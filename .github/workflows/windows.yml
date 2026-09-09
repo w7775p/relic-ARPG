@@ -1,4 +1,4 @@
-name: M0 Windows 验证与导出
+name: M1 Windows 验证与导出
 
 on:
   push:
@@ -51,7 +51,7 @@ jobs:
         shell: pwsh
         run: |
           $logPath = Join-Path $env:GITHUB_WORKSPACE 'package-smoke.log'
-          $process = Start-Process -FilePath ./builds/windows/relic_arpg.exe -ArgumentList '--headless','--quit-after','30','--log-file',$logPath -Wait -PassThru
+          $process = Start-Process -FilePath ./builds/windows/relic_arpg.exe -ArgumentList '--headless','res://world/maps/combat_arena.tscn','--fixed-fps','60','--quit-after','180','--log-file',$logPath -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw "导出包退出码 $($process.ExitCode)" }
           if (!(Test-Path package-smoke.log)) { throw "导出包未产生验证日志" }
           Get-Content package-smoke.log
@@ -59,7 +59,7 @@ jobs:
       - name: 上传 Windows 包
         uses: actions/upload-artifact@v4
         with:
-          name: relic-arpg-m0-windows
+          name: relic-arpg-m1-windows
           path: builds/windows/*
           if-no-files-found: error
       - name: 保存启动日志

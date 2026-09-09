@@ -1,11 +1,13 @@
 class_name PlayerController
-extends CharacterBody3D
-## 处理平面移动、地面瞄准与有碰撞的闪避；M0 暂无战斗。
+extends CombatActor
+## 处理移动、地面瞄准、闪避与技能视觉朝向。
 
 @export var move_speed_mps: float = 7.0
 @export var dodge_speed_mps: float = 18.0
 @export var dodge_duration_sec: float = 0.18
 @export var dodge_cooldown_sec: float = 0.7
+
+var skills: SkillRunner
 
 var dodge_remaining_sec: float = 0.0
 var cooldown_remaining_sec: float = 0.0
@@ -16,11 +18,19 @@ var _dodge_direction: Vector3 = Vector3.FORWARD
 
 ## 在物理帧中移动；斜向输入由 Input.get_vector 自动归一化。
 func _physics_process(delta: float) -> void:
+	if is_dead:
+		velocity = Vector3.ZERO
+		return
+	tick_status(delta)
 	var input_vector: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var direction: Vector3 = Vector3(input_vector.x, 0.0, input_vector.y)
 	cooldown_remaining_sec = maxf(0.0, cooldown_remaining_sec - delta)
 	dodge_remaining_sec = maxf(0.0, dodge_remaining_sec - delta)
 	_update_aim()
+	if is_instance_valid(skills) and skills.is_channeling:
+		$VisualRoot/WeaponSocket.rotation.y += delta * 20.0
+	else:
+		$VisualRoot/WeaponSocket.rotation.y = 0.0
 	if Input.is_action_just_pressed("dodge") and cooldown_remaining_sec <= 0.0:
 		_dodge_direction = direction if direction.length_squared() > 0.01 else -visual_root.global_basis.z
 		dodge_remaining_sec = dodge_duration_sec

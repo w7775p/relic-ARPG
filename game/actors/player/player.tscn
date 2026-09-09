@@ -1,0 +1,36 @@
+[gd_scene load_steps=7 format=3]
+[ext_resource type="Script" path="res://actors/player/player_controller.gd" id="1"]
+[sub_resource type="CapsuleShape3D" id="Shape"]
+radius = 0.4
+height = 1.8
+[sub_resource type="StandardMaterial3D" id="BodyMat"]
+albedo_color = Color(0.12, 0.7, 0.75, 1)
+roughness = 0.65
+[sub_resource type="CapsuleMesh" id="Body"]
+material = SubResource("BodyMat")
+radius = 0.4
+height = 1.8
+radial_segments = 12
+rings = 4
+[sub_resource type="StandardMaterial3D" id="SwordMat"]
+albedo_color = Color(0.95, 0.72, 0.3, 1)
+[sub_resource type="BoxMesh" id="Sword"]
+material = SubResource("SwordMat")
+size = Vector3(0.15, 0.15, 1.5)
+[node name="Player" type="CharacterBody3D"]
+process_mode = 1
+collision_layer = 2
+collision_mask = 1
+floor_snap_length = 0.3
+script = ExtResource("1")
+[node name="CollisionShape" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("Shape")
+[node name="VisualRoot" type="Node3D" parent="."]
+[node name="Body" type="MeshInstance3D" parent="VisualRoot"]
+position = Vector3(0, 0.9, 0)
+mesh = SubResource("Body")
+[node name="WeaponSocket" type="Node3D" parent="VisualRoot"]
+position = Vector3(0.55, 0.9, -0.6)
+[node name="Sword" type="MeshInstance3D" parent="VisualRoot/WeaponSocket"]
+mesh = SubResource("Sword")

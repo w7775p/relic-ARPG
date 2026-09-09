@@ -1,0 +1,71 @@
+name: M0 Windows 验证与导出
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-export:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      GODOT_VERSION: 4.7.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 安装同版引擎与导出模板
+        shell: pwsh
+        run: |
+          $release = "https://github.com/godotengine/godot-builds/releases/download/$env:GODOT_VERSION-stable"
+          $engineZip = "$env:RUNNER_TEMP/godot.zip"
+          $templateZip = "$env:RUNNER_TEMP/templates.zip"
+          Invoke-WebRequest "$release/Godot_v$env:GODOT_VERSION-stable_win64.exe.zip" -OutFile $engineZip
+          Expand-Archive $engineZip "$env:RUNNER_TEMP/godot"
+          Invoke-WebRequest "$release/Godot_v$env:GODOT_VERSION-stable_export_templates.tpz" -OutFile $templateZip
+          Expand-Archive $templateZip "$env:RUNNER_TEMP/template_unpack"
+          $templateDir = "$env:APPDATA/Godot/export_templates/$env:GODOT_VERSION.stable"
+          New-Item -ItemType Directory -Force $templateDir | Out-Null
+          Copy-Item "$env:RUNNER_TEMP/template_unpack/templates/windows_*x86_64.exe" $templateDir
+          $engine = (Get-ChildItem "$env:RUNNER_TEMP/godot/*_console.exe").FullName
+          "GODOT_BIN=$engine" >> $env:GITHUB_ENV
+      - name: 导入与实际场景回归
+        shell: pwsh
+        run: python tools/verify.py --godot "$env:GODOT_BIN"
+      - name: 导出 Windows 成品
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force builds/windows | Out-Null
+          & $env:GODOT_BIN --headless --path game --export-release "Windows Desktop" ../builds/windows/relic_arpg.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (!(Test-Path builds/windows/relic_arpg.exe)) { throw "导出未产生 exe" }
+      - name: 验证导出包独立启动
+        shell: pwsh
+        run: |
+          $logPath = Join-Path $env:GITHUB_WORKSPACE 'package-smoke.log'
+          $process = Start-Process -FilePath ./builds/windows/relic_arpg.exe -ArgumentList '--headless','--quit-after','30','--log-file',$logPath -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "导出包退出码 $($process.ExitCode)" }
+          if (!(Test-Path package-smoke.log)) { throw "导出包未产生验证日志" }
+          Get-Content package-smoke.log
+          if (Select-String -Path package-smoke.log -Pattern 'SCRIPT ERROR:|ERROR:') { throw "导出包运行报错" }
+      - name: 上传 Windows 包
+        uses: actions/upload-artifact@v4
+        with:
+          name: relic-arpg-m0-windows
+          path: builds/windows/*
+          if-no-files-found: error
+      - name: 保存启动日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-startup-log
+          path: package-smoke.log
+          if-no-files-found: ignore

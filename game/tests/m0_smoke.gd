@@ -38,6 +38,24 @@ func _run() -> void:
 	await _frames(30)
 	Input.action_release("move_right")
 	_check(player.position.x > start.x + 2.0, "输入驱动角色移动")
+	var key_event: InputEventKey = InputEventKey.new()
+	key_event.physical_keycode = KEY_LEFT
+	key_event.pressed = true
+	start = player.position
+	Input.parse_input_event(key_event)
+	await _frames(6)
+	key_event.pressed = false
+	Input.parse_input_event(key_event)
+	_check(player.position.x < start.x - 0.2, "左方向键产生向左移动")
+	key_event = InputEventKey.new()
+	key_event.physical_keycode = KEY_RIGHT
+	key_event.pressed = true
+	start = player.position
+	Input.parse_input_event(key_event)
+	await _frames(6)
+	key_event.pressed = false
+	Input.parse_input_event(key_event)
+	_check(player.position.x > start.x + 0.2, "右方向键产生向右移动")
 	player.restore_position(Vector3(18.5, 0, 0))
 	Input.action_press("move_right")
 	Input.action_press("dodge")

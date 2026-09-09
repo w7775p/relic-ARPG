@@ -43,6 +43,8 @@ func _ready() -> void:
 	status.text = "清理四角怪群与精英；按 2 试穿雷霆旋风"
 	if auto_spawn:
 		encounters.start_wave()
+	if OS.get_cmdline_user_args().has("--smoke-combat"):
+		print("M1_COMBAT_BOOT_READY")
 
 
 ## 每 0.1 秒刷新 HUD，暂停期间保持已有数值。

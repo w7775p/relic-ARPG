@@ -51,11 +51,12 @@ jobs:
         shell: pwsh
         run: |
           $logPath = Join-Path $env:GITHUB_WORKSPACE 'package-smoke.log'
-          $process = Start-Process -FilePath ./builds/windows/relic_arpg.exe -ArgumentList '--headless','res://world/maps/combat_arena.tscn','--fixed-fps','60','--quit-after','180','--log-file',$logPath -Wait -PassThru
-          if ($process.ExitCode -ne 0) { throw "导出包退出码 $($process.ExitCode)" }
+          $process = Start-Process -FilePath ./builds/windows/relic_arpg.exe -ArgumentList '--headless','--fixed-fps','60','--quit-after','180','--log-file',$logPath,'--','--smoke-combat' -Wait -PassThru
           if (!(Test-Path package-smoke.log)) { throw "导出包未产生验证日志" }
           Get-Content package-smoke.log
+          if ($process.ExitCode -ne 0) { throw "导出包退出码 $($process.ExitCode)" }
           if (Select-String -Path package-smoke.log -Pattern 'SCRIPT ERROR:|ERROR:') { throw "导出包运行报错" }
+          if (!(Select-String -Path package-smoke.log -Pattern 'M1_COMBAT_BOOT_READY')) { throw "导出包未进入战斗场景" }
       - name: 上传 Windows 包
         uses: actions/upload-artifact@v4
         with:

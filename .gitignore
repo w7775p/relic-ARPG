@@ -1,0 +1,10 @@
+game/.godot/
+builds/
+*.tmp
+*.log
+.env
+.env.*
+export_credentials.cfg
+*.pfx
+*.p12
+__pycache__/

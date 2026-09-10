@@ -33,3 +33,14 @@ static func apply(object: Object, data: Dictionary) -> void:
 		elif old is int:
 			value = int(value)
 		object.set(key, value)
+
+## 装配数据独立于技能瞬态，避免切换时重置攻击冷却。
+static func loadout(state: LoadoutState) -> Dictionary:
+	return state.snapshot()
+
+## v2 完整会话迁移，仅补充默认装配；其他字段深复制保留。
+static func migrate_v2(data: Dictionary) -> Dictionary:
+	var result: Dictionary = data.duplicate(true)
+	result.version = 3
+	result.expedition.loadout = LoadoutState.new().snapshot()
+	return result

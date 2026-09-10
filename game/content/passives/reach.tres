@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="PassiveDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/stats/passive_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "reach"
+display_name = "扩旋"
+description = "旋风半径 +0.5 米"
+stat = "whirlwind_radius_m"
+value = 0.5

@@ -3,6 +3,7 @@ extends Node
 
 const SAVE_PATH: String = "user://session.json"
 const SAVE_VERSION: int = 1
+const EXPEDITION_VERSION: int = 3
 
 
 ## 判断是否存在可恢复的当前版本存档。
@@ -14,8 +15,8 @@ func has_session() -> bool:
 func is_valid_session(data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
-	if data.get("version") == 2:
-		return data.get("map_id") == "map_m2_arena" and SaveValidator.expedition(data.get("expedition"))
+	if data.get("version") == 2 or data.get("version") == 3:
+		return data.get("map_id") == "map_m2_arena" and SaveValidator.expedition(data.get("expedition"), int(data.version))
 	if data.get("version") != SAVE_VERSION or data.get("map_id") != "map_m0_arena":
 		return false
 	var position_data: Variant = data.get("player_position")
@@ -36,7 +37,7 @@ func load_session() -> Dictionary:
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	if not is_valid_session(data):
 		return {}
-	return data
+	return SessionSnapshot.migrate_v2(data) if data.version == 2 else data
 
 
 ## 先完整写入临时文件，再替换正式存档，返回实际文件错误。
@@ -53,7 +54,7 @@ func save_session(player_position: Vector3) -> Error:
 
 ## 保存通过结构与实例唯一性校验的 M2 会话。
 func save_expedition(snapshot: Dictionary) -> Error:
-	var data: Dictionary = {"version":2, "map_id":"map_m2_arena", "expedition":snapshot}
+	var data: Dictionary = {"version":EXPEDITION_VERSION, "map_id":"map_m2_arena", "expedition":snapshot}
 	if not is_valid_session(data):
 		return ERR_INVALID_DATA
 	return _write(data)

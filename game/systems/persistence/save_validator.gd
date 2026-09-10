@@ -70,7 +70,7 @@ static func item(data: Variant, ids: Dictionary) -> bool:
 	return true
 
 ## 检查完整会话，随机状态以字符串保存以避免 JSON 浮点精度损失。
-static func expedition(data: Variant) -> bool:
+static func expedition(data: Variant, version: int = 3) -> bool:
 	if not data is Dictionary:
 		return false
 	for key: String in ["inventory", "in_town", "wave_completed", "minimum_quality", "ground", "next_drop_id", "next_item_id", "loot_rng", "combat_rng", "enemies", "projectiles", "player", "position", "facing", "skills", "clock", "attack_id", "kills", "damage", "lightning_ready", "lightning_count", "explosion_count"]:
@@ -87,6 +87,10 @@ static func expedition(data: Variant) -> bool:
 		if not number(data[key]):
 			return false
 	if not number(data.minimum_quality, 0, 2) or not number(data.facing, -10000, 10000):
+		return false
+	if version == 3 and not LoadoutState.valid(data.get("loadout")):
+		return false
+	if version == 2 and data.has("loadout"):
 		return false
 	var inv: Variant = data.inventory
 	if not inv is Dictionary or inv.size() != 9:

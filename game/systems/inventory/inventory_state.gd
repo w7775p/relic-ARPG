@@ -4,6 +4,7 @@ extends RefCounted
 signal changed
 const BAG_CAPACITY: int = 40
 const STASH_CAPACITY: int = 120
+var loadout: LoadoutState = LoadoutState.new()
 var bag: Array = []
 var stash: Array = []
 var equipment: Dictionary = {}
@@ -103,6 +104,9 @@ func build() -> BuildDefinition:
 				result.death_explosion = true
 			else:
 				_apply_stat(result, stat, float(value))
+	for id: String in loadout.passives:
+		var node: PassiveDefinition = LoadoutState.passive(id)
+		_apply_stat(result, node.stat, node.value)
 	result.critical_chance = minf(result.critical_chance, 0.85)
 	result.attack_interval_sec = maxf(result.attack_interval_sec, 0.12)
 	result.whirlwind_interval_sec = maxf(result.whirlwind_interval_sec, 0.08)
@@ -118,6 +122,10 @@ func defense(stat: String) -> float:
 		for rolled: Dictionary in item.affixes:
 			if ItemCatalog.affix(rolled.id).stat == stat:
 				total += float(rolled.value)
+	for id: String in loadout.passives:
+		var node: PassiveDefinition = LoadoutState.passive(id)
+		if node.stat == stat:
+			total += node.value
 	return total
 
 ## 应用加法属性；攻速词条以减少两种攻击间隔实现。

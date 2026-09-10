@@ -11,6 +11,12 @@ var summary: Label
 var hint: Label
 var tabs: OptionButton
 var action_buttons: Dictionary = {}
+var loadout_view: VBoxContainer
+var inventory_columns: HBoxContainer
+var inventory_actions: HFlowContainer
+var passive_buttons: Dictionary = {}
+var skill_choices: Dictionary = {}
+var attributes: Label
 
 ## 使用原生容器适配窗口，所有操作通过会话规则提交。
 func _ready() -> void:
@@ -26,7 +32,7 @@ func _ready() -> void:
 	var top: HBoxContainer = HBoxContainer.new()
 	rows.add_child(top)
 	tabs = OptionButton.new()
-	for title: String in ["背包", "已装备", "仓库（整备时）"]:
+	for title: String in ["背包", "已装备", "仓库（整备时）", "技能与被动"]:
 		tabs.add_item(title)
 	tabs.item_selected.connect(_on_tab)
 	top.add_child(tabs)
@@ -37,6 +43,7 @@ func _ready() -> void:
 	var columns: HBoxContainer = HBoxContainer.new()
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	rows.add_child(columns)
+	inventory_columns = columns
 	items = ItemList.new()
 	items.custom_minimum_size.x = 300
 	items.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -46,12 +53,14 @@ func _ready() -> void:
 	right_text = _description_column(columns)
 	var actions: HFlowContainer = HFlowContainer.new()
 	rows.add_child(actions)
+	inventory_actions = actions
 	for key: String in ["equip", "unequip", "lock", "discard", "store", "retrieve", "sell", "depart", "return", "filter"]:
 		var button: Button = Button.new()
 		button.text = {"equip":"穿戴", "unequip":"卸下", "lock":"锁定 / 解锁", "discard":"丢弃", "store":"存入仓库", "retrieve":"取回背包", "sell":"出售", "depart":"出发", "return":"撤离整备", "filter":"切换掉落过滤"}[key]
 		button.pressed.connect(_on_action.bind(key))
 		actions.add_child(button)
 		action_buttons[key] = button
+	_create_loadout(rows)
 	hint = Label.new()
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rows.add_child(hint)
@@ -84,6 +93,10 @@ func entries() -> Array:
 func refresh() -> void:
 	if items == null:
 		return
+	inventory_columns.visible = source != 3
+	inventory_actions.visible = source != 3
+	loadout_view.visible = source == 3
+	_refresh_loadout()
 	var inventory: InventoryState = session.inventory
 	summary.text = "%s · 等级 %d · 经验 %d/%d · 金币 %d · 材料 %d\n背包 %d/40 · 仓库 %d/120 · 难度 %d · 通关 %d 次" % ["据点整备" if session.in_town else "探险中", inventory.level, inventory.experience, inventory.level * 60, inventory.gold, inventory.materials, inventory.bag.size(), inventory.stash.size(), inventory.difficulty, inventory.completed]
 	items.clear()
@@ -135,3 +148,71 @@ func _on_action(key: String) -> void:
 	var message: String = session.inventory_action(key, source, selected)
 	refresh()
 	hint.text = message + "\n" + hint.text
+
+## 原生容器承载技能槽和六个被动，与物品页共用顶部入口。
+func _create_loadout(rows: VBoxContainer) -> void:
+	loadout_view = VBoxContainer.new()
+	loadout_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	rows.add_child(loadout_view)
+	for slot: String in ["basic", "main", "auxiliary"]:
+		var row: HBoxContainer = HBoxContainer.new()
+		loadout_view.add_child(row)
+		var title: Label = Label.new()
+		title.text = {"basic":"左键 · 基础攻击", "main":"右键 · 主要技能", "auxiliary":"F · 辅助技能"}[slot]
+		title.custom_minimum_size.x = 180
+		row.add_child(title)
+		var choice: OptionButton = OptionButton.new()
+		choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		choice.add_item("空槽")
+		choice.set_item_metadata(0, "")
+		for definition: SkillDefinition in LoadoutState.SKILLS:
+			if definition.slot == slot:
+				choice.add_item(definition.display_name)
+				choice.set_item_metadata(choice.item_count - 1, definition.id)
+		choice.item_selected.connect(_on_skill.bind(slot))
+		row.add_child(choice)
+		skill_choices[slot] = choice
+	for definition: PassiveDefinition in LoadoutState.PASSIVES:
+		var button: Button = Button.new()
+		button.toggle_mode = true
+		button.text = definition.display_name + "：" + definition.description
+		button.pressed.connect(_on_loadout.bind("passive", definition.id))
+		loadout_view.add_child(button)
+		passive_buttons[definition.id] = button
+	var reset: Button = Button.new()
+	reset.text = "免费重置被动（最多同时选择三个）"
+	reset.pressed.connect(_on_loadout.bind("reset", ""))
+	loadout_view.add_child(reset)
+	attributes = Label.new()
+	attributes.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	loadout_view.add_child(attributes)
+
+## 根据真实构筑显示合计、选择数与据点限制。
+func _refresh_loadout() -> void:
+	var state: LoadoutState = session.inventory.loadout
+	var build: BuildDefinition = session.inventory.build()
+	for slot: String in skill_choices:
+		var choice: OptionButton = skill_choices[slot]
+		choice.disabled = not session.in_town
+		for index: int in range(choice.item_count):
+			var id: String = choice.get_item_metadata(index)
+			if not id.is_empty():
+				choice.set_item_text(index, LoadoutState.skill(id).describe(build))
+			if id == state.slots[slot]:
+				choice.select(index)
+	for id: String in passive_buttons:
+		passive_buttons[id].set_pressed_no_signal(state.passives.has(id))
+		passive_buttons[id].disabled = not session.in_town
+	attributes.text = "已选 %d/3｜%s\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒" % [state.passives.size(), "据点可免费调整；F 辅助槽暂空" if session.in_town else "探险中只能查看", build.damage, build.critical_chance * 100, build.whirlwind_radius_m, session.inventory.defense("max_health"), session.inventory.defense("armor"), build.idle_energy_regen]
+
+## 失败原因写入共用提示，包括第四项选择被拒绝。
+func _on_loadout(action: String, id: String) -> void:
+	var message: String = session.loadout_action(action, id)
+	refresh()
+	hint.text = message
+
+## 下拉框提交稳定技能 ID，状态修改交由会话校验。
+func _on_skill(index: int, slot: String) -> void:
+	var message: String = session.loadout_action("skill", skill_choices[slot].get_item_metadata(index), slot)
+	refresh()
+	hint.text = message

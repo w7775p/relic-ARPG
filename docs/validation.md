@@ -78,3 +78,6 @@ M1 的无窗口 100 怪数据仍是历史战斗测试，不能充当 M2 带掉�
 引擎实际版本 `4.7.2.stable.official.ed1daf0bf`。命令：`python tools/verify.py --godot /workspace/scratch/7b23297c2b83/godot-runtime/Godot_v4.7.2-stable_linux.x86_64`。编辑器导入、主入口和 M0/M1/M2/P1 完成标记全部通过，共 123 项。新增 `tests/p1_loadout.tscn` 31 项：六属性加值与取消、第四项提示、错误槽位、空槽攻击、据点权限、资源和冷却保持、上限钳制、v2 两种地点完整迁移及下一次随机、v3 非默认装配保存、重复/未知节点拒绝。原 M2 在途弹体与蓄力恢复、物品身份和奖励幂等继续通过。
 
 图形运行：Xvfb :91 报 Cannot establish any listening sockets，未取得可见画面。人工待验收：新角色→技能与被动→选择三项与尝试第四项→出发→普攻/旋风→保存重启；1280×720 与 1920×1080 核对中文和下拉框、返回据点重置。Windows 导出与包启动结果随 PR 工作流记录。
+
+
+本轮交付：功能提交 `aaf8b2e7512c491601bc1426b890cd0cb7c9c6ba`，[PR #5](https://github.com/w7775p/relic-ARPG/pull/5)。对应 [Windows 工作流](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309) 的回归、导出与独立启动全部通过；[下载 Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309/artifacts/10178021093)。产物沿用工作流名称 relic-arpg-m2-windows，实际包含本卡功能。本次后续提交仅补验证交接文档，代码与已验证提交相同。可见试玩仍待验收。

@@ -86,4 +86,7 @@ SkillRunner 已运行普攻、旋风和能量；InventoryState.build() 从装备
 
 存档 v3：v2 校验后仅补装配字段，v1 仍走原新角色入口；覆盖快照、校验、迁移、加载、恢复。完整回归命令 `python tools/verify.py --godot <Godot 4.7.2 路径>`，Linux 123 项通过（M0 20、M1 26、M2 46、P1 31）。新增测试覆盖六属性、第四项 UI 提示、据点限制、钳制与无补满、空槽施放、v2 据点/战斗重建、随机下一步、v3 选择持久化及损坏输入。
 
-可见验收待完成：当前 Xvfb 无法建立显示套接字，未获得本轮画面、中文排版与人工操作结果；自动回归不能替代该项。Windows 构建、提交与 PR 见本卡后续记录。下一卡 P1_Task2 在本任务合入后接入横扫、战吼与药剂。
+可见验收待完成：当前 Xvfb 无法建立显示套接字，未获得本轮画面、中文排版与人工操作结果；自动回归不能替代该项。Windows 构建、提交与 PR 见下方交付记录。下一卡 P1_Task2 在本任务合入后接入横扫、战吼与药剂。
+
+
+本轮交付：功能提交 `aaf8b2e7512c491601bc1426b890cd0cb7c9c6ba`，[PR #5](https://github.com/w7775p/relic-ARPG/pull/5)。对应 [Windows 工作流](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309) 的回归、导出与独立启动全部通过；[下载 Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309/artifacts/10178021093)。产物沿用工作流名称 relic-arpg-m2-windows，实际包含本卡功能。本次后续提交仅补验证交接文档，代码与已验证提交相同。可见试玩仍待验收。

@@ -1,5 +1,7 @@
 # P2_Task 2：墓园敌人与精英组合
 
+仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
+
 阶段：D2。状态：待执行。任务 ID：`P2_Task2`。建议分支：`feat/p2-task2-enemies`。
 
 前置任务：[P2_Task 1](P2_Task1.md)。执行时以最新 `main` 为代码起点，核实前置功能已合入；本包未合并时，可从任务文档分支读取本卡，按总表说明准备功能分支。文档基线为 `313ac7f`，它只用于识别 M2 历史，禁止把它当作后续任务固定起点。

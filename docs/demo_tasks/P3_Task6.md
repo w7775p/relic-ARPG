@@ -1,5 +1,7 @@
 # P3_Task 6：Demo 发行构建与交付
 
+仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
+
 阶段：D3。状态：待执行。任务 ID：`P3_Task6`。建议分支：`feat/p3-task6-release`。
 
 前置任务：[P3_Task 1](P3_Task1.md)；[P3_Task 2](P3_Task2.md)；[P3_Task 3](P3_Task3.md)；[P3_Task 4](P3_Task4.md)；[P3_Task 5](P3_Task5.md)。执行时以最新 `main` 为代码起点，核实前置功能已合入；本包未合并时，可从任务文档分支读取本卡，按总表说明准备功能分支。文档基线为 `313ac7f`，它只用于识别 M2 历史，禁止把它当作后续任务固定起点。

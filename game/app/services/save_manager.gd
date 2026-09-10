@@ -1,5 +1,5 @@
 extends Node
-## 保存 M0 场地位置；M2 再扩展为装备和完整探险状态。
+## 兼容 M0 位置存档与 M2 完整探险，校验后写入临时文件替换。
 
 const SAVE_PATH: String = "user://session.json"
 const SAVE_VERSION: int = 1
@@ -14,6 +14,8 @@ func has_session() -> bool:
 func is_valid_session(data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
+	if data.get("version") == 2:
+		return data.get("map_id") == "map_m2_arena" and SaveValidator.expedition(data.get("expedition"))
 	if data.get("version") != SAVE_VERSION or data.get("map_id") != "map_m0_arena":
 		return false
 	var position_data: Variant = data.get("player_position")
@@ -46,6 +48,19 @@ func save_session(player_position: Vector3) -> Error:
 	}
 	if not is_valid_session(data):
 		return ERR_INVALID_DATA
+	return _write(data)
+
+
+## 保存通过结构与实例唯一性校验的 M2 会话。
+func save_expedition(snapshot: Dictionary) -> Error:
+	var data: Dictionary = {"version":2, "map_id":"map_m2_arena", "expedition":snapshot}
+	if not is_valid_session(data):
+		return ERR_INVALID_DATA
+	return _write(data)
+
+
+## 完整刷新文件后替换正式路径，保留真实系统错误。
+func _write(data: Dictionary) -> Error:
 	var file: FileAccess = FileAccess.open(SAVE_PATH + ".tmp", FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()

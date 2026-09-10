@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="UniqueDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/unique_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "energy_grips"
+display_name = "噬能护手"
+base_id = "grips"
+stats = { "hit_energy": 3.0, "kill_energy": 8.0, "haste": 0.04 }

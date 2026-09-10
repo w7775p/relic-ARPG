@@ -39,17 +39,17 @@ horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="Center/Rows"]
 layout_mode = 2
-text = "M1 战斗原型 / 雷霆旋风"
+text = "M2 刷宝原型 / 雷霆旋风"
 theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 
 [node name="Start" type="Button" parent="Center/Rows"]
 layout_mode = 2
-text = "进入试炼场"
+text = "新建角色"
 
 [node name="Continue" type="Button" parent="Center/Rows"]
 layout_mode = 2
-text = "继续上次位置"
+text = "继续探险"
 
 [node name="SettingsButton" type="Button" parent="Center/Rows"]
 layout_mode = 2
@@ -61,7 +61,7 @@ text = "退出"
 
 [node name="Hint" type="Label" parent="Center/Rows"]
 layout_mode = 2
-text = "左键普攻 · 右键旋风 · 2 切换雷霆旋风"
+text = "左键普攻 · 右键旋风 · I 背包 · E 拾取"
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 

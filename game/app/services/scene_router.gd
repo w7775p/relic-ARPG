@@ -2,7 +2,7 @@ extends Node
 ## 管理主菜单和测试场地切换，离开场景时解除暂停。
 
 const MAIN_MENU: String = "res://ui/menus/main_menu.tscn"
-const TEST_ARENA: String = "res://world/maps/combat_arena.tscn"
+const TEST_ARENA: String = "res://world/maps/expedition.tscn"
 
 var should_restore_session: bool = false
 

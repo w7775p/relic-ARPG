@@ -14,7 +14,7 @@ func _on_start_pressed() -> void:
 	SceneRouter.start_session()
 
 
-## 恢复已保存位置。
+## 恢复角色与当前探险。
 func _on_continue_pressed() -> void:
 	SceneRouter.start_session(true)
 

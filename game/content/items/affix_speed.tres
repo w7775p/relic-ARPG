@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "speed"
+display_name = "移动速度"
+stat = "move_speed_mps"
+group = "move"
+slots = PackedStringArray("weapon", "head", "body", "hands", "feet", "ring")
+min_level = 1
+weight = 3.0
+minimum = 0.2
+maximum = 0.6

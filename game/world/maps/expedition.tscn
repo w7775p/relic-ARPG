@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="PackedScene" path="res://world/maps/combat_arena.tscn" id="1"]
+[ext_resource type="Script" path="res://world/maps/expedition.gd" id="2"]
+[node name="Expedition" instance=ExtResource("1")]
+script = ExtResource("2")
+auto_spawn = false
+[node name="Loot" type="Node3D" parent="."]
+process_mode = 1
+[node name="Save" parent="Interface/Pause/Center/Rows" index="2"]
+text = "保存角色与探险"

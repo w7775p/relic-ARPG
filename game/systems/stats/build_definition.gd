@@ -30,6 +30,8 @@ func describe() -> String:
 	if chain_count > 0:
 		text += "\n直接暴击触发 %d 目标闪电（间隔 %.2f 秒）；闪电使存活目标感电 %.1f 秒" % [chain_count, lightning_cooldown_sec, shock_duration_sec]
 	if death_explosion:
-		text += "\n感电死亡爆炸 %.0f 伤害 / %.1f 米；直接命中回能 %.0f，击杀回能 %.0f" % [explosion_damage, explosion_radius_m, hit_energy, kill_energy]
+		text += "\n感电死亡爆炸 %.0f 伤害 / %.1f 米" % [explosion_damage, explosion_radius_m]
+	if hit_energy > 0.0 or kill_energy > 0.0:
+		text += "\n直接命中回能 %.1f，击杀回能 %.1f" % [hit_energy, kill_energy]
 	text += "\n旋风消耗 %.0f 能量/秒；停止施放回复 %.0f/秒" % [energy_cost_per_sec, idle_energy_regen]
 	return text

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "recovery"
+display_name = "闲置回能"
+stat = "idle_energy_regen"
+group = "regen"
+slots = PackedStringArray("weapon", "head", "body", "hands", "feet", "ring")
+min_level = 1
+weight = 3.0
+minimum = 2.0
+maximum = 5.0

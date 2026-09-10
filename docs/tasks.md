@@ -23,3 +23,31 @@
 任务备注格式：`编号｜阶段｜系统｜具体工作｜前置依赖｜交付文件或场景｜验收步骤与预期｜状态｜备注`。
 
 MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加入冲锋重击、房间组合与首领，D3 完成引导、配置、平衡、性能和发行准备。
+
+## D1～D3 独立任务卡
+
+2026-09-10：M0/M1/M2 已合并 main，核对基线 `313ac7f`。用户已试玩 M2，反馈效果可以；历史自动化结果保留在 `validation.md`。下列为新拆分的待执行任务，完整依赖与使用方法见 [D1～D3 任务总表](demo_tasks/README.md)。
+
+| 任务 | 交付主题 | 硬依赖 | 状态 |
+| --- | --- | --- | --- |
+| [P1_Task 1](demo_tasks/P1_Task1.md) | 技能装配与被动选择 | main 的 M2 | 待执行 |
+| [P1_Task 2](demo_tasks/P1_Task2.md) | 流血横扫、战吼与恢复药剂 | P1_Task 1 | 待执行 |
+| [P1_Task 3](demo_tasks/P1_Task3.md) | D1 装备池、精英修饰与地图变体 | P1_Task 2 | 待执行 |
+| [P1_Task 4](demo_tasks/P1_Task4.md) | 据点拆解与材料循环 | P1_Task 3 | 待执行 |
+| [P1_Task 5](demo_tasks/P1_Task5.md) | 单词条位置重铸 | P1_Task 4 | 待执行 |
+| [P1_Task 6](demo_tasks/P1_Task6.md) | D1 过滤、属性解释与阶段验收 | P1_Task 1、P1_Task 2、P1_Task 3、P1_Task 4、P1_Task 5 | 待执行 |
+| [P2_Task 1](demo_tasks/P2_Task1.md) | 冲锋重击与被动扩展 | P1_Task 6 | 待执行 |
+| [P2_Task 2](demo_tasks/P2_Task2.md) | 墓园敌人与精英组合 | P2_Task 1 | 待执行 |
+| [P2_Task 3](demo_tasks/P2_Task3.md) | 墓园房间标准与十二个模板 | P2_Task 2 | 待执行 |
+| [P2_Task 4](demo_tasks/P2_Task4.md) | 随机连接、导航与布局存档 | P2_Task 3 | 待执行 |
+| [P2_Task 5](demo_tasks/P2_Task5.md) | 墓园首领战 | P2_Task 4 | 待执行 |
+| [P2_Task 6](demo_tasks/P2_Task6.md) | 三档难度、宝箱与据点入口 | P2_Task 5 | 待执行 |
+| [P2_Task 7](demo_tasks/P2_Task7.md) | 目标掉落与 Demo 装备总量 | P2_Task 6 | 待执行 |
+| [P2_Task 8](demo_tasks/P2_Task8.md) | 主要美术、动作与音效替换 | P2_Task 7 | 待执行 |
+| [P2_Task 9](demo_tasks/P2_Task9.md) | 随机区域整体验收与存档回归 | P2_Task 1、P2_Task 2、P2_Task 3、P2_Task 4、P2_Task 5、P2_Task 6、P2_Task 7、P2_Task 8 | 待执行 |
+| [P3_Task 1](demo_tasks/P3_Task1.md) | 首次引导、保存与结算反馈 | P2_Task 9 | 待执行 |
+| [P3_Task 2](demo_tasks/P3_Task2.md) | 键位、显示、声音与镜头设置 | P3_Task 1 | 待执行 |
+| [P3_Task 3](demo_tasks/P3_Task3.md) | 物品说明、过滤预设与界面可读性 | P3_Task 2 | 待执行 |
+| [P3_Task 4](demo_tasks/P3_Task4.md) | 成长、经济与构筑平衡 | P3_Task 3 | 待执行 |
+| [P3_Task 5](demo_tasks/P3_Task5.md) | 怪群、标签与加载性能 | P3_Task 4 | 待执行 |
+| [P3_Task 6](demo_tasks/P3_Task6.md) | Demo 发行构建与交付 | P3_Task 1、P3_Task 2、P3_Task 3、P3_Task 4、P3_Task 5 | 待执行 |

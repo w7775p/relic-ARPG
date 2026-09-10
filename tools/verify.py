@@ -1,4 +1,4 @@
-"""在临时用户目录运行引擎导入和 M0/M1 回归，发现脚本错误时失败。"""
+"""在临时用户目录运行引擎导入和 M0/M1/M2 回归，发现脚本错误时失败。"""
 import argparse
 import os
 from pathlib import Path
@@ -24,6 +24,7 @@ def main():
             ["--quit-after", "10"],
             ["res://tests/m0_smoke.tscn"],
             ["res://tests/m1_combat.tscn"],
+            ["res://tests/m2_loop.tscn"],
         ]
         for extra in commands:
             result = subprocess.run(
@@ -35,7 +36,7 @@ def main():
             print(output)
             if result.returncode or "SCRIPT ERROR:" in output or "ERROR:" in output:
                 raise SystemExit(result.returncode or 1)
-            marker = "M1_COMBAT_RESULT: 0 failures" if "m1_combat" in extra[0] else "M0_SMOKE_RESULT: 0 failures"
+            marker = "M2_LOOP_RESULT: 0 failures" if "m2_loop" in extra[0] else "M1_COMBAT_RESULT: 0 failures" if "m1_combat" in extra[0] else "M0_SMOKE_RESULT: 0 failures"
             if extra[0].startswith("res://tests/") and marker not in output:
                 raise SystemExit("测试未运行到完成标记")
 

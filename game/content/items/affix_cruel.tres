@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "cruel"
+display_name = "强力攻击"
+stat = "damage"
+group = "power"
+slots = PackedStringArray("weapon", "head", "body", "hands", "feet", "ring")
+min_level = 3
+weight = 1.0
+minimum = 7.0
+maximum = 12.0

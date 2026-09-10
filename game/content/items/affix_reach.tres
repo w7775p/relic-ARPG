@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "reach"
+display_name = "旋风范围"
+stat = "whirlwind_radius_m"
+group = "range"
+slots = PackedStringArray("weapon", "head", "body", "hands", "feet", "ring")
+min_level = 1
+weight = 3.0
+minimum = 0.15
+maximum = 0.45

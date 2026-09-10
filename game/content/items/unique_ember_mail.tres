@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="UniqueDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/unique_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "ember_mail"
+display_name = "余烬锁甲"
+base_id = "mail"
+stats = { "death_explosion": true, "whirlwind_radius_m": 0.8 }

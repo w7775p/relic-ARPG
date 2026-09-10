@@ -1,5 +1,5 @@
 game/.godot/
-builds/
+/builds/
 *.tmp
 *.log
 .env

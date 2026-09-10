@@ -1,0 +1,31 @@
+{
+	"active_min": 62,
+	"cpu": "AMD EPYC 9V74 80-Core Processor",
+	"damage": 348317.0,
+	"display_driver": "headless",
+	"duration_sec": 180.001166333369,
+	"engine": "4.7.2-stable (official)",
+	"explosions": 987,
+	"fps_cap": 60,
+	"frame_max_ms": 60.382,
+	"frame_p50_ms": 16.652,
+	"frame_p95_ms": 18.418,
+	"frame_p99_ms": 21.184,
+	"kills": 3357,
+	"lightning": 360,
+	"logical_processors": 9,
+	"note": "高生命测试角色；无窗口模式只验证 CPU/物理与逻辑，帧率受 60 上限限制。",
+	"os": "Linux",
+	"peak_event_queue": 83,
+	"physics_p95_ms": 19.492,
+	"physics_p99_ms": 29.668,
+	"preset": "thunder",
+	"renderer": "",
+	"resolution": [
+		1280,
+		720
+	],
+	"samples": 10498,
+	"target_population": 100,
+	"warmup_sec": 5
+}

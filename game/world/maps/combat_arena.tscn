@@ -1,0 +1,61 @@
+[gd_scene load_steps=8 format=3]
+[ext_resource type="PackedScene" path="res://world/maps/test_arena.tscn" id="1"]
+[ext_resource type="Script" path="res://world/maps/combat_arena.gd" id="2"]
+[ext_resource type="Script" path="res://systems/combat/combat_system.gd" id="3"]
+[ext_resource type="Script" path="res://systems/skills/skill_runner.gd" id="4"]
+[ext_resource type="Script" path="res://systems/effects/effect_resolver.gd" id="5"]
+[ext_resource type="Script" path="res://shared/vfx/combat_feedback.gd" id="6"]
+[ext_resource type="Script" path="res://systems/encounters/encounter_director.gd" id="7"]
+[node name="CombatArena" instance=ExtResource("1")]
+script = ExtResource("2")
+[node name="Title" parent="Interface/Hud/Rows" index="0"]
+text = "遗物试炼 · 雷霆旋风"
+[node name="Keys" parent="Interface/Hud/Rows" index="1"]
+text = "左键普攻 / 右键旋风 / 空格闪避 / Esc 暂停"
+[node name="CombatSystem" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("3")
+[node name="SkillRunner" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("4")
+[node name="EffectResolver" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("5")
+[node name="Feedback" type="Node3D" parent="."]
+process_mode = 1
+script = ExtResource("6")
+[node name="EncounterDirector" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("7")
+[node name="Enemies" type="Node3D" parent="."]
+process_mode = 1
+[node name="Projectiles" type="Node3D" parent="."]
+process_mode = 1
+[node name="CombatInfo" type="PanelContainer" parent="Interface"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -225.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+[node name="Rows" type="VBoxContainer" parent="Interface/CombatInfo"]
+layout_mode = 2
+mouse_filter = 2
+[node name="Build" type="Label" parent="Interface/CombatInfo/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 16
+[node name="Stats" type="Label" parent="Interface/CombatInfo/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 16
+[node name="Controls" type="Label" parent="Interface/CombatInfo/Rows"]
+layout_mode = 2
+mouse_filter = 2
+text = "1 基础装备 / 2 雷霆旋风 / R 重开遭遇 / F6 生成 100 怪 / F5 仅保存位置"
+theme_override_font_sizes/font_size = 16

@@ -63,9 +63,12 @@ godot --headless --path game res://debug/stress_test.tscn -- --stress-seconds=18
 | --- | --- |
 | `docs/plan.md` | MVP 与 Demo 完整规划 |
 | `docs/tasks.md` | 阶段任务状态 |
+| [docs/demo_tasks/README.md](docs/demo_tasks/README.md) | D1～D3 共 21 张独立任务卡、顺序与交接 |
 | `docs/engineering.md` | 当前模块职责与规则 |
 | `docs/assets.md`、`docs/asset_sources.md` | 资产规范与来源 |
 | `docs/validation.md` | 自动验证与人工试玩步骤 |
 | `docs/work_log.md`、`known_trap.md` | 开发记录与实际问题 |
 
 从本仓库空工程编写，未引入其他业务仓库代码或资源。
+
+2026-09-10：M0～M2 已合并 main；用户已试玩 M2 并反馈效果可以。D1～D3 已拆分，从 `docs/demo_tasks/P1_Task1.md` 开始。正式资产、经济时长和目标机性能按后续任务逐项验收。

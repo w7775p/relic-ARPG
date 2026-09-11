@@ -151,8 +151,8 @@ static func expedition(data: Variant, version: int = 4) -> bool:
 	var vectors: Array[String] = ["knockback_velocity", "velocity", "_dodge_direction"]
 	if not fields(data.player, SessionSnapshot.ACTOR + SessionSnapshot.PLAYER, vectors, ["is_dead"]):
 		return false
-	var skill_fields: Array[String] = SessionSnapshot.SKILL if version >= 4 else SessionSnapshot.SKILL_V3
-	var skill_bools: Array[String] = ["_exhausted", "_warcry_applied"] if version >= 4 else ["_exhausted"]
+	var skill_fields: Array = SessionSnapshot.SKILL if version >= 4 else SessionSnapshot.SKILL_V3
+	var skill_bools: Array = ["_exhausted", "_warcry_applied"] if version >= 4 else ["_exhausted"]
 	if not fields(data.skills, skill_fields, [], skill_bools):
 		return false
 	if data.player.health <= 0 or data.player.health > data.player.max_health or data.player.is_dead:

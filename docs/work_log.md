@@ -45,3 +45,7 @@
 代码验证提交 `fba5f85e423c5273e950dbc3e8a4b622ad01b2b9`。Windows [run 34574865158](https://github.com/w7775p/relic-ARPG/actions/runs/34574865158) 的全量场景回归、Windows 导出及导出包独立启动全部通过；构建 [artifact 10189231734](https://github.com/w7775p/relic-ARPG/actions/runs/34574865158/artifacts/10189231734)，SHA256 `e6a0b9a7dfc16a61c8b6b0a20ee27e1757042f3b2a4de87298d6b23151d9ae87`。
 
 下一步为 Resource 存档重构：拆分 `PlayerProfileResource`、`RunStateResource`、`SaveGameResource`，将旧 `session.json` 作为一次性迁移输入；迁移和 Resource 回归完成后删除 `LEGACY_EXPEDITION`、运行期 `in_town` 及仅服务 JSON v4 的兼容代码。详细边界见 `docs/hub_refactor.md`。
+
+## Resource 存档重构 S1（2026-09-11）
+
+从 `30b85f0` 建立 `feat/resource-save`。新增角色、物品、经济、进度、据点五个 Resource 模块、嵌套实例/词条/装配、GameSession 和按依赖恢复的注册协议。基线原有回归通过；Godot 4.7.2 导入与 ResourceModel 13 项通过。现有玩法暂未切换；下一步为完整检查点存储和多槽位。进度见 `resource_save_task.md`。

@@ -16,6 +16,15 @@ TEST_MARKERS = {
 }
 
 
+def _partial_text(value):
+    """把 TimeoutExpired 保留的字节或文本统一转换为可读日志。"""
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
 def main():
     """接收引擎路径并依次运行导入、启动和场景回归。"""
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -34,11 +43,15 @@ def main():
             *[[scene] for scene in TEST_MARKERS],
         ]
         for extra in commands:
-            result = subprocess.run(
-                [args.godot, "--headless", "--path", str(project), *extra],
-                env=env, capture_output=True, text=True, timeout=120,
-                encoding="utf-8", errors="replace",
-            )
+            try:
+                result = subprocess.run(
+                    [args.godot, "--headless", "--path", str(project), *extra],
+                    env=env, capture_output=True, text=True, timeout=120,
+                    encoding="utf-8", errors="replace",
+                )
+            except subprocess.TimeoutExpired as error:
+                print(_partial_text(error.stdout) + _partial_text(error.stderr))
+                raise SystemExit("Godot 场景验证超过 120 秒：" + " ".join(extra)) from error
             output = result.stdout + result.stderr
             print(output)
             if result.returncode or "SCRIPT ERROR:" in output or "ERROR:" in output:

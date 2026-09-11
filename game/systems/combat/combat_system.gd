@@ -60,7 +60,12 @@ func targets_in_range(origin: Vector3, radius_m: float) -> Array[CombatActor]:
 	return targets
 
 
-## 结算玩家伤害；派生技能不再掷暴击，感电提供 20% 伤害增幅。
+## 判断会触发直接命中收益和暴击闪电的攻击来源。
+static func is_direct_skill(skill_id: StringName) -> bool:
+	return skill_id == &"primary" or skill_id == &"whirlwind" or skill_id == &"sweep"
+
+
+## 结算玩家伤害；持续与派生技能不掷暴击，感电提供 20% 伤害增幅。
 func hit(target: CombatActor, amount: float, skill_id: StringName, root_id: int, build: BuildDefinition) -> DamageEvent:
 	if not is_instance_valid(target) or target.is_dead or amount <= 0.0:
 		return null
@@ -71,7 +76,7 @@ func hit(target: CombatActor, amount: float, skill_id: StringName, root_id: int,
 	event.root_attack_id = root_id
 	event.was_shocked = target.shock_remaining_sec > 0.0
 	event.build = build
-	var direct: bool = skill_id == &"primary" or skill_id == &"whirlwind"
+	var direct: bool = is_direct_skill(skill_id)
 	event.is_critical = direct and rng.randf() < build.critical_chance
 	var multiplier: float = build.critical_multiplier if event.is_critical else 1.0
 	if event.was_shocked:

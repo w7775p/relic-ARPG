@@ -20,5 +20,18 @@
 
 完成检查：差异与中文注释检查通过；资源、UID 及新场景已纳入；123 项自动回归完成，旧档完整状态及下一次随机一致；保留原 M2 收益/身份回归。图形服务无法建立套接字，可见试玩未验收。架构、README、任务总表、任务卡与验证记录同步；新增真实 JSON 版本比较陷阱。Windows 导出与独立启动通过，结果见下方交付记录。
 
-
 本轮交付：功能提交 `aaf8b2e7512c491601bc1426b890cd0cb7c9c6ba`，[PR #5](https://github.com/w7775p/relic-ARPG/pull/5)。对应 [Windows 工作流](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309) 的回归、导出与独立启动全部通过；[下载 Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309/artifacts/10178021093)。产物沿用工作流名称 relic-arpg-m2-windows，实际包含本卡功能。本次后续提交仅补验证交接文档，代码与已验证提交相同。可见试玩仍待验收。
+
+## P1_Task2：流血横扫、战吼与恢复药剂
+
+2026-09-11 从 P1_Task1 head `1ff89c7` 建立堆叠分支 `feat/p1-task2-bleed-skills`。完成流血横扫、三层有界流血快照、F 战吼、Q 恢复药剂、HUD 与基础反馈，并将完整探险存档升级到 v4；v2/v3 均可迁移到 v4。实际发现战吼临时护甲会被经验或装备属性重算覆盖，已修复并记录 `P1-02`。
+
+功能验证提交 `0dc446a8fdcce1d014aba6ef8c82457afa3b60c3`。Windows GitHub Actions 使用官方 Godot `4.7.2.stable.official.ed1daf0bf`，M0 20、M1 26、M2 46、P1_Task1 31、P1_Task2 36，共 159 项回归全部通过；Windows 导出成功，导出包独立启动进入 `M2_EXPEDITION_BOOT_READY`。工作流：[run 34552955127](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127)；构建：[artifact 10181489752](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127/artifacts/10181489752)。
+
+本轮交付：[PR #6](https://github.com/w7775p/relic-ARPG/pull/6)，base 为 `feat/p1-task1-loadout`。PR #5 合入后再将 base 调整为 `main`。可见画面、中文排版、声音和实际操作手感待人工试玩，任务状态为待验收。
+
+### P1_Task2 人工验收：保存失败诊断补丁
+
+2026-09-11 用户在 Windows 发布包点击保存后实际看到“保存失败”。自动回归此前只能证明 CI 临时用户目录可写，无法解释用户机器上的具体失败阶段，因此新增 F3 游戏内 DebugLog，常驻于 SceneRouter 下并读取 `user://logs/godot.log`；SaveManager 逐步输出结构校验、临时文件写入/flush、rename、绝对存档路径与错误码。首次实现放在 `debug/` 后被导出过滤规则排除，发布包独立启动捕获 preload 缺失，随后迁到 `ui/debug/`。
+
+修正后的 [run 34557223053](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053) 使用官方 Godot 4.7.2：原 159 项保持通过，新增 DebugLog 6 项通过，共 165 项；Windows 导出与发布包独立启动通过。构建：[artifact 10183010207](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053/artifacts/10183010207)，SHA256 `e84b77a7188f6e79feb6beeff40fc58660501bebbcd22845048325a71d3d4cd4`。用户机器上的原始保存失败原因仍需使用此新包复现并读取 `[DEBUGLOG][ERROR]` 行后定位。

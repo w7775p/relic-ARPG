@@ -1,6 +1,6 @@
 # M0 验证记录
 
-验证日期：2026-09-09。引擎：Godot `4.7.2.stable.official.ed1daf0bf`。执行环境：Linux 无窗口；当前未具备 Windows 桌面或可视化渲染环境。
+验证日期：2026-09-09。引擎：`4.7.2.stable.official.ed1daf0bf`。执行环境：Linux 无窗口；当前未具备 Windows 桌面或可视化渲染环境。
 
 | 验证项 | 方法 | 结果 |
 | --- | --- | --- |
@@ -18,7 +18,7 @@
 | 100 / 200 怪物性能 | M1 / Demo 压力场景 | 未实现，当前没有怪物 |
 | 正式模型导入与动画 | 美术源工程 → GLB → 包装场景 | 未验证，当前为原生几何体占位 |
 
-测试进程使用临时用户数据目录。正式运行的用户存档不会被测试覆盖。构建日志与本地包处于工作目录，CI（持续集成）成功后提供 Windows 下载产物。
+测试进程使用临时用户目录。正式运行的用户存档不会被测试覆盖。构建日志与本地包处于工作目录，CI（持续集成）成功后提供 Windows 下载产物。
 
 ## Windows 人工验收
 
@@ -79,5 +79,41 @@ M1 的无窗口 100 怪数据仍是历史战斗测试，不能充当 M2 带掉�
 
 图形运行：Xvfb :91 报 Cannot establish any listening sockets，未取得可见画面。人工待验收：新角色→技能与被动→选择三项与尝试第四项→出发→普攻/旋风→保存重启；1280×720 与 1920×1080 核对中文和下拉框、返回据点重置。Windows 导出与包启动结果随 PR 工作流记录。
 
-
 本轮交付：功能提交 `aaf8b2e7512c491601bc1426b890cd0cb7c9c6ba`，[PR #5](https://github.com/w7775p/relic-ARPG/pull/5)。对应 [Windows 工作流](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309) 的回归、导出与独立启动全部通过；[下载 Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34543081309/artifacts/10178021093)。产物沿用工作流名称 relic-arpg-m2-windows，实际包含本卡功能。本次后续提交仅补验证交接文档，代码与已验证提交相同。可见试玩仍待验收。
+
+## P1_Task2 本轮验证
+
+验证日期：2026-09-11。功能提交：`0dc446a8fdcce1d014aba6ef8c82457afa3b60c3`。GitHub Actions Windows Server 2025 环境下载并运行官方 Godot `4.7.2.stable.official.ed1daf0bf` 与同版 Windows 导出模板，命令入口为 `python tools/verify.py --godot <引擎路径>`。
+
+| 内容 | 实际结果 |
+| --- | --- |
+| 全量回归 | M0 20、M1 26、M2 46、P1_Task1 31、P1_Task2 36，共 159 项，0 失败 |
+| 横扫 | 前方命中、背后拒绝、3.2 米范围边缘、地形 LOS、稳定技能目录与据点装配通过 |
+| 流血 | 最多三层、满层替换最短剩余层、攻击时快照、跳伤无暴击闪电及直接命中回能通过 |
+| 死亡收益 | 流血击杀只登记一次击杀、经验、金币与击杀回能，死亡后续跳伤无重复收益 |
+| 战吼 | 单层护甲、即时回能、重复刷新、持续结束恢复基础护甲、属性重算保留增益通过 |
+| 恢复药剂 | 按最大生命比例治疗、冷却重复输入、满血、死亡和暂停拒绝通过 |
+| 暂停 | 流血、战吼和药剂计时冻结，暂停期间药剂请求拒绝 |
+| v4 存档 | 流血剩余/下一跳、战吼持续与冷却、药剂冷却、临时护甲完整恢复；v2/v3 迁移链通过 |
+| Windows 导出 | `relic_arpg.exe` 导出成功 |
+| 独立包启动 | headless 启动出现 `M1_COMBAT_BOOT_READY` 与 `M2_EXPEDITION_BOOT_READY`，日志无脚本错误 |
+
+工作流：[run 34552955127](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127)。Windows 构建：[artifact 10181489752](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127/artifacts/10181489752)，工作流记录的压缩产物 SHA256 为 `d1fac666058269ea87a4bae5156b191467a3fe955461be603e4bc33b35c534df`。
+
+当前执行容器尝试下载 Godot 4.7.2 Linux 版时无法解析 `github.com`，因此本轮没有新增 Linux 本地 Godot 结果；实际引擎证据来自上述 Windows Actions。人工待验收：可见运行横扫方向反馈、流血辨识度、战吼和药剂反馈、中文排版、声音听感与操作手感。交付 PR：[PR #6](https://github.com/w7775p/relic-ARPG/pull/6)。
+
+## P1_Task2 Windows 保存失败诊断（2026-09-11）
+
+用户在 Windows 发布包人工验收时点击保存实际显示“保存失败”。CI 的 v4 存档写入此前一直成功，因此无法从旧提示判断用户机器失败发生在结构校验、临时文件写入、flush 或正式文件替换中的哪一步。本轮增加游戏内 F3 DebugLog，读取 `user://logs/godot.log`；SceneRouter 启动时打印 Godot 版本、系统、`user://` 和 `session.json` 绝对路径，SaveManager 打印保存各阶段与错误码。
+
+| 内容 | 实际结果 |
+| --- | --- |
+| 原 M0/M1/M2/P1 回归 | 159 项继续通过 |
+| DebugLog 新回归 | 6 项通过：常驻控制台、F3 语义动作、发布包 stdout 实时 flush、固定日志路径、运行中读到探针、覆盖层打开 |
+| 合计 | 165 项，0 失败 |
+| Windows 存档写入 | CI 临时 Windows 用户目录多次创建/覆盖 `session.json` 成功；日志记录绝对路径与写入字符数 |
+| 首次发布包验证 | 失败：运行期控制台位于 `debug/`，被 `exclude_filter="tests/*,debug/*"` 排除；独立启动捕获 preload 缺失 |
+| 修正 | 将运行期控制台迁到 `ui/debug/`，开发用 `debug/*` 继续排除 |
+| 修正后发布包 | run 34557223053：导入回归、Windows 导出、独立启动、包上传全部通过 |
+
+修正工作流：[run 34557223053](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053)。Windows 构建：[artifact 10183010207](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053/artifacts/10183010207)，SHA256 `e84b77a7188f6e79feb6beeff40fc58660501bebbcd22845048325a71d3d4cd4`。下一项人工验证：使用该新包点击保存；若仍失败，F3 打开控制台并记录最新 `[DEBUGLOG][ERROR]` 及其前后保存步骤，据此定位用户机器上的真实失败原因。

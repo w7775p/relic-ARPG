@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "sweep"
+display_name = "流血横扫"
+slot = "main"
+tags = PackedStringArray("近战", "直接命中", "流血")
+damage_multiplier = 1.2
+range_m = 8.0
+energy_cost = 18.0
+cooldown_sec = 0.55
+facing_dot_min = 0.25
+bleed_damage_multiplier = 0.84
+bleed_duration_sec = 4.0
+bleed_tick_sec = 1.0
+bleed_max_stacks = 3

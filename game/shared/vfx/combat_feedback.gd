@@ -84,6 +84,27 @@ func slash(origin: Vector3, facing: Vector3, color: Color = Color(0.9, 0.85, 0.5
 	beam(origin + facing * 2.2, origin + facing * 1.4 + side, color, 0.12, 0.13)
 
 
+## 横扫按真实判定半径绘制扇形边界与中心线，确保玩家能看清方向和覆盖范围。
+func sweep(origin: Vector3, facing: Vector3, radius_m: float, facing_dot_min: float) -> void:
+	var flat_facing: Vector3 = Vector3(facing.x, 0.0, facing.z).normalized()
+	if flat_facing.length_squared() < 0.001:
+		return
+	var color: Color = Color(1.0, 0.2, 0.08)
+	var half_angle: float = acos(clampf(facing_dot_min, -1.0, 1.0))
+	var segments: int = 10
+	var points: Array[Vector3] = []
+	for index: int in range(segments + 1):
+		var weight: float = float(index) / float(segments)
+		var angle: float = lerpf(-half_angle, half_angle, weight)
+		points.append(origin + flat_facing.rotated(Vector3.UP, angle) * radius_m)
+	beam(origin, points[0], color, 0.24, 0.11)
+	for index: int in range(points.size() - 1):
+		beam(points[index], points[index + 1], color, 0.24, 0.11)
+	beam(points[points.size() - 1], origin, color, 0.24, 0.11)
+	beam(origin, origin + flat_facing * radius_m, Color(1.0, 0.55, 0.15), 0.24, 0.15)
+	slash(origin, flat_facing, color)
+
+
 ## 命中反馈只改变表现，原始结算事件保持完整。
 func on_hit(event: DamageEvent) -> void:
 	if _sound_remaining <= 0.0:

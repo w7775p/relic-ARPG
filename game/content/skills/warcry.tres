@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "warcry"
+display_name = "战吼"
+slot = "auxiliary"
+tags = PackedStringArray("辅助", "防御", "回能")
+armor_bonus = 35.0
+energy_restore = 30.0
+duration_sec = 4.0
+cooldown_sec = 6.0

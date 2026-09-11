@@ -95,7 +95,7 @@ func refresh() -> void:
 		return
 	inventory_columns.visible = source != 3
 	inventory_actions.visible = source != 3
-	loadout_view.visible = source == 3
+	loadout_view.get_parent().visible = source == 3
 	_refresh_loadout()
 	var inventory: InventoryState = session.inventory
 	summary.text = "%s · 等级 %d · 经验 %d/%d · 金币 %d · 材料 %d\n背包 %d/40 · 仓库 %d/120 · 难度 %d · 通关 %d 次" % ["据点整备" if session.in_town else "探险中", inventory.level, inventory.experience, inventory.level * 60, inventory.gold, inventory.materials, inventory.bag.size(), inventory.stash.size(), inventory.difficulty, inventory.completed]
@@ -149,11 +149,16 @@ func _on_action(key: String) -> void:
 	refresh()
 	hint.text = message + "\n" + hint.text
 
-## 原生容器承载技能槽和六个被动，与物品页共用顶部入口。
+## 原生滚动容器承载技能槽和六个被动，低分辨率下仍可访问底部属性与重置按钮。
 func _create_loadout(rows: VBoxContainer) -> void:
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.follow_focus = true
+	rows.add_child(scroll)
 	loadout_view = VBoxContainer.new()
-	loadout_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	rows.add_child(loadout_view)
+	loadout_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(loadout_view)
 	for slot: String in ["basic", "main", "auxiliary"]:
 		var row: HBoxContainer = HBoxContainer.new()
 		loadout_view.add_child(row)
@@ -203,7 +208,7 @@ func _refresh_loadout() -> void:
 	for id: String in passive_buttons:
 		passive_buttons[id].set_pressed_no_signal(state.passives.has(id))
 		passive_buttons[id].disabled = not session.in_town
-	attributes.text = "已选 %d/3｜%s\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒" % [state.passives.size(), "据点可免费调整；F 辅助槽暂空" if session.in_town else "探险中只能查看", build.damage, build.critical_chance * 100, build.whirlwind_radius_m, session.inventory.defense("max_health"), session.inventory.defense("armor"), build.idle_energy_regen]
+	attributes.text = "已选 %d/3｜%s\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒\n右键可选旋风或流血横扫；F 可装战吼；Q 恢复药剂独立于装备。" % [state.passives.size(), "据点可免费调整" if session.in_town else "探险中只能查看", build.damage, build.critical_chance * 100, build.whirlwind_radius_m, session.inventory.defense("max_health"), session.inventory.defense("armor"), build.idle_energy_regen]
 
 ## 失败原因写入共用提示，包括第四项选择被拒绝。
 func _on_loadout(action: String, id: String) -> void:

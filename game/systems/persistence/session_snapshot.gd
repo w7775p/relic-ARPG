@@ -1,10 +1,11 @@
 class_name SessionSnapshot
 extends RefCounted
-## 显式字段快照，保存攻击动作、弹体和冷却；导航路径在恢复后重算。
+## 显式字段快照，保存攻击动作、弹体、持续状态和冷却；导航路径在恢复后重算。
 const ACTOR: Array[String] = ["health", "max_health", "armor", "is_dead", "shock_remaining_sec", "stagger_remaining_sec", "knockback_velocity", "velocity"]
 const ENEMY: Array[String] = ["state", "state_remaining", "_cooldown", "_locked_direction", "attacks_performed"]
 const PLAYER: Array[String] = ["dodge_remaining_sec", "cooldown_remaining_sec", "_dodge_direction"]
-const SKILL: Array[String] = ["energy", "_attack_remaining", "_whirlwind_remaining", "_exhausted"]
+const SKILL_V3: Array[String] = ["energy", "_attack_remaining", "_whirlwind_remaining", "_exhausted"]
+const SKILL: Array[String] = ["energy", "_attack_remaining", "_whirlwind_remaining", "_sweep_remaining", "_warcry_remaining", "_warcry_cooldown_remaining", "_warcry_applied", "_potion_remaining", "_exhausted"]
 const PROJECTILE: Array[String] = ["direction", "damage", "lifetime_sec", "speed_mps"]
 
 ## 向量转换为 JSON 数组。
@@ -38,9 +39,22 @@ static func apply(object: Object, data: Dictionary) -> void:
 static func loadout(state: LoadoutState) -> Dictionary:
 	return state.snapshot()
 
-## v2 完整会话迁移，仅补充默认装配；其他字段深复制保留。
+## v2 完整会话迁移到 v3，仅补充默认装配；其他字段深复制保留。
 static func migrate_v2(data: Dictionary) -> Dictionary:
 	var result: Dictionary = data.duplicate(true)
 	result.version = 3
 	result.expedition.loadout = LoadoutState.new().snapshot()
+	return result
+
+## v3 装配存档迁移到 v4，补空流血与新增技能瞬态。
+static func migrate_v3(data: Dictionary) -> Dictionary:
+	var result: Dictionary = data.duplicate(true)
+	result.version = 4
+	for enemy: Dictionary in result.expedition.enemies:
+		enemy.bleeds = []
+	result.expedition.skills._sweep_remaining = 0.0
+	result.expedition.skills._warcry_remaining = 0.0
+	result.expedition.skills._warcry_cooldown_remaining = 0.0
+	result.expedition.skills._warcry_applied = false
+	result.expedition.skills._potion_remaining = 0.0
 	return result

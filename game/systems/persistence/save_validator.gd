@@ -1,6 +1,6 @@
 class_name SaveValidator
 extends RefCounted
-## 在恢复前检查版本内结构、内容编号和物品唯一归属，拒绝损坏数据。
+## 在恢复前检查版本内结构、内容编号、持续状态和物品唯一归属，拒绝损坏数据。
 
 ## 校验有限数值和允许范围。
 static func number(value: Variant, low: float = 0.0, high: float = 1.0e12) -> bool:
@@ -16,7 +16,7 @@ static func vector(value: Variant) -> bool:
 	return true
 
 ## 快照字段必须完整且没有未知成员，避免任意对象属性写入。
-static func fields(data: Variant, keys: Array, vectors: Array[String] = [], booleans: Array[String] = []) -> bool:
+static func fields(data: Variant, keys: Array, vectors: Array = [], booleans: Array = []) -> bool:
 	if not data is Dictionary or data.size() != keys.size():
 		return false
 	for key: String in keys:
@@ -30,6 +30,25 @@ static func fields(data: Variant, keys: Array, vectors: Array[String] = [], bool
 				return false
 		elif not number(data[key], -10000.0):
 			return false
+	return true
+
+## 校验单层流血快照；仅允许玩家横扫来源和固定十字段结构。
+static func bleed(data: Variant) -> bool:
+	if not data is Dictionary or data.size() != 10:
+		return false
+	for key: String in ["source", "root_attack_id", "damage", "remaining_sec", "next_tick_sec", "tick_interval_sec", "kill_energy", "death_explosion", "explosion_radius_m", "explosion_damage"]:
+		if not data.has(key):
+			return false
+	if data.source != "player:sweep" or not data.death_explosion is bool:
+		return false
+	if not number(data.root_attack_id, 1) or float(data.root_attack_id) != int(data.root_attack_id):
+		return false
+	if not number(data.damage, 0.0001, 1000000.0) or not number(data.remaining_sec, 0.0, 60.0):
+		return false
+	if not number(data.next_tick_sec, 0.0, 60.0) or not number(data.tick_interval_sec, 0.01, 60.0):
+		return false
+	if not number(data.kill_energy, 0.0, 10000.0) or not number(data.explosion_radius_m, 0.0, 1000.0) or not number(data.explosion_damage, 0.0, 1000000.0):
+		return false
 	return true
 
 ## 检查底材、品质、独特装备部位、词条等级范围及互斥组。
@@ -70,7 +89,7 @@ static func item(data: Variant, ids: Dictionary) -> bool:
 	return true
 
 ## 检查完整会话，随机状态以字符串保存以避免 JSON 浮点精度损失。
-static func expedition(data: Variant, version: int = 3) -> bool:
+static func expedition(data: Variant, version: int = 4) -> bool:
 	if not data is Dictionary:
 		return false
 	for key: String in ["inventory", "in_town", "wave_completed", "minimum_quality", "ground", "next_drop_id", "next_item_id", "loot_rng", "combat_rng", "enemies", "projectiles", "player", "position", "facing", "skills", "clock", "attack_id", "kills", "damage", "lightning_ready", "lightning_count", "explosion_count"]:
@@ -88,7 +107,7 @@ static func expedition(data: Variant, version: int = 3) -> bool:
 			return false
 	if not number(data.minimum_quality, 0, 2) or not number(data.facing, -10000, 10000):
 		return false
-	if version == 3 and not LoadoutState.valid(data.get("loadout")):
+	if version >= 3 and not LoadoutState.valid(data.get("loadout")):
 		return false
 	if version == 2 and data.has("loadout"):
 		return false
@@ -132,12 +151,22 @@ static func expedition(data: Variant, version: int = 3) -> bool:
 	var vectors: Array[String] = ["knockback_velocity", "velocity", "_dodge_direction"]
 	if not fields(data.player, SessionSnapshot.ACTOR + SessionSnapshot.PLAYER, vectors, ["is_dead"]):
 		return false
-	if not fields(data.skills, SessionSnapshot.SKILL, [], ["_exhausted"]):
+	var skill_fields: Array = SessionSnapshot.SKILL if version >= 4 else SessionSnapshot.SKILL_V3
+	var skill_bools: Array = ["_exhausted", "_warcry_applied"] if version >= 4 else ["_exhausted"]
+	if not fields(data.skills, skill_fields, [], skill_bools):
 		return false
 	if data.player.health <= 0 or data.player.health > data.player.max_health or data.player.is_dead:
 		return false
 	if data.skills.energy < 0 or data.skills.energy > 100:
 		return false
+	if version >= 4:
+		for key: String in ["_sweep_remaining", "_warcry_remaining", "_warcry_cooldown_remaining", "_potion_remaining"]:
+			if not number(data.skills[key], 0.0, 120.0):
+				return false
+		if data.skills._warcry_applied and data.skills._warcry_remaining <= 0.0:
+			return false
+		if not data.skills._warcry_applied and data.skills._warcry_remaining != 0.0:
+			return false
 	for enemy: Variant in data.enemies:
 		if not enemy is Dictionary or not enemy.get("definition") is String:
 			return false
@@ -145,6 +174,15 @@ static func expedition(data: Variant, version: int = 3) -> bool:
 		if not ["res://content/enemies/melee.tres", "res://content/enemies/ranged.tres", "res://content/enemies/charger.tres", "res://content/enemies/elite.tres"].has(path):
 			return false
 		var runtime: Dictionary = enemy.duplicate()
+		if version >= 4:
+			if not enemy.get("bleeds") is Array or enemy.bleeds.size() > SkillRunner.SWEEP.bleed_max_stacks:
+				return false
+			for layer: Variant in enemy.bleeds:
+				if not bleed(layer) or int(layer.root_attack_id) > int(data.attack_id):
+					return false
+			runtime.erase("bleeds")
+		elif enemy.has("bleeds"):
+			return false
 		runtime.erase("definition")
 		if not fields(runtime, SessionSnapshot.ACTOR + SessionSnapshot.ENEMY + ["position", "damage"], ["knockback_velocity", "velocity", "_locked_direction", "position"], ["is_dead"]):
 			return false

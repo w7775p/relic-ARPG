@@ -1,7 +1,7 @@
 class_name LoadoutState
 extends RefCounted
 ## 会话拥有装配和被动；地点授权由探险会话统一检查。
-const SKILLS: Array[SkillDefinition] = [preload("res://content/skills/primary.tres"), preload("res://content/skills/whirlwind.tres")]
+const SKILLS: Array[SkillDefinition] = [preload("res://content/skills/primary.tres"), preload("res://content/skills/whirlwind.tres"), preload("res://content/skills/sweep.tres"), preload("res://content/skills/warcry.tres")]
 const PASSIVES: Array[PassiveDefinition] = [preload("res://content/passives/might.tres"), preload("res://content/passives/precision.tres"), preload("res://content/passives/reach.tres"), preload("res://content/passives/vitality.tres"), preload("res://content/passives/guard.tres"), preload("res://content/passives/recovery.tres")]
 const LIMIT: int = 3
 var slots: Dictionary = {"basic":"primary", "main":"whirlwind", "auxiliary":""}

@@ -1,5 +1,5 @@
 extends "res://world/maps/test_arena.gd"
-## M1 场地扩展：装配战斗、技能、触发、遭遇与真实战斗 HUD。
+## M1/D1 场地扩展：装配战斗、技能、触发、遭遇与真实战斗 HUD。
 
 @export var auto_spawn: bool = true
 
@@ -57,8 +57,8 @@ func _process(delta: float) -> void:
 	if _hud_remaining > 0.0:
 		return
 	_hud_remaining = 0.1
-	$Interface/Hud/Rows/Position.text = "生命 %.0f / %.0f　能量 %.0f / %.0f　闪避 %.1f 秒" % [player.health, player.max_health, skills.energy, skills.max_energy, player.cooldown_remaining_sec]
-	$Interface/CombatInfo/Rows/Stats.text = "敌人 %d　击杀 %d　闪电 %d　爆炸 %d\n帧率 %d　物理 %.2f 毫秒" % [combat.enemies.size(), combat.kills, effects.lightning_count, effects.explosion_count, Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0]
+	$Interface/Hud/Rows/Position.text = "生命 %.0f / %.0f　能量 %.0f / %.0f　闪避 %.1f 秒\n战吼持续 %.1f 秒 / 冷却 %.1f 秒　药剂冷却 %.1f 秒" % [player.health, player.max_health, skills.energy, skills.max_energy, player.cooldown_remaining_sec, skills._warcry_remaining, skills._warcry_cooldown_remaining, skills._potion_remaining]
+	$Interface/CombatInfo/Rows/Stats.text = "敌人 %d　击杀 %d　闪电 %d　爆炸 %d　流血跳数 %d\n帧率 %d　物理 %.2f 毫秒" % [combat.enemies.size(), combat.kills, effects.lightning_count, effects.explosion_count, effects.bleed_tick_count, Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0]
 	if combat.enemies.is_empty() and not player.is_dead:
 		status.text = "本轮清理完成！按 R 开始下一轮，或按 1 / 2 比较装备"
 

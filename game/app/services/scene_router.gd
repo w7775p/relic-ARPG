@@ -3,7 +3,7 @@ extends Node
 
 const MAIN_MENU: String = "res://ui/menus/main_menu.tscn"
 const TEST_ARENA: String = "res://world/maps/expedition.tscn"
-const DEBUG_CONSOLE: Script = preload("res://debug/debug_console.gd")
+const DEBUG_CONSOLE: Script = preload("res://ui/debug/debug_console.gd")
 
 var should_restore_session: bool = false
 var _debug_console: CanvasLayer

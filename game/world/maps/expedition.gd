@@ -123,14 +123,14 @@ func toggle_inventory() -> void:
 	else:
 		show_inventory()
 
-## 穿脱与升级重新生成属性快照，当前生命只截断超出的上限。
+## 穿脱与升级重新生成属性快照；战吼生效时保留其单层临时护甲。
 func _on_inventory_changed() -> void:
 	if not is_instance_valid(skills.actor):
 		return
 	skills.loadout = inventory.loadout
 	skills.equip(inventory.build())
 	player.max_health = inventory.defense("max_health")
-	player.armor = inventory.defense("armor")
+	player.armor = inventory.defense("armor") + (SkillRunner.WARCRY.armor_bonus if skills._warcry_applied else 0.0)
 	player.health = minf(player.health, player.max_health)
 	if panel != null:
 		panel.refresh()

@@ -3,7 +3,8 @@ extends Node
 
 const MAIN_MENU: String = "res://ui/menus/main_menu.tscn"
 const HUB: String = "res://world/hub/hub.tscn"
-const EXPEDITION: String = "res://world/maps/expedition.tscn"
+const EXPEDITION: String = "res://world/maps/expedition_runtime.tscn"
+const LEGACY_EXPEDITION: String = "res://world/maps/expedition.tscn"
 const DEBUG_CONSOLE: Script = preload("res://ui/debug/debug_console.gd")
 
 var should_restore_session: bool = false
@@ -62,10 +63,10 @@ func has_character_state() -> bool:
 	return _has_transition_state
 
 
-## 进入旧兼容探险入口；完整据点切换在 Hub 场景接通后替换此调用。
+## 新角色先进入独立 Hub；旧 JSON 继续入口暂留给下一轮 Resource 存档迁移。
 func start_session(restore: bool = false) -> void:
 	should_restore_session = restore
-	_change_scene(EXPEDITION)
+	_change_scene(LEGACY_EXPEDITION if restore else HUB)
 
 
 ## 切换到独立据点场景。
@@ -74,7 +75,7 @@ func open_hub() -> void:
 	_change_scene(HUB)
 
 
-## 切换到探险场景；角色状态应在调用前通过 stage_character_state 暂存。
+## 切换到正式探险运行场景；角色状态应在调用前通过 stage_character_state 暂存。
 func open_expedition() -> void:
 	should_restore_session = false
 	_change_scene(EXPEDITION)

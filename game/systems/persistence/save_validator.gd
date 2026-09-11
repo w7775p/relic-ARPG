@@ -16,7 +16,7 @@ static func vector(value: Variant) -> bool:
 	return true
 
 ## 快照字段必须完整且没有未知成员，避免任意对象属性写入。
-static func fields(data: Variant, keys: Array, vectors: Array[String] = [], booleans: Array[String] = []) -> bool:
+static func fields(data: Variant, keys: Array, vectors: Array = [], booleans: Array = []) -> bool:
 	if not data is Dictionary or data.size() != keys.size():
 		return false
 	for key: String in keys:

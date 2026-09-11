@@ -24,6 +24,8 @@ func _ready() -> void:
 	add_child(panel)
 	panel.show()
 	panel.refresh()
+	if OS.get_cmdline_user_args().has("--smoke-combat"):
+		_depart_for_smoke.call_deferred()
 
 
 ## 据点向共用背包面板声明当前位置能力。
@@ -40,6 +42,12 @@ func _create_new_character() -> void:
 	starter.affixes = []
 	inventory.bag.append(starter)
 	inventory.equip(0)
+
+
+## 导出包 smoke 沿正式 Hub→探险路径自动出发，避免维护第二套启动流程。
+func _depart_for_smoke() -> void:
+	SceneRouter.stage_character_state(inventory, generator, minimum_quality)
+	SceneRouter.open_expedition()
 
 
 ## Hub 没有战斗世界；关闭整备只隐藏面板，再按 I 或 Esc 可重新打开。

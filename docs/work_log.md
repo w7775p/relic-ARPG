@@ -35,3 +35,13 @@
 2026-09-11 用户在 Windows 发布包点击保存后实际看到“保存失败”。自动回归此前只能证明 CI 临时用户目录可写，无法解释用户机器上的具体失败阶段，因此新增 F3 游戏内 DebugLog，常驻于 SceneRouter 下并读取 `user://logs/godot.log`；SaveManager 逐步输出结构校验、临时文件写入/flush、rename、绝对存档路径与错误码。首次实现放在 `debug/` 后被导出过滤规则排除，发布包独立启动捕获 preload 缺失，随后迁到 `ui/debug/`。
 
 修正后的 [run 34557223053](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053) 使用官方 Godot 4.7.2：原 159 项保持通过，新增 DebugLog 6 项通过，共 165 项；Windows 导出与发布包独立启动通过。构建：[artifact 10183010207](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053/artifacts/10183010207)，SHA256 `e84b77a7188f6e79feb6beeff40fc58660501bebbcd22845048325a71d3d4cd4`。用户机器上的原始保存失败原因仍需使用此新包复现并读取 `[DEBUGLOG][ERROR]` 行后定位。
+
+## Hub / in_town 场景拆分
+
+2026-09-11 从最新 main `37750a5` 建立 `refactor/hub-scene`。按可独立验证子任务分别提交：InventoryPanel 地点能力接口、SceneRouter 一次性角色状态交接、独立 Hub 场景、Hub 驱动的 ExpeditionRuntime、正式路由切换、旧 JSON 自动保存解耦、HubFlow 回归和发行 smoke 适配。
+
+正常新角色流程已使用 `MainMenu → Hub → ExpeditionRuntime → Hub`。Hub 负责背包、装备、仓库、出售、技能与被动整备；ExpeditionRuntime 负责战斗世界。撤离和死亡结束当前探险场景并切换回 Hub。旧 `expedition.gd` 中的 `in_town` 与 v4 JSON 据点快照仅保留给旧档兼容、历史回归和下一轮迁移输入，新据点服务禁止继续接入该分支。
+
+代码验证提交 `fba5f85e423c5273e950dbc3e8a4b622ad01b2b9`。Windows [run 34574865158](https://github.com/w7775p/relic-ARPG/actions/runs/34574865158) 的全量场景回归、Windows 导出及导出包独立启动全部通过；构建 [artifact 10189231734](https://github.com/w7775p/relic-ARPG/actions/runs/34574865158/artifacts/10189231734)，SHA256 `e6a0b9a7dfc16a61c8b6b0a20ee27e1757042f3b2a4de87298d6b23151d9ae87`。
+
+下一步为 Resource 存档重构：拆分 `PlayerProfileResource`、`RunStateResource`、`SaveGameResource`，将旧 `session.json` 作为一次性迁移输入；迁移和 Resource 回归完成后删除 `LEGACY_EXPEDITION`、运行期 `in_town` 及仅服务 JSON v4 的兼容代码。详细边界见 `docs/hub_refactor.md`。

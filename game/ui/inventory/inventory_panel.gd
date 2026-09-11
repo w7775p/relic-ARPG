@@ -66,6 +66,12 @@ func _ready() -> void:
 	rows.add_child(hint)
 	refresh()
 
+## 当前会话是否处于据点；新 Hub 场景优先提供显式接口，旧探险场景保留兼容回退。
+func _is_hub() -> bool:
+	if session != null and session.has_method("is_hub"):
+		return bool(session.call("is_hub"))
+	return bool(session.get("in_town")) if session != null else false
+
 ## 每个说明列独立滚动，低分辨率下仍可访问全部词条。
 func _description_column(parent: Control) -> Label:
 	var scroll: ScrollContainer = ScrollContainer.new()
@@ -93,12 +99,13 @@ func entries() -> Array:
 func refresh() -> void:
 	if items == null:
 		return
+	var hub: bool = _is_hub()
 	inventory_columns.visible = source != 3
 	inventory_actions.visible = source != 3
 	loadout_view.get_parent().visible = source == 3
 	_refresh_loadout()
 	var inventory: InventoryState = session.inventory
-	summary.text = "%s · 等级 %d · 经验 %d/%d · 金币 %d · 材料 %d\n背包 %d/40 · 仓库 %d/120 · 难度 %d · 通关 %d 次" % ["据点整备" if session.in_town else "探险中", inventory.level, inventory.experience, inventory.level * 60, inventory.gold, inventory.materials, inventory.bag.size(), inventory.stash.size(), inventory.difficulty, inventory.completed]
+	summary.text = "%s · 等级 %d · 经验 %d/%d · 金币 %d · 材料 %d\n背包 %d/40 · 仓库 %d/120 · 难度 %d · 通关 %d 次" % ["据点整备" if hub else "探险中", inventory.level, inventory.experience, inventory.level * 60, inventory.gold, inventory.materials, inventory.bag.size(), inventory.stash.size(), inventory.difficulty, inventory.completed]
 	items.clear()
 	var values: Array = entries()
 	for item: Dictionary in values:
@@ -112,10 +119,10 @@ func refresh() -> void:
 		match key:
 			"equip", "lock", "discard": enabled = enabled and source == 0
 			"unequip": enabled = enabled and source == 1
-			"store", "sell": enabled = enabled and source == 0 and session.in_town
-			"retrieve": enabled = enabled and source == 2 and session.in_town
-			"depart": enabled = session.in_town
-			"return": enabled = not session.in_town
+			"store", "sell": enabled = enabled and source == 0 and hub
+			"retrieve": enabled = enabled and source == 2 and hub
+			"depart": enabled = hub
+			"return": enabled = not hub
 			"filter": enabled = true
 		action_buttons[key].disabled = not enabled
 	hint.text = "金币材料靠近自动拾取；装备靠近按 E，重叠物品按 Tab 切换。锁定物品可穿戴，禁止出售或丢弃。\n掉落过滤：%s；通关后撤离提高难度，前三次通关依次奖励核心独特装备。" % ["全部", "魔法及以上", "稀有及以上"][session.minimum_quality]
@@ -194,11 +201,12 @@ func _create_loadout(rows: VBoxContainer) -> void:
 
 ## 根据真实构筑显示合计、选择数与据点限制。
 func _refresh_loadout() -> void:
+	var hub: bool = _is_hub()
 	var state: LoadoutState = session.inventory.loadout
 	var build: BuildDefinition = session.inventory.build()
 	for slot: String in skill_choices:
 		var choice: OptionButton = skill_choices[slot]
-		choice.disabled = not session.in_town
+		choice.disabled = not hub
 		for index: int in range(choice.item_count):
 			var id: String = choice.get_item_metadata(index)
 			if not id.is_empty():
@@ -207,8 +215,8 @@ func _refresh_loadout() -> void:
 				choice.select(index)
 	for id: String in passive_buttons:
 		passive_buttons[id].set_pressed_no_signal(state.passives.has(id))
-		passive_buttons[id].disabled = not session.in_town
-	attributes.text = "已选 %d/3｜%s\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒\n右键可选旋风或流血横扫；F 可装战吼；Q 恢复药剂独立于装备。" % [state.passives.size(), "据点可免费调整" if session.in_town else "探险中只能查看", build.damage, build.critical_chance * 100, build.whirlwind_radius_m, session.inventory.defense("max_health"), session.inventory.defense("armor"), build.idle_energy_regen]
+		passive_buttons[id].disabled = not hub
+	attributes.text = "已选 %d/3｜%s\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒\n右键可选旋风或流血横扫；F 可装战吼；Q 恢复药剂独立于装备。" % [state.passives.size(), "据点可免费调整" if hub else "探险中只能查看", build.damage, build.critical_chance * 100, build.whirlwind_radius_m, session.inventory.defense("max_health"), session.inventory.defense("armor"), build.idle_energy_regen]
 
 ## 失败原因写入共用提示，包括第四项选择被拒绝。
 func _on_loadout(action: String, id: String) -> void:

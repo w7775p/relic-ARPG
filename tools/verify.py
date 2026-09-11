@@ -1,4 +1,4 @@
-"""在临时用户目录运行引擎导入和 M0/M1/M2/D1/DebugLog 回归，发现脚本错误时失败。"""
+"""在临时用户目录运行引擎导入和 M0/M1/M2/D1/Hub/DebugLog 回归，发现脚本错误时失败。"""
 import argparse
 import os
 from pathlib import Path
@@ -13,6 +13,7 @@ TEST_MARKERS = {
     "res://tests/m2_loop.tscn": "M2_LOOP_RESULT: 0 failures",
     "res://tests/p1_loadout.tscn": "P1_LOADOUT_RESULT: 0 failures",
     "res://tests/p1_bleed_skills.tscn": "P1_BLEED_SKILLS_RESULT: 0 failures",
+    "res://tests/hub_flow.tscn": "HUB_FLOW_RESULT: 0 failures",
     "res://tests/debug_console.tscn": "DEBUG_CONSOLE_RESULT: 0 failures",
 }
 

@@ -1,12 +1,17 @@
 extends Node
-## 管理主菜单和测试场地切换，离开场景时解除暂停；持有常驻 DebugLog 覆盖层。
+## 管理主菜单、据点与探险切换；离开场景时解除暂停，并持有一次性跨场景角色状态。
 
 const MAIN_MENU: String = "res://ui/menus/main_menu.tscn"
-const TEST_ARENA: String = "res://world/maps/expedition.tscn"
+const HUB: String = "res://world/hub/hub.tscn"
+const EXPEDITION: String = "res://world/maps/expedition.tscn"
 const DEBUG_CONSOLE: Script = preload("res://ui/debug/debug_console.gd")
 
 var should_restore_session: bool = false
 var _debug_console: CanvasLayer
+var _transition_inventory: InventoryState
+var _transition_generator: ItemGenerator
+var _transition_minimum_quality: int = 0
+var _has_transition_state: bool = false
 
 
 ## 创建跨场景常驻调试控制台，并打印本机运行路径。
@@ -28,10 +33,51 @@ func debug_log(level: String, message: String) -> void:
 		print(line)
 
 
-## 进入测试场地；读取存档由场地初始化时执行。
+## 暂存一次跨场景角色状态；目标场景读取后立即清空引用。
+func stage_character_state(inventory: InventoryState, generator: ItemGenerator, minimum_quality: int) -> void:
+	_transition_inventory = inventory
+	_transition_generator = generator
+	_transition_minimum_quality = minimum_quality
+	_has_transition_state = true
+
+
+## 取得一次性跨场景角色状态，避免 SceneRouter 长期持有玩法数据。
+func take_character_state() -> Dictionary:
+	if not _has_transition_state:
+		return {}
+	var result: Dictionary = {
+		"inventory": _transition_inventory,
+		"generator": _transition_generator,
+		"minimum_quality": _transition_minimum_quality,
+	}
+	_transition_inventory = null
+	_transition_generator = null
+	_transition_minimum_quality = 0
+	_has_transition_state = false
+	return result
+
+
+## 判断当前是否有等待目标场景领取的角色状态。
+func has_character_state() -> bool:
+	return _has_transition_state
+
+
+## 进入旧兼容探险入口；完整据点切换在 Hub 场景接通后替换此调用。
 func start_session(restore: bool = false) -> void:
 	should_restore_session = restore
-	_change_scene(TEST_ARENA)
+	_change_scene(EXPEDITION)
+
+
+## 切换到独立据点场景。
+func open_hub() -> void:
+	should_restore_session = false
+	_change_scene(HUB)
+
+
+## 切换到探险场景；角色状态应在调用前通过 stage_character_state 暂存。
+func open_expedition() -> void:
+	should_restore_session = false
+	_change_scene(EXPEDITION)
 
 
 ## 回到主菜单，保留已写入的存档。

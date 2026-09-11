@@ -1,5 +1,5 @@
 extends "res://world/maps/combat_arena.gd"
-## M2 刷宝会话：真实装备、地面战利品、整备、成长与探险恢复。
+## M2/D1 刷宝会话：真实装备、技能状态、地面战利品、整备、成长与探险恢复。
 const PANEL: Script = preload("res://ui/inventory/inventory_panel.gd")
 var inventory: InventoryState = InventoryState.new()
 var generator: ItemGenerator = ItemGenerator.new()
@@ -26,8 +26,8 @@ func _ready() -> void:
 	panel.session = self
 	$Interface.add_child(panel)
 	panel.hide()
-	$Interface/CombatInfo/Rows/Controls.text = "I 背包装备 / E 拾取 / Tab 切换物品 / T 撤离 / F5 完整保存"
-	if saved.get("version", 0) == 3:
+	$Interface/CombatInfo/Rows/Controls.text = "I 背包装备 / E 拾取 / Tab 切换物品 / F 战吼 / Q 药剂 / T 撤离 / F5 完整保存"
+	if saved.get("version", 0) == 4:
 		restore_expedition(saved.expedition)
 	else:
 		var starter: Dictionary = generator.generate(1)
@@ -70,7 +70,7 @@ func _process(delta: float) -> void:
 		text += "\n已清场，拾取战利品后按 T 撤离，提高下一趟难度"
 	status.text = text
 
-## M2 键位只控制真实流程，测试预设继续留在 M1 场景。
+## M2 键位只控制真实流程，测试预设继续留在独立调试资源。
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
@@ -108,6 +108,8 @@ func show_inventory() -> void:
 	get_tree().paused = true
 	skills.channel_requested = false
 	skills.primary_requested = false
+	skills.auxiliary_requested = false
+	skills.potion_requested = false
 	skills.is_channeling = false
 	panel.show()
 	panel.refresh()
@@ -226,7 +228,7 @@ func _clear_ground() -> void:
 	for drop: Dictionary in ground.duplicate():
 		_remove_drop(drop)
 
-## 据点出发恢复生命与能量，难度同时增加怪物生命、伤害与金币。
+## 据点出发恢复生命、能量和药剂，难度同时增加怪物生命、伤害与金币。
 func depart() -> void:
 	if not in_town:
 		return
@@ -309,7 +311,7 @@ func inventory_action(action: String, source: int, index: int) -> String:
 			success = true
 	return "操作完成" if success else "操作失败：请检查地点、选中物品、锁定状态和容量"
 
-## 保存前完成当前有限触发链；保留敌人动作、弹体、技能冷却及独立随机序列。
+## 保存前完成当前有限触发链；保留敌人持续状态、动作、弹体、技能冷却及独立随机序列。
 func snapshot_expedition() -> Dictionary:
 	effects.drain(1000000)
 	var enemies: Array = []
@@ -318,6 +320,7 @@ func snapshot_expedition() -> Dictionary:
 		data.position = SessionSnapshot.vector(enemy.position)
 		data.definition = enemy.get_meta("definition_path", enemy.definition.resource_path)
 		data.damage = enemy.definition.damage
+		data.bleeds = enemy.bleeds.duplicate(true)
 		enemies.append(data)
 	var projectiles: Array = []
 	for projectile: EnemyProjectile in $Projectiles.get_children():
@@ -355,10 +358,14 @@ func restore_expedition(data: Dictionary) -> void:
 		var enemy: EnemyController = encounters.spawn_enemy(definition, SessionSnapshot.unvector(entry.position))
 		enemy.set_meta("definition_path", entry.definition)
 		var fields: Dictionary = entry.duplicate()
-		for key: String in ["definition", "damage", "position"]:
+		var saved_bleeds: Array = fields.bleeds.duplicate(true)
+		for key: String in ["definition", "damage", "position", "bleeds"]:
 			fields.erase(key)
 		SessionSnapshot.apply(enemy, fields)
+		enemy.bleeds = saved_bleeds
 		enemy._on_health_changed(enemy.health, enemy.max_health)
+		if not enemy.bleeds.is_empty():
+			feedback.ring(enemy.position, 0.35, Color(0.8, 0.06, 0.06), 0.5)
 		if enemy.state == EnemyController.State.WINDUP:
 			feedback.ring(enemy.position, 1.8, Color.RED, maxf(enemy.state_remaining, 0.01))
 			if definition.kind == EnemyDefinition.Kind.CHARGER:
@@ -375,14 +382,16 @@ func restore_expedition(data: Dictionary) -> void:
 	ground = data.ground.duplicate(true)
 	for drop: Dictionary in ground:
 		_render_drop(drop)
+	skills.reset()
 	player.restore_position(SessionSnapshot.unvector(data.position))
 	SessionSnapshot.apply(player, data.player)
 	player.visual_root.rotation.y = data.facing
-	skills.reset()
 	SessionSnapshot.apply(skills, data.skills)
+	if skills._warcry_applied:
+		feedback.ring(player.position, 2.2, Color(0.95, 0.72, 0.18), maxf(skills._warcry_remaining, 0.01))
 	$FollowCamera.snap_to_target()
 
-## M2 存档入口沿用暂停菜单按钮，文件错误反馈到界面。
+## 完整存档入口沿用暂停菜单按钮，文件错误反馈到界面。
 func _save_position() -> Error:
 	if _initializing:
 		return OK

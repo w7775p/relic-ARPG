@@ -22,6 +22,18 @@ func check(value: bool, message: String) -> void:
 func normalized(value: Variant) -> Variant:
 	return JSON.parse_string(JSON.stringify(value))
 
+## 从 v4 快照提取 v2 时代字段，用于验证完整迁移链。
+func legacy_v2(original: Dictionary) -> Dictionary:
+	var old: Dictionary = {"version":2, "map_id":"map_m2_arena", "expedition":original.duplicate(true)}
+	old.expedition.erase("loadout")
+	var legacy_skills: Dictionary = {}
+	for key: String in SessionSnapshot.SKILL_V3:
+		legacy_skills[key] = old.expedition.skills[key]
+	old.expedition.skills = legacy_skills
+	for enemy: Dictionary in old.expedition.enemies:
+		enemy.erase("bleeds")
+	return old
+
 ## 场景操作覆盖合计、迁移以及恢复后的行为。
 func _run() -> void:
 	var arena: Node3D = ARENA.instantiate()
@@ -64,10 +76,10 @@ func _run() -> void:
 	arena.skills.advance(0.5)
 	check(arena.combat._next_attack_id > attack_id, "重新装配普攻恢复施放")
 	arena.skills.primary_requested = false
-	check(arena._save_position() == OK and SaveManager.load_session().version == 3, "新装配保存为v3")
+	check(arena._save_position() == OK and SaveManager.load_session().version == 4, "新装配保存为v4")
 	var saved: Dictionary = SaveManager.load_session()
 	arena.restore_expedition(saved.expedition)
-	check(normalized(arena.snapshot_expedition()) == saved.expedition, "v3据点完整快照往返一致")
+	check(normalized(arena.snapshot_expedition()) == saved.expedition, "v4据点完整快照往返一致")
 	for kind: String in ["duplicate", "unknown", "extra", "slot"]:
 		var bad: Dictionary = saved.duplicate(true)
 		match kind:
@@ -86,12 +98,11 @@ func _run() -> void:
 		arena.skills._attack_remaining = 0.17
 		arena.skills._whirlwind_remaining = 0.09
 		var original: Dictionary = arena.snapshot_expedition()
-		var old: Dictionary = {"version":2, "map_id":"map_m2_arena", "expedition":original.duplicate(true)}
-		old.expedition.erase("loadout")
+		var old: Dictionary = legacy_v2(original)
 		check(SaveManager.is_valid_session(old), "M2旧档合法，据点=" + str(in_town))
 		check(SaveManager._write(old) == OK, "写入v2迁移样例")
 		var migrated: Dictionary = SaveManager.load_session()
-		check(migrated.version == 3 and normalized(migrated.expedition) == normalized(original), "迁移只补默认装配，完整状态保持")
+		check(migrated.version == 4 and normalized(migrated.expedition) == normalized(original), "v2依次迁移到v4且完整状态保持")
 		var next_item: Dictionary = arena.generator.generate(2, true)
 		var next_roll: int = arena.combat.rng.randi()
 		arena.queue_free()
@@ -111,7 +122,7 @@ func _run() -> void:
 	arena._save_position()
 	var battle: Dictionary = SaveManager.load_session()
 	arena.restore_expedition(battle.expedition)
-	check(arena.skills.loadout.slots.main == "" and arena.skills.loadout.passives.has("might"), "v3战斗存档保留非默认技能槽与被动")
+	check(arena.skills.loadout.slots.main == "" and arena.skills.loadout.passives.has("might"), "v4战斗存档保留非默认技能槽与被动")
 	arena.skills.channel_requested = true
 	arena.skills.advance(0.1)
 	check(not arena.skills.is_channeling, "空主要槽恢复后禁止旋风")

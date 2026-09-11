@@ -1,6 +1,6 @@
 class_name EffectResolver
 extends Node
-## 排队处理命中与击杀触发，派生伤害重新入队，避免同步递归。
+## 排队处理命中、击杀与流血触发，派生伤害重新入队，避免同步递归。
 
 var combat: CombatSystem
 var skills: SkillRunner
@@ -8,6 +8,7 @@ var feedback: CombatFeedback
 var queue: Array[DamageEvent] = []
 var lightning_count: int = 0
 var explosion_count: int = 0
+var bleed_tick_count: int = 0
 var peak_queue_size: int = 0
 var _next_lightning_sec: float = 0.0
 
@@ -18,9 +19,31 @@ func enqueue(event: DamageEvent) -> void:
 	peak_queue_size = maxi(peak_queue_size, queue.size())
 
 
-## 处理队列中的来源规则；没有目标时的暴击也不会消耗额外随机数。
-func _physics_process(_delta: float) -> void:
+## 先按战斗时间推进流血，再处理本帧产生的有限事件队列。
+func _physics_process(delta: float) -> void:
+	advance_bleeds(delta)
 	drain()
+
+
+## 推进所有存活敌人的有界流血；跳伤使用施加时保存的攻击属性。
+func advance_bleeds(delta: float) -> void:
+	for target: CombatActor in combat.enemies.duplicate():
+		for entry: Dictionary in target.advance_bleeds(delta):
+			if target.is_dead:
+				break
+			bleed_tick_count += 1
+			feedback.ring(target.global_position, 0.45, Color(0.85, 0.08, 0.08), 0.18)
+			combat.hit(target, float(entry.damage), &"bleed", int(entry.root_attack_id), _bleed_build(entry))
+
+
+## 从可序列化流血条目重建本次跳伤需要的击杀触发属性。
+func _bleed_build(entry: Dictionary) -> BuildDefinition:
+	var result: BuildDefinition = BuildDefinition.new()
+	result.kill_energy = float(entry.kill_energy)
+	result.death_explosion = bool(entry.death_explosion)
+	result.explosion_radius_m = float(entry.explosion_radius_m)
+	result.explosion_damage = float(entry.explosion_damage)
+	return result
 
 
 ## 每个死亡事件只出现一次，爆炸链终点由有限敌人集合确定。
@@ -29,7 +52,7 @@ func drain(budget: int = 256) -> void:
 	while not queue.is_empty() and processed < budget:
 		var event: DamageEvent = queue.pop_front()
 		processed += 1
-		var direct: bool = event.skill_id == &"primary" or event.skill_id == &"whirlwind"
+		var direct: bool = CombatSystem.is_direct_skill(event.skill_id)
 		if direct:
 			skills.restore_energy(event.build.hit_energy)
 		if event.killed:
@@ -72,10 +95,11 @@ func _explode(event: DamageEvent) -> void:
 		combat.hit(target, event.build.explosion_damage, &"explosion", event.root_attack_id, event.build)
 
 
-## 重开时清空旧事件，防止旧尸体效果作用于新遭遇。
+## 重开时清空旧事件和计数，角色自身流血由遭遇回收或 reset_health 清理。
 func reset() -> void:
 	queue.clear()
 	_next_lightning_sec = 0.0
 	lightning_count = 0
 	explosion_count = 0
+	bleed_tick_count = 0
 	peak_queue_size = 0

@@ -37,6 +37,8 @@
 
 完整探险存档版本升级为 v4，增加敌人流血层、横扫计时、战吼持续/冷却/生效状态与药剂冷却。v2 依次迁移到 v3/v4，v3 直接补齐 v4 状态。战斗中保存后，流血从保存的下一跳继续，战吼和药剂按剩余时间继续。
 
+人工验收首次发现 Windows 发布包点击保存显示“保存失败”。当前新增 F3 DebugLog：发布包内可直接查看 `user://logs/godot.log`，SaveManager 会记录绝对存档路径、结构校验、临时文件创建与刷新、文件替换以及 Godot 错误码。CI 可正常写入 v4 存档，用户机器上的具体失败原因等待使用新包复现日志后定位。
+
 ## 验收标准
 
 ① 横扫前后方、范围边缘和地形遮挡符合配置；流血最多三层，刷新规则稳定，暂停期间计时冻结。
@@ -48,6 +50,8 @@
 ④ 流血下一跳前、战吼结束前保存重启，剩余伤害、持续时间、护甲恢复和冷却继续正确推进。
 
 ⑤ `python tools/verify.py --godot <引擎路径>` 全量回归通过；Windows 导出包可以独立启动。画面、声音和操作手感由可见人工试玩完成最终验收。
+
+⑥ 若保存失败，按 F3 打开 DebugLog，保留 `[DEBUGLOG][ERROR]` 行和其前后的保存步骤；该日志作为 Windows 实机存档问题的验收证据。
 
 ## 完成检查
 
@@ -61,6 +65,8 @@
 
 功能验证提交：`0dc446a8fdcce1d014aba6ef8c82457afa3b60c3`。Windows GitHub Actions 使用官方 Godot `4.7.2.stable.official.ed1daf0bf` 与同版导出模板。全量回归共 159 项：M0 20、M1 26、M2 46、P1_Task1 31、P1_Task2 36，结果为 0 失败。Windows `.exe` 导出成功，导出包独立 headless 启动进入 `M2_EXPEDITION_BOOT_READY`，日志无脚本错误。
 
-工作流：[run 34552955127](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127)。Windows 构建：[artifact 10181489752](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127/artifacts/10181489752)。交付：[PR #6](https://github.com/w7775p/relic-ARPG/pull/6)，base 为 `feat/p1-task1-loadout`，head 为 `feat/p1-task2-bleed-skills`。前置合入后可将 PR #6 的 base 调整到 `main`。
+原功能工作流：[run 34552955127](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127)。原 Windows 构建：[artifact 10181489752](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127/artifacts/10181489752)。交付：[PR #6](https://github.com/w7775p/relic-ARPG/pull/6)，base 为 `feat/p1-task1-loadout`，head 为 `feat/p1-task2-bleed-skills`。前置合入后可将 PR #6 的 base 调整到 `main`。
 
-机器验收已经通过。当前剩余人工项：横扫方向反馈、流血视觉辨识度、战吼与药剂反馈、中文排版、声音听感和实际操作手感，因此任务状态保持“待验收”。
+人工验收诊断补丁：新增 F3 控制台与保存阶段日志，新增 6 项 DebugLog 回归。首次放入 `debug/` 的运行期脚本被导出规则排除，Windows 独立启动捕获该问题后迁到 `ui/debug/`。修正后的 [run 34557223053](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053) 共 165 项回归通过，Windows 导出与独立启动通过；新构建：[artifact 10183010207](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053/artifacts/10183010207)，SHA256 `e84b77a7188f6e79feb6beeff40fc58660501bebbcd22845048325a71d3d4cd4`。
+
+机器验收已经通过。当前剩余人工项：先用新包复现并定位用户机器上的保存失败，再完成横扫方向反馈、流血视觉辨识度、战吼与药剂反馈、中文排版、声音听感和实际操作手感，因此任务状态保持“待验收”。

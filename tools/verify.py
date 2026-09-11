@@ -25,6 +25,7 @@ def main():
             ["res://tests/m0_smoke.tscn"],
             ["res://tests/m1_combat.tscn"],
             ["res://tests/m2_loop.tscn"],
+            ["res://tests/p1_loadout.tscn"],
         ]
         for extra in commands:
             result = subprocess.run(
@@ -36,7 +37,7 @@ def main():
             print(output)
             if result.returncode or "SCRIPT ERROR:" in output or "ERROR:" in output:
                 raise SystemExit(result.returncode or 1)
-            marker = "M2_LOOP_RESULT: 0 failures" if "m2_loop" in extra[0] else "M1_COMBAT_RESULT: 0 failures" if "m1_combat" in extra[0] else "M0_SMOKE_RESULT: 0 failures"
+            marker = "P1_LOADOUT_RESULT: 0 failures" if "p1_loadout" in extra[0] else "M2_LOOP_RESULT: 0 failures" if "m2_loop" in extra[0] else "M1_COMBAT_RESULT: 0 failures" if "m1_combat" in extra[0] else "M0_SMOKE_RESULT: 0 failures"
             if extra[0].startswith("res://tests/") and marker not in output:
                 raise SystemExit("测试未运行到完成标记")
 

@@ -7,6 +7,7 @@ signal build_changed
 const BASIC: BuildDefinition = preload("res://content/builds/basic.tres")
 const THUNDER: BuildDefinition = preload("res://content/builds/thunder.tres")
 
+var loadout: LoadoutState = LoadoutState.new()
 var build: BuildDefinition = BASIC
 var energy: float = 100.0
 var max_energy: float = 100.0
@@ -25,6 +26,7 @@ var _exhausted: bool = false
 ## 换装直接重算移动属性，保留当前生命与能量，避免热切换回满。
 func equip(preset: BuildDefinition) -> void:
 	build = preset
+	energy = clampf(energy, 0.0, max_energy)
 	actor.move_speed_mps = build.move_speed_mps
 	build_changed.emit()
 
@@ -46,7 +48,7 @@ func advance(delta: float) -> void:
 	_whirlwind_remaining = maxf(0.0, _whirlwind_remaining - delta)
 	if not channel_requested:
 		_exhausted = false
-	is_channeling = channel_requested and not _exhausted and actor.dodge_remaining_sec <= 0.0
+	is_channeling = loadout.slots.main == "whirlwind" and channel_requested and not _exhausted and actor.dodge_remaining_sec <= 0.0
 	if is_channeling:
 		var cost: float = build.energy_cost_per_sec * delta
 		if energy < cost:
@@ -60,7 +62,7 @@ func advance(delta: float) -> void:
 				cast_whirlwind()
 	else:
 		restore_energy(build.idle_energy_regen * delta)
-	if primary_requested and not is_channeling and _attack_remaining <= 0.0 and actor.dodge_remaining_sec <= 0.0:
+	if loadout.slots.basic == "primary" and primary_requested and not is_channeling and _attack_remaining <= 0.0 and actor.dodge_remaining_sec <= 0.0:
 		_attack_remaining = build.attack_interval_sec
 		cast_primary()
 

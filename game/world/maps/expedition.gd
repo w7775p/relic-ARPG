@@ -27,7 +27,7 @@ func _ready() -> void:
 	$Interface.add_child(panel)
 	panel.hide()
 	$Interface/CombatInfo/Rows/Controls.text = "I 背包装备 / E 拾取 / Tab 切换物品 / T 撤离 / F5 完整保存"
-	if saved.get("version", 0) == 2:
+	if saved.get("version", 0) == 3:
 		restore_expedition(saved.expedition)
 	else:
 		var starter: Dictionary = generator.generate(1)
@@ -125,6 +125,7 @@ func toggle_inventory() -> void:
 func _on_inventory_changed() -> void:
 	if not is_instance_valid(skills.actor):
 		return
+	skills.loadout = inventory.loadout
 	skills.equip(inventory.build())
 	player.max_health = inventory.defense("max_health")
 	player.armor = inventory.defense("armor")
@@ -325,10 +326,11 @@ func snapshot_expedition() -> Dictionary:
 		var data: Dictionary = SessionSnapshot.fields(projectile, SessionSnapshot.PROJECTILE)
 		data.position = SessionSnapshot.vector(projectile.position)
 		projectiles.append(data)
-	return {"inventory":inventory.snapshot(), "in_town":in_town, "wave_completed":wave_completed, "minimum_quality":minimum_quality, "ground":ground.duplicate(true), "next_drop_id":next_drop_id, "next_item_id":generator.next_id, "loot_rng":str(generator.rng.state), "combat_rng":str(combat.rng.state), "enemies":enemies, "projectiles":projectiles, "player":SessionSnapshot.fields(player, SessionSnapshot.ACTOR + SessionSnapshot.PLAYER), "position":SessionSnapshot.vector(player.position), "facing":player.visual_root.rotation.y, "skills":SessionSnapshot.fields(skills, SessionSnapshot.SKILL), "clock":combat.clock_sec, "attack_id":combat._next_attack_id, "kills":combat.kills, "damage":combat.damage_dealt, "lightning_ready":effects._next_lightning_sec, "lightning_count":effects.lightning_count, "explosion_count":effects.explosion_count}
+	return {"loadout":SessionSnapshot.loadout(inventory.loadout), "inventory":inventory.snapshot(), "in_town":in_town, "wave_completed":wave_completed, "minimum_quality":minimum_quality, "ground":ground.duplicate(true), "next_drop_id":next_drop_id, "next_item_id":generator.next_id, "loot_rng":str(generator.rng.state), "combat_rng":str(combat.rng.state), "enemies":enemies, "projectiles":projectiles, "player":SessionSnapshot.fields(player, SessionSnapshot.ACTOR + SessionSnapshot.PLAYER), "position":SessionSnapshot.vector(player.position), "facing":player.visual_root.rotation.y, "skills":SessionSnapshot.fields(skills, SessionSnapshot.SKILL), "clock":combat.clock_sec, "attack_id":combat._next_attack_id, "kills":combat.kills, "damage":combat.damage_dealt, "lightning_ready":effects._next_lightning_sec, "lightning_count":effects.lightning_count, "explosion_count":effects.explosion_count}
 
 ## 依次恢复持有、属性、世界和瞬态；输入意图由玩家重新按键产生。
 func restore_expedition(data: Dictionary) -> void:
+	inventory.loadout.restore(data.loadout)
 	inventory.restore(data.inventory)
 	in_town = data.in_town
 	wave_completed = data.wave_completed
@@ -413,3 +415,21 @@ func _set_paused(value: bool) -> void:
 	if value and panel != null:
 		panel.hide()
 	super._set_paused(value)
+
+## 据点独占装配入口；成功只重算属性，保留资源和所有冷却。
+func loadout_action(action: String, id: String = "", slot: String = "") -> String:
+	if not in_town:
+		return "只能在据点调整技能与被动"
+	var error: String = ""
+	match action:
+		"passive": error = inventory.loadout.toggle(id)
+		"reset": inventory.loadout.passives.clear()
+		"skill":
+			if not LoadoutState.fits(slot, id):
+				return "技能与槽位不匹配"
+			inventory.loadout.slots[slot] = id
+		_: return "未知装配操作"
+	if not error.is_empty():
+		return error
+	inventory.changed.emit()
+	return "装配已更新"

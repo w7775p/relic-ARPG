@@ -76,3 +76,9 @@ M1 延续兼容渲染器，无动态特效灯。`combat_arena.tscn` 继承 M0 �
 保存是本物理阶段的结算检查点：先排空有限触发队列，然后记录所有结果。恢复不重放死亡事件，尸体只留下已经生成的战利品；纯视觉补间不保存，仍处于蓄力的敌人重建危险提示，导航路径由原生代理重算。按键意图重新采集，技能与闪避冷却继续保留。存档字段逐一校验，JSON 解析结果禁止直接整包写进任意节点。
 
 背包打开暂停世界；列表拥有焦点时全局 I/Esc/F5 仍可使用。装备掉落为原生小方块与 Label3D 名称，稀有以上增加环形反馈。当前标签没有屏幕空间防重叠排布，使用附近候选选择与过滤控制拾取；美术与标签视觉打磨仍需后续验收。
+
+## D1 技能装配
+
+`LoadoutState` 由 InventoryState 持有并交给 SkillRunner，记录 basic/main/auxiliary 技能 ID 和最多三项被动 ID。静态 SkillDefinition 与 PassiveDefinition 资源显式预载；inventory.build() 和 defense() 分别叠加技能与防御属性。所有 UI 修改经 expedition.loadout_action 校验据点；成功只发 changed 重算，不调用技能 reset。右键/左键继续用原语义动作；F 预留 auxiliary_skill，目前无辅助候选。
+
+装配作为顶层 expedition.loadout 独立保存，原九字段 inventory 格式保持。v3 严格校验三个槽、节点 ID、重复与上限。v2 先按原结构验证，再深复制并补默认装配；恢复装配后再重算属性、恢复瞬态，保留随机状态和奖励记录。v1 位置档继续从据点初始化。

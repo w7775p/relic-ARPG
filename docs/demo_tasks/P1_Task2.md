@@ -2,7 +2,7 @@
 
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
-阶段：D1。状态：待验收。任务 ID：`P1_Task2`。执行分支：`feat/p1-task2-bleed-skills`。前置任务：[P1_Task1](P1_Task1.md)。
+阶段：D1。状态：已完成。任务 ID：`P1_Task2`。执行分支：`feat/p1-task2-bleed-skills`。前置任务：[P1_Task1](P1_Task1.md)。
 
 ## 开始前阅读
 
@@ -37,7 +37,7 @@
 
 完整探险存档版本升级为 v4，增加敌人流血层、横扫计时、战吼持续/冷却/生效状态与药剂冷却。v2 依次迁移到 v3/v4，v3 直接补齐 v4 状态。战斗中保存后，流血从保存的下一跳继续，战吼和药剂按剩余时间继续。
 
-人工验收首次发现 Windows 发布包点击保存显示“保存失败”。当前新增 F3 DebugLog：发布包内可直接查看 `user://logs/godot.log`，SaveManager 会记录绝对存档路径、结构校验、临时文件创建与刷新、文件替换以及 Godot 错误码。CI 可正常写入 v4 存档，用户机器上的具体失败原因等待使用新包复现日志后定位。
+人工验收期间曾发现 Windows 发布包点击保存显示“保存失败”，因此加入 F3 DebugLog 与 SaveManager 分阶段日志；CI 仍可正常写入 v4 存档。该实机问题未继续扩展修复范围，按用户决定在 P1_Task1 / P1_Task2 验收完成后单独讨论存档系统重构与 `in_town` 场景，不作为本卡当前验收阻塞项。
 
 ## 验收标准
 
@@ -51,7 +51,7 @@
 
 ⑤ `python tools/verify.py --godot <引擎路径>` 全量回归通过；Windows 导出包可以独立启动。画面、声音和操作手感由可见人工试玩完成最终验收。
 
-⑥ 若保存失败，按 F3 打开 DebugLog，保留 `[DEBUGLOG][ERROR]` 行和其前后的保存步骤；该日志作为 Windows 实机存档问题的验收证据。
+⑥ 若保存失败，按 F3 打开 DebugLog，保留 `[DEBUGLOG][ERROR]` 行和其前后的保存步骤；该日志保留为后续存档系统讨论的诊断依据。
 
 ## 完成检查
 
@@ -59,14 +59,14 @@
 
 ## 执行记录
 
-执行日期：2026-09-11。开工时最新 `main` 为 `313ac7f`。前置 [PR #5](https://github.com/w7775p/relic-ARPG/pull/5) 仍处于 open，因此从其 head `1ff89c7` 建立堆叠分支 `feat/p1-task2-bleed-skills`。任务卡已随前置分支存在。
+执行日期：2026-09-11。开工时最新 `main` 为 `313ac7f`。前置 [PR #5](https://github.com/w7775p/relic-ARPG/pull/5) 当时仍处于 open，因此从其 head `1ff89c7` 建立堆叠分支 `feat/p1-task2-bleed-skills`。
 
 实现结果：右键主要槽新增流血横扫；F 辅助槽新增战吼；Q 新增独立恢复药剂；HUD 与基础反馈同步。完整探险存档升级为 v4，并保留 v2/v3 迁移链。实际开发中发现战吼临时护甲会被经验或装备属性重算覆盖，现已统一按基础护甲重建并补回有效战吼层，记录为 `P1-02`。
 
-功能验证提交：`0dc446a8fdcce1d014aba6ef8c82457afa3b60c3`。Windows GitHub Actions 使用官方 Godot `4.7.2.stable.official.ed1daf0bf` 与同版导出模板。全量回归共 159 项：M0 20、M1 26、M2 46、P1_Task1 31、P1_Task2 36，结果为 0 失败。Windows `.exe` 导出成功，导出包独立 headless 启动进入 `M2_EXPEDITION_BOOT_READY`，日志无脚本错误。
+功能验证提交：`0dc446a8fdcce1d014aba6ef8c82457afa3b60c3`。Windows GitHub Actions 使用官方 Godot `4.7.2.stable.official.ed1daf0bf` 与同版导出模板。原全量回归共 159 项：M0 20、M1 26、M2 46、P1_Task1 31、P1_Task2 36，结果为 0 失败。Windows `.exe` 导出成功，导出包独立 headless 启动进入 `M2_EXPEDITION_BOOT_READY`，日志无脚本错误。
 
-原功能工作流：[run 34552955127](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127)。原 Windows 构建：[artifact 10181489752](https://github.com/w7775p/relic-ARPG/actions/runs/34552955127/artifacts/10181489752)。交付：[PR #6](https://github.com/w7775p/relic-ARPG/pull/6)，base 为 `feat/p1-task1-loadout`，head 为 `feat/p1-task2-bleed-skills`。前置合入后可将 PR #6 的 base 调整到 `main`。
+人工验收诊断补丁：新增 F3 控制台与保存阶段日志，新增 6 项 DebugLog 回归。首次放入 `debug/` 的运行期脚本被导出规则排除，Windows 独立启动捕获该问题后迁到 `ui/debug/`。修正后的 [run 34557223053](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053) 共 165 项回归通过，Windows 导出与独立启动通过。
 
-人工验收诊断补丁：新增 F3 控制台与保存阶段日志，新增 6 项 DebugLog 回归。首次放入 `debug/` 的运行期脚本被导出规则排除，Windows 独立启动捕获该问题后迁到 `ui/debug/`。修正后的 [run 34557223053](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053) 共 165 项回归通过，Windows 导出与独立启动通过；新构建：[artifact 10183010207](https://github.com/w7775p/relic-ARPG/actions/runs/34557223053/artifacts/10183010207)，SHA256 `e84b77a7188f6e79feb6beeff40fc58660501bebbcd22845048325a71d3d4cd4`。
+最终试玩修正：技能/被动页加入滚动；横扫范围调整为 8 米、流血倍率调整为 0.84，并增加与真实判定范围一致的扇形方向反馈。最终 [run 34566230391](https://github.com/w7775p/relic-ARPG/actions/runs/34566230391) 共 166 项自动回归通过，Windows 导出与独立启动通过；最终构建：[artifact 10186123633](https://github.com/w7775p/relic-ARPG/actions/runs/34566230391/artifacts/10186123633)，SHA256 `8ea2021d5bb2f0378590cad82fac65af4ecbb7231f31914ddb14cff017f2eb45`。
 
-机器验收已经通过。当前剩余人工项：先用新包复现并定位用户机器上的保存失败，再完成横扫方向反馈、流血视觉辨识度、战吼与药剂反馈、中文排版、声音听感和实际操作手感，因此任务状态保持“待验收”。
+2026-09-11 用户完成可见试玩，确认 P1_Task1 / P1_Task2 验收通过。PR #5、PR #6 已按顺序合入 `main`。存档系统重构与 `in_town` 场景留到本轮验收后单独讨论。

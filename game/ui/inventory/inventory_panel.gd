@@ -203,7 +203,7 @@ func _refresh_loadout() -> void:
 	for id: String in passive_buttons:
 		passive_buttons[id].set_pressed_no_signal(state.passives.has(id))
 		passive_buttons[id].disabled = not session.in_town
-	attributes.text = "已选 %d/3｜%s\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒" % [state.passives.size(), "据点可免费调整；F 辅助槽暂空" if session.in_town else "探险中只能查看", build.damage, build.critical_chance * 100, build.whirlwind_radius_m, session.inventory.defense("max_health"), session.inventory.defense("armor"), build.idle_energy_regen]
+	attributes.text = "已选 %d/3｜%s\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒\n右键可选旋风或流血横扫；F 可装战吼；Q 恢复药剂独立于装备。" % [state.passives.size(), "据点可免费调整" if session.in_town else "探险中只能查看", build.damage, build.critical_chance * 100, build.whirlwind_radius_m, session.inventory.defense("max_health"), session.inventory.defense("armor"), build.idle_energy_regen]
 
 ## 失败原因写入共用提示，包括第四项选择被拒绝。
 func _on_loadout(action: String, id: String) -> void:

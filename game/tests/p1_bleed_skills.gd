@@ -69,6 +69,7 @@ func _run() -> void:
 	var arena: Node3D = ARENA.instantiate()
 	add_child(arena)
 	check(LoadoutState.skill("sweep") != null and LoadoutState.skill("warcry") != null, "横扫与战吼进入稳定技能目录")
+	check(is_equal_approx(SkillRunner.SWEEP.range_m, 8.0) and is_equal_approx(SkillRunner.SWEEP.bleed_damage_multiplier, 0.84), "横扫试玩参数为8米范围与0.84流血倍率")
 	check(arena.loadout_action("skill", "sweep", "main").contains("更新"), "据点可把右键主要技能替换为横扫")
 	check(arena.loadout_action("skill", "warcry", "auxiliary").contains("更新"), "据点可把战吼装入 F 辅助槽")
 	arena.depart()
@@ -86,8 +87,8 @@ func _run() -> void:
 
 	await clear_targets(arena)
 	arena.effects.reset()
-	var edge_in: EnemyController = spawn_target(arena, Vector3(0, 0.05, -3.19))
-	var edge_out: EnemyController = spawn_target(arena, Vector3(0, 0.05, -3.21))
+	var edge_in: EnemyController = spawn_target(arena, Vector3(0, 0.05, -(SkillRunner.SWEEP.range_m - 0.01)))
+	var edge_out: EnemyController = spawn_target(arena, Vector3(0, 0.05, -(SkillRunner.SWEEP.range_m + 0.01)))
 	arena.skills.cast_sweep()
 	arena.effects.drain()
 	check(edge_in.health < edge_in.max_health, "横扫包含资源范围内侧边缘")

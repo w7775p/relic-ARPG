@@ -126,7 +126,7 @@ func cast_whirlwind() -> void:
 func cast_sweep() -> void:
 	var root_id: int = combat.next_attack_id()
 	var facing: Vector3 = -actor.visual_root.global_basis.z
-	feedback.slash(actor.global_position, facing, Color(0.95, 0.25, 0.18))
+	feedback.sweep(actor.global_position, facing, SWEEP.range_m, SWEEP.facing_dot_min)
 	for target: CombatActor in combat.targets_in_range(actor.global_position, SWEEP.range_m):
 		var direction: Vector3 = (target.global_position - actor.global_position).normalized()
 		if direction.dot(facing) < SWEEP.facing_dot_min:
@@ -134,7 +134,7 @@ func cast_sweep() -> void:
 		var event: DamageEvent = combat.hit(target, build.damage * SWEEP.damage_multiplier, &"sweep", root_id, build)
 		if event != null and not target.is_dead:
 			target.apply_bleed(_bleed_snapshot(root_id), SWEEP.bleed_max_stacks)
-			feedback.ring(target.global_position, 0.35, Color(0.8, 0.06, 0.06), 0.22)
+			feedback.ring(target.global_position, 0.55, Color(0.8, 0.06, 0.06), 0.35)
 		target.push_back(direction, 1.6)
 
 

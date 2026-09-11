@@ -95,7 +95,7 @@ func refresh() -> void:
 		return
 	inventory_columns.visible = source != 3
 	inventory_actions.visible = source != 3
-	loadout_view.visible = source == 3
+	loadout_view.get_parent().visible = source == 3
 	_refresh_loadout()
 	var inventory: InventoryState = session.inventory
 	summary.text = "%s · 等级 %d · 经验 %d/%d · 金币 %d · 材料 %d\n背包 %d/40 · 仓库 %d/120 · 难度 %d · 通关 %d 次" % ["据点整备" if session.in_town else "探险中", inventory.level, inventory.experience, inventory.level * 60, inventory.gold, inventory.materials, inventory.bag.size(), inventory.stash.size(), inventory.difficulty, inventory.completed]
@@ -149,11 +149,16 @@ func _on_action(key: String) -> void:
 	refresh()
 	hint.text = message + "\n" + hint.text
 
-## 原生容器承载技能槽和六个被动，与物品页共用顶部入口。
+## 原生滚动容器承载技能槽和六个被动，低分辨率下仍可访问底部属性与重置按钮。
 func _create_loadout(rows: VBoxContainer) -> void:
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.follow_focus = true
+	rows.add_child(scroll)
 	loadout_view = VBoxContainer.new()
-	loadout_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	rows.add_child(loadout_view)
+	loadout_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(loadout_view)
 	for slot: String in ["basic", "main", "auxiliary"]:
 		var row: HBoxContainer = HBoxContainer.new()
 		loadout_view.add_child(row)

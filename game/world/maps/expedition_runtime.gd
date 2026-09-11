@@ -24,6 +24,32 @@ func is_hub() -> bool:
 	return false
 
 
+## 从独立 Hub 开始新探险；当前正常场景流不再触发旧 JSON 据点自动保存。
+func depart() -> void:
+	if not in_town:
+		return
+	in_town = false
+	wave_completed = false
+	panel.hide()
+	_set_paused(false)
+	effects.reset()
+	combat.kills = 0
+	combat.damage_dealt = 0.0
+	player.restore_position(Vector3.ZERO)
+	player.reset_health()
+	skills.reset()
+	_clear_ground()
+	encounters.clear()
+	for index: int in range(48):
+		var original: EnemyDefinition = EncounterDirector.ELITE if index == 47 else EncounterDirector.DEFINITIONS[index % 3]
+		var definition: EnemyDefinition = original.duplicate()
+		definition.health *= 1.0 + (inventory.difficulty - 1) * 0.25
+		definition.damage *= 1.0 + (inventory.difficulty - 1) * 0.15
+		var enemy: EnemyController = encounters.spawn_enemy(definition, encounters._spawn_position(index))
+		enemy.set_meta("definition_path", original.resource_path)
+	$FollowCamera.snap_to_target()
+
+
 ## 撤离结束本次世界，把长期角色状态交给独立 Hub；未拾取地面物品随场景销毁。
 func return_to_town() -> void:
 	if in_town:

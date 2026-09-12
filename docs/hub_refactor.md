@@ -1,35 +1,27 @@
-# Hub 场景拆分与存档重构边界
+# Hub 与探险场景边界
 
-日期：2026-09-11。分支：`refactor/hub-scene`。PR：#7。
+Hub 拆分在 main `30b85f01bae318ea0088d0c096e36637798ab513`（PR #7）完成。本文同步 Resource 存档重构后的当前实现；存档规则见 [save_system.md](save_system.md)，执行与交付见 [resource_save_task.md](resource_save_task.md)。
 
-## 当前完成状态
+## 场景与状态归属
 
-正式新角色流程已改为 `MainMenu → Hub → ExpeditionRuntime → Hub`。`Hub` 是独立场景，负责背包、装备、仓库、出售、技能与被动整备；`ExpeditionRuntime` 负责战斗世界、掉落、怪物、技能瞬态和撤离。角色长期状态通过 `SceneRouter` 的一次性过渡引用在两个场景之间交接，目标场景领取后立即清空，SceneRouter 不长期持有玩法状态。
+正式流程为 `MainMenu → Hub → ExpeditionRuntime → Hub`。Hub 是独立场景，负责背包、装备、仓库、出售、技能与被动整备以及保存界面。ExpeditionRuntime 直接继承 combat_arena，负责战斗世界、敌人、地面掉落和本趟状态。
 
-`InventoryPanel` 通过 `session.is_hub()` 判断地点能力，不再要求 UI 直接读取 `session.in_town`。正常 Hub 出发不会调用旧 JSON 据点自动保存；撤离或死亡会结束当前探险场景并真实切换回 Hub，未拾取地面物品随场景销毁，已拾取装备、成长、金币材料、技能装配与掉落生成器状态继续保留。
+当前场景持有 GameSession；角色、物品、经济、据点、进度五个长期 Resource 模块随会话跨场景保持。SceneRouter 仅一次性交接引用，目标领取后清空。InventoryPanel 查询地点能力决定据点服务是否可用，保存由 `can_save_checkpoint()` 判断，UI 不读取内部地点布尔值。
 
-## 旧 in_town 的处理
+## 出发、回城与退出
 
-`game/world/maps/expedition.gd` 暂时保留原 `in_town` 字段、弹窗式整备和 v4 JSON 快照，只服务于旧存档兼容、现有 M2/P1 回归及下一轮迁移输入。正式新角色流程由 `game/world/maps/expedition_runtime.tscn` 承接，不再把据点当作探险场景内状态。
+Hub 出发前保存成功才进入探险；没有持久变化时跳过重复写入。撤离、通关或死亡排空当前有限结算队列，保留已拾取收益，销毁探险后回到真实 Hub 并保存。通关/难度进度只结算一次，重复离场请求不会重复奖励。
 
-在 Resource 存档完成前禁止继续向旧 `in_town` 分支增加新的据点服务。P1_Task4 拆解、P1_Task5 重铸及后续据点能力应落在 `Hub`。
+普通探险退出或返回菜单同样经过撤离、Hub 结算和成功保存，保存失败停留 Hub 允许重试。强制结束进程只能恢复最后成功检查点。本趟地图、敌人、地面对象、战斗 RNG、技能冷却和持续状态不持久化，下次出发重新建立。
 
-## 下一轮存档重构目标
+## 旧路径处理
 
-下一步将 JSON 持久化改为 Godot Resource。目标数据边界：
+按已冻结方案，旧 expedition 场景/脚本、运行期 `in_town`、SaveValidator、SessionSnapshot 及 JSON v1～v4 兼容已移除，不再恢复旧探险或迁移旧 `session.json`。旧文件不由新系统自动删除。后续拆解、重铸、难度和区域选择统一接入 Hub 与所属 Resource 模块。
 
-① `PlayerProfileResource`：背包、仓库、装备、金币、材料、等级经验、难度解锁、技能装配、被动等长期状态。
-
-② `RunStateResource`：地图/随机种子、玩家位置与战斗资源、敌人、地面掉落、弹体、技能冷却、持续状态、战斗 RNG 等本趟状态。
-
-③ `SaveGameResource`：版本、角色档、本趟档及迁移元数据。
-
-开发阶段优先保存为 `user://save.tres` 便于检查；稳定后可根据发行需求改为二进制 `.res`。旧 `session.json` 只提供一次性迁移入口，迁移成功后新保存路径只写 Resource。
-
-当 Resource 保存与旧 JSON 迁移回归完成后，删除 `LEGACY_EXPEDITION`、运行期 `in_town`、旧据点快照分支以及仅为 JSON v4 服务的兼容代码。
+此前 Hub 拆分文档中的 PlayerProfileResource / RunStateResource 和旧 JSON 一次性迁移设想已经由本轮冻结方案替代。当前正式存档为五模块完整 Hub 检查点。
 
 ## 验证
 
-新增 `game/tests/hub_flow.tscn`，覆盖独立 Hub、起始装备、技能装配、角色对象与 ItemGenerator 跨场景保持、掉落过滤保持、48 怪探险启动及探险期间拒绝据点出售服务。
+`game/tests/hub_flow.tscn` 当前覆盖真实路由、新角色起装、自动保存去抖、多槽选择、跨场景会话保持、探险拒绝保存、回城结算一次、坏档保留当前状态、手动整体回退、读取不写档及界面边界。存储故障由 `save_faults.tscn` 七个独立进程验证。
 
-最终代码提交 `fba5f85e423c5273e950dbc3e8a4b622ad01b2b9` 对应 GitHub Actions run `34574865158`：全量场景回归通过、Windows 导出通过、导出包独立启动通过。Windows artifact `10189231734`，SHA256 `e6a0b9a7dfc16a61c8b6b0a20ee27e1757042f3b2a4de87298d6b23151d9ae87`。
+PR #7 的历史 Windows 证据为 run `34574865158`。本轮需要使用 Resource 分支对应的全量回归和 Windows 包，结果见 [validation.md](validation.md)；无窗口布局检查不替代可见试玩。

@@ -1,5 +1,7 @@
 # P1_Task 1：技能装配与被动选择
 
+> 存档说明：本卡 v3/v4 与旧 JSON 迁移内容是原阶段交付历史；当前正式规则已改为 [Resource Hub 检查点](../save_system.md)，旧探险恢复已退休。
+
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
 阶段：D1。状态：已完成。任务 ID：`P1_Task1`。建议分支：`feat/p1-task1-loadout`。

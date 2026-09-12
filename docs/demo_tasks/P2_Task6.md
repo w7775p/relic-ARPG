@@ -13,6 +13,7 @@
 | [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
 | [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
+| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
 | [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
 | [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
 | [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
@@ -23,7 +24,7 @@
 
 ## 已经实现的功能
 
-仓库基线已完成 M0～M2：3D 即时战斗、雷霆旋风、随机装备、拾取换装、背包仓库、出售、成长、整备及完整探险存档。用户已试玩 M2 并反馈效果可以；历史自动化记录为 92 项回归及 Windows 导出/启动通过。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
 
 M2 难度为通关后自动递增整数；随机墓园与首领已接入，仓库/出售/拆解/重铸已有据点服务。
 
@@ -44,24 +45,24 @@ M2 难度为通关后自动递增整数；随机墓园与首领已接入，仓�
 | 主要路径 | 实现落点 |
 | --- | --- |
 | `game/content/（难度资源）、game/systems/encounters/、game/world/` | 难度参数与区域流程分离，宝箱用独立交互场景。 |
-| `game/ui/inventory/、game/ui/、game/world/maps/expedition.gd` | 复用服务入口，新增难度选择和区域状态提示。 |
-| `game/systems/persistence/、game/systems/inventory/` | 将已解锁难度与本次选择分开保存。 |
+| `game/ui/inventory/、game/world/hub/、game/world/maps/expedition_runtime.gd` | 真实 Hub 开放难度和服务入口，探险显示区域状态。 |
+| `game/systems/progression/、game/world/hub/hub_resource.gd` | progression 保存解锁，hub 保存所选区域/难度；随模块版本升级。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/maps/expedition.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
 
 ## 存档与兼容
 
-旧存档原 difficulty 与 completed 转成新解锁/选择状态，映射规则写入 engineering.md；保留原 completed 以维持前三次雷霆奖励状态。旧探险继续原强度，撤离后使用三档选择。宝箱开启和已生成战利品一起保存，地图/战斗/掉落 RNG 各自延续。
+将已有 Resource 的 difficulty/completed 映射为解锁/选择状态，映射规则写入 engineering.md；保留 completed 对应的前三次奖励进度。宝箱开启和地面掉落仅留本趟，开启先登记再生成一次；回 Hub 保存已拾取装备、经济与进度。旧 JSON 和旧探险不迁移。
 
 ## 验收标准
 
 ① 新角色从第一档开始，完成首领逐档解锁，第三档能再次出发；中途退出和死亡按规则处理。
 
-② 同一宝箱多次交互只生成一次；开箱前、开箱后与拾取后保存恢复，物品总数及实例唯一。
+② 同一宝箱多次交互只生成一次；开箱前、开箱后和拾取后分别撤离，回 Hub 保存恢复，持有物品与实例唯一；新探险无旧地面物品。
 
 ③ 首领死后即使支路仍有敌人也可撤离完成；据点各服务地点校验与已有操作正常。
 
-④ 导入 difficulty 大于 3 的旧存档，角色成长和已拾取装备保持，完成明确的难度迁移。
+④ 加载 difficulty 大于 3 的此前 Resource 检查点，角色成长和已拾取装备保持，按明确模块升级映射三档难度；读取不覆盖原档。
 
 功能验证通过 `python tools/verify.py --godot <引擎路径>` 执行；新增用例需要实际运行到完成标记。涉及显示、声音和操作的标准按可见运行与试玩记录验收，历史结果不能代替本次验证。
 

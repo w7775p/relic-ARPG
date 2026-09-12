@@ -13,6 +13,7 @@
 | [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
 | [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
+| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
 | [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
 | [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
 | [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
@@ -23,7 +24,7 @@
 
 ## 已经实现的功能
 
-仓库基线已完成 M0～M2：3D 即时战斗、雷霆旋风、随机装备、拾取换装、背包仓库、出售、成长、整备及完整探险存档。用户已试玩 M2 并反馈效果可以；历史自动化记录为 92 项回归及 Windows 导出/启动通过。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
 
 物品实例已保存实际词条数值，词条定义已有等级、部位、权重与互斥组；据点已能出售、拆解并获得材料。当前没有重铸位置记录。
 
@@ -44,14 +45,14 @@
 | 主要路径 | 实现落点 |
 | --- | --- |
 | `game/systems/town/、game/systems/items/item_generator.gd` | 复用合法候选选择，重铸服务完成校验、抽取、扣费与实例更新。 |
-| `game/ui/inventory/、game/world/maps/expedition.gd` | 按实例 ID 和词条位置发起请求，选项变化及时清除旧选择。 |
+| `game/ui/inventory/、game/world/maps/expedition_runtime.gd` | 按实例 ID 和词条位置发起请求，选项变化及时清除旧选择。 |
 | `game/systems/persistence/、game/content/（费用配置）` | 记录重铸位置与随机状态，保存校验允许新字段。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/maps/expedition.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
 
 ## 存档与兼容
 
-物品新增重铸位置（未选择默认 -1）及会话重铸 RNG 状态。M2 和此前 D1 存档补默认值；独立随机状态用字符串保存。首次选择的位置与结果必须一起持久化，恢复不会重新抽值。
+items 模块新增重铸位置（未选择默认 -1）和独立重铸 RNG 的原生整数 seed/state，增加模块版本并升级此前 Resource 存档。首次位置、词条结果与 economy 材料一起进入完整检查点，恢复不会重新抽值。
 
 ## 验收标准
 
@@ -61,7 +62,7 @@
 
 ③ 同底材两件装备与静态定义保持独立；重铸后穿戴显示与伤害数值一致。
 
-④ 保存重启后位置、材料、新词条及下一次重铸随机结果一致；地图/掉落随机序列按各自规则继续。
+④ 保存重启后位置、材料、新词条及下一次重铸随机结果一致；掉落随机序列保持，下一趟地图按新探险规则建立。
 
 功能验证通过 `python tools/verify.py --godot <引擎路径>` 执行；新增用例需要实际运行到完成标记。涉及显示、声音和操作的标准按可见运行与试玩记录验收，历史结果不能代替本次验证。
 

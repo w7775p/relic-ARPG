@@ -13,6 +13,7 @@
 | [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
 | [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
+| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
 | [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
 | [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
 | [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
@@ -23,7 +24,7 @@
 
 ## 已经实现的功能
 
-仓库基线已完成 M0～M2：3D 即时战斗、雷霆旋风、随机装备、拾取换装、背包仓库、出售、成长、整备及完整探险存档。用户已试玩 M2 并反馈效果可以；历史自动化记录为 92 项回归及 Windows 导出/启动通过。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
 
 D1 验收后已有普攻、旋风、横扫、战吼四个主动技能和六个被动；碰撞、闪避和单体续航已有实现。
 
@@ -45,19 +46,19 @@ D1 验收后已有普攻、旋风、横扫、战吼四个主动技能和六个�
 | --- | --- |
 | `game/systems/skills/、game/content/skills/、game/content/passives/` | 扩展 D1 装配规则，保持六个技能的稳定 ID 与标签。 |
 | `game/actors/player/player_controller.gd、game/systems/combat/、game/shared/vfx/` | CharacterBody3D 处理冲锋运动；攻击结算仍进入 CombatSystem。 |
-| `game/systems/persistence/、game/ui/inventory/` | 新增运行状态、选择与冷却提示。 |
+| `game/systems/skills/、game/ui/inventory/` | 运行期动作与冷却提示；持久装配接入 character 模块。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/maps/expedition.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
 
 ## 存档与兼容
 
-记录冲锋阶段、方向、已命中目标的稳定身份、重击前摇/恢复及组合增益剩余时间；避免恢复后重复命中。新增 D2 字段按 main 当前存档结构迁移，旧角色保持原技能选择。
+冲锋阶段、命中集合、重击动作和组合增益属于当前探险，暂停时保持、离场时清理，不保存到检查点。主动/被动选择归 character 模块，若结构变化提供 Resource 升级，旧角色保持原选择。
 
 ## 验收标准
 
 ① 面对墙角、薄墙、敌人和狭窄入口验证冲锋停止，禁止瞬移穿墙；一个冲锋对同一目标只结算约定次数。
 
-② 重击伤害发生在规定时点；暂停、死亡和保存重启不会跳过前摇或重复攻击。
+② 重击伤害发生在规定时点；暂停不跳过前摇，死亡/撤离清理动作；Hub 保存重启后新探险没有残留攻击。
 
 ③ 使用测试装备独立打通普通怪群与单精英，记录能量循环；正式专属装备由 P2_Task7 接入。
 

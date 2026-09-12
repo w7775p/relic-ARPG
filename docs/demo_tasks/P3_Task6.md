@@ -13,6 +13,7 @@
 | [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
 | [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
+| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
 | [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
 | [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
 | [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
@@ -25,7 +26,7 @@
 
 ## 已经实现的功能
 
-仓库基线已完成 M0～M2：3D 即时战斗、雷霆旋风、随机装备、拾取换装、背包仓库、出售、成长、整备及完整探险存档。用户已试玩 M2 并反馈效果可以；历史自动化记录为 92 项回归及 Windows 导出/启动通过。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
 
 Windows CI 已能运行回归、导出内嵌资源的 exe，并通过 --smoke-combat 从 Boot 进入 M2；现有导出排除 tests/debug，但 SkillRunner 仍直接预加载基础/雷霆测试预设。
 
@@ -51,11 +52,11 @@ Windows CI 已能运行回归、导出内嵌资源的 exe，并通过 --smoke-co
 | `.github/workflows/windows.yml、tools/verify.py、builds/（忽略产物）` | 同版引擎与模板导出，检查退出码、错误日志、最终场景标记和产物。 |
 | `README.md、docs/validation.md、docs/asset_sources.md、发行说明/许可证` | 说明按实际键位和流程编写，包内可直接查看。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/maps/expedition.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
 
 ## 存档与兼容
 
-最终发行验证 M2 → D1 → D2/D3 迁移链与最新档往返，测试使用隔离目录。发布模式不得自动覆盖或清空玩家旧档；设置和档案路径与文档一致。
+最终发行验证从本轮 Resource 首版到 D1/D2/D3 已发布模块版本的升级链与最新档往返，使用隔离目录。覆盖五手动槽、自动三版、坏档回退、失败重试与正常退出；旧 JSON 不迁移。设置和档案路径与文档一致，读取不自动覆盖检查点。
 
 ## 验收标准
 

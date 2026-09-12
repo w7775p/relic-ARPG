@@ -53,3 +53,9 @@
 ## Resource 存档重构 S2（2026-09-12）
 
 新增 SaveStore、可重建索引、槽位摘要、读回字段摘要；真实 Resource 写入/读回、多角色和手动槽隔离、自动最近三版、无效模块拒绝覆盖、索引重建通过。保存使用同目录 pending 文件，替换前保留旧文件恢复副本。旧系统仍运行，下一阶段统一接入正式业务和场景。
+
+## Resource 存档重构 S3～S5（2026-09-12）
+
+InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例表以 ID 保存唯一归属，独特装备使用稳定内容 ID，掉落种子/状态/计数归物品模块。SceneRouter 一次性交接 GameSession。Hub 接入手动槽、自动保存、回退和保存后离场；正式探险直接继承 combat_arena，结算一次后切回 Hub。移除旧 expedition、SaveValidator、SessionSnapshot 及 JSON 保存。
+
+模块类型切换与场景/回归存在编译依赖，因此 S3～S5 作为可运行集成提交。Godot 4.7.2 的九个实际场景验证全部通过（ResourceModel、ResourceStore、M0、M1、M2、Loadout、BleedSkills、HubFlow、DebugConsole）。保留物品、收益、技能时序规则测试；退休旧位置/战斗恢复及 JSON 迁移断言，新增完整 Hub 回退、新探险重建与去抖断言。后续故障、规模、Windows 与可见 UI 验证尚待执行。

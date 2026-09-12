@@ -50,9 +50,17 @@ static func affix(id: String) -> AffixDefinition:
 			return entry
 	return null
 
+## 按稳定 ID 查找独特定义，目录排序不改变存档含义。
+static func unique(id: String) -> UniqueDefinition:
+	for entry: UniqueDefinition in UNIQUES:
+		if entry.id == id:
+			return entry
+	return null
+
 ## 三件核心独特装备分别提供连锁、爆炸和循环续航。
-static func unique_stats(index: int) -> Dictionary:
-	return UNIQUES[index].stats if index >= 0 and index < UNIQUES.size() else {}
+static func unique_stats(id: String) -> Dictionary:
+	var definition: UniqueDefinition = unique(id)
+	return definition.stats if definition != null else {}
 
 ## 按统一单位格式化词条。
 static func stat_text(stat: String, value: float) -> String:

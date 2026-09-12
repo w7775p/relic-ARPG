@@ -152,7 +152,8 @@ func _commit(save: SaveGameResource, slot: String) -> SaveResult:
 	if not validation.ok:
 		return validation
 	var sequence: int = 0
-	for entry: SaveSlotResource in catalog().slots:
+	var directory: SaveIndexResource = catalog()
+	for entry: SaveSlotResource in directory.slots:
 		if entry.group_id == save.group_id:
 			sequence = maxi(sequence, entry.sequence)
 	save.sequence = sequence + 1
@@ -172,20 +173,30 @@ func _commit(save: SaveGameResource, slot: String) -> SaveResult:
 		error = DirAccess.copy_absolute(target, backup)
 		if error != OK:
 			return SaveResult.failure("backup", error, "无法保留上一份存档，已停止覆盖")
-	error = DirAccess.rename_absolute(pending, target)
+	error = _replace_file(pending, target)
 	if error != OK:
 		_catalog = null
 		return SaveResult.failure("replace", error, "正式存档替换失败，原文件及恢复副本保留")
 	if FileAccess.file_exists(backup):
 		DirAccess.remove_absolute(backup)
 	# 当前正文已经提交，索引失败不应误报保存失败或重复结算。
-	_catalog = null
-	catalog(true)
+	for index: int in range(directory.slots.size() - 1, -1, -1):
+		var entry: SaveSlotResource = directory.slots[index]
+		if entry.group_id == save.group_id and entry.slot_id in [slot, slot + ".rollback"]:
+			directory.slots.remove_at(index)
+	directory.slots.append(SaveSlotResource.from_result(save.group_id, slot, SaveResult.success(save)))
+	directory.slots.sort_custom(_newer)
+	directory.fingerprint = _fingerprint(_files())
+	_catalog = directory
 	var result: SaveResult = SaveResult.success(save, "已保存")
 	if _write_index() != OK:
 		result.warning = "存档已成功，目录索引稍后重建"
 	result.value = save
 	return result
+
+## 同目录替换正式文件；独立入口便于验证替换瞬间的实际文件系统竞争。
+func _replace_file(pending: String, target: String) -> Error:
+	return DirAccess.rename_absolute(pending, target)
 
 ## 索引采用同目录临时文件；正文始终是可重建目录的依据。
 func _write_index() -> Error:

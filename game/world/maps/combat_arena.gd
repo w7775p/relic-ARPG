@@ -112,12 +112,3 @@ func _on_player_health_changed(_current: float, _maximum: float) -> void:
 func _on_player_died() -> void:
 	status.text = "你已倒下。按 R 重新挑战，按 Esc 打开菜单"
 	effects.reset()
-
-
-## M1 尚未实现完整战斗存档，明确仅保存位置，继续时重建遭遇。
-func _save_position() -> Error:
-	var error: Error = super._save_position()
-	if error == OK:
-		status.text = "已保存位置；继续时重新生成怪群，装备预设恢复基础"
-		$Interface/Pause/Center/Rows/Status.text = "已保存位置（战斗进度尚未保存）"
-	return error

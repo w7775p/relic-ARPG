@@ -59,3 +59,9 @@
 InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例表以 ID 保存唯一归属，独特装备使用稳定内容 ID，掉落种子/状态/计数归物品模块。SceneRouter 一次性交接 GameSession。Hub 接入手动槽、自动保存、回退和保存后离场；正式探险直接继承 combat_arena，结算一次后切回 Hub。移除旧 expedition、SaveValidator、SessionSnapshot 及 JSON 保存。
 
 模块类型切换与场景/回归存在编译依赖，因此 S3～S5 作为可运行集成提交。Godot 4.7.2 的九个实际场景验证全部通过（ResourceModel、ResourceStore、M0、M1、M2、Loadout、BleedSkills、HubFlow、DebugConsole）。保留物品、收益、技能时序规则测试；退休旧位置/战斗恢复及 JSON 迁移断言，新增完整 Hub 回退、新探险重建与去抖断言。后续故障、规模、Windows 与可见 UI 验证尚待执行。
+
+## Resource 存档重构 S6a（2026-09-12）
+
+新增七个隔离进程，实际制造临时文件不可写、正式文件替换失败、损坏正文、缺失内容 ID、索引失败、未提交 pending 和正常探险退出。验证失败时保留当前状态和旧档、手动选择回退、重试成功后离场、索引重建及读取不自动覆盖。补充旧模块版本一真实文件升级为版本二，保留原文件；索引成功路径直接更新摘要，避免每次保存重读全部正文。
+
+实际发现 `.tres` 的浮点十进制舍入会误判读回失败，以及默认版本值被 ResourceSaver 省略会使后续升级失效；修复和回归见 `known_trap.md` SAVE-01/02。完整 `tools/verify.py` 在 Godot 4.7.2 通过导入、启动、10 个常规场景与 7 个故障进程。另测 10000 件装备：约 5.88 MB，保存 4869.63 ms，读取 2349.67 ms，测量时保留堆内存增量 95598572 字节（包含快照与恢复对象，不是峰值）。当前同步 `.tres` 在该规模存在明显停顿，后续大数据需求需另做性能阶段。可见 UI 和 Windows 验证待执行。

@@ -3,8 +3,8 @@ extends Resource
 ## 一个完整检查点的封装；各业务模块独立演进，文件整体回退。
 const FORMAT_VERSION: int = 1
 const CONTENT_VERSION: int = 1
-@export var format_version: int = FORMAT_VERSION
-@export var content_version: int = CONTENT_VERSION
+@export var format_version: int = 0
+@export var content_version: int = 0
 @export var group_id: String = ""
 @export var checkpoint_id: String = ""
 @export var saved_at: int = 0

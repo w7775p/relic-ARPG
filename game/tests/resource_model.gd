@@ -12,6 +12,15 @@ class ExtensionModule extends SaveModule:
 	func dependencies() -> Array[String]:
 		return ["hub"]
 
+## 故意声明自循环，验证注册协议在准备前发现依赖环。
+class CyclicModule extends SaveModule:
+	## 初始化测试模块身份。
+	func _init() -> void:
+		module_id = "cycle"
+	## 声明循环依赖。
+	func dependencies() -> Array[String]:
+		return ["cycle"]
+
 ## 记录断言，全部完成后返回结果。
 func check(condition: bool, message: String) -> void:
 	if not condition:
@@ -66,5 +75,7 @@ func _ready() -> void:
 	save.format_version = 99
 	check(not registry.prepare(save).ok, "未来封装版本被拒绝")
 	check(not SaveGameResource.valid_id("../../escape"), "角色目录只接受内部生成标识")
+	check(not registry.ordered({"cycle":CyclicModule.new()}).ok, "恢复依赖环在采用会话前被拒绝")
+	check(not registry.ordered({"extension":ExtensionModule.new()}).ok, "缺失依赖在采用会话前被拒绝")
 	print("RESOURCE_MODEL_RESULT: ", failures, " failures")
 	get_tree().quit(0 if failures == 0 else 1)

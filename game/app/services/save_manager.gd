@@ -20,6 +20,7 @@ func save_game(session: GameSession, location: Node, manual_slot: int = 0, reaso
 	var slot: String = "manual_%02d" % manual_slot if manual_slot > 0 else store.auto_slot(session.group_id)
 	var result: SaveResult = store.write_checkpoint(session.capture(reason), slot)
 	if result.ok:
+		result.message = "手动 %02d 已保存" % manual_slot if manual_slot > 0 else "自动存档已保存"
 		session.saved_revision = session.revision
 		session.saved_checkpoint_id = result.value.checkpoint_id
 		session.needs_initial_save = false

@@ -31,6 +31,8 @@ func _on_module_changed(id: String) -> void:
 func capture(reason: String) -> SaveGameResource:
 	generator.synchronize()
 	var save: SaveGameResource = SaveGameResource.new()
+	save.format_version = SaveGameResource.FORMAT_VERSION
+	save.content_version = SaveGameResource.CONTENT_VERSION
 	save.group_id = group_id
 	save.checkpoint_id = SaveGameResource.make_id()
 	save.saved_at = int(Time.get_unix_time_from_system())

@@ -2,7 +2,7 @@ class_name SaveModule
 extends Resource
 ## 模块协议：业务数据、独立版本、校验、升级和恢复准备集中在所属模块。
 @export var module_id: String = ""
-@export var module_version: int = 1
+@export var module_version: int = 0
 
 ## 当前模块格式版本；扩展时由模块覆盖。
 func current_version() -> int:

@@ -44,5 +44,21 @@ func _ready() -> void:
 	check(rebuilt.catalog().slots.size() == 6, "索引缺失后从实际检查点重建全部槽位")
 	check(not store.load_session(session.group_id, "manual_05").ok, "空槽返回缺失信息，不创建默认角色")
 	check(not store.load_session(session.group_id, "../../index").ok, "槽位路径不能越过角色目录")
+	var extension: SaveModule = preload("res://tests/fixtures/extension_save_module.gd").new()
+	store.registry.register_module(extension, 2)
+	var extended: GameSession = GameSession.new(store.registry.defaults())
+	extended.modules.extension.counter = 5
+	var old: SaveGameResource = extended.capture("upgrade_fixture")
+	for module: SaveModule in old.modules:
+		if module.module_id == "extension":
+			module.module_version = 1
+	var path: String = store.slot_path(extended.group_id, "manual_01")
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	ResourceSaver.save(old, path)
+	loaded = store.load_session(extended.group_id, "manual_01")
+	check(loaded.ok and loaded.value.modules.extension.counter == 5 and loaded.value.modules.extension.unlocked, "新增模块通过注册协议完成真实旧版 Resource 读取与独立升级")
+	var original: SaveGameResource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
+	check(original.modules.back().module_version == 1, "加载升级仅作用于候选，原文件保持旧版本")
+	check(store.write_checkpoint(loaded.value.capture("upgraded"), "manual_02").ok, "升级后的扩展模块可通过统一入口再保存")
 	print("RESOURCE_STORE_RESULT: ", failures, " failures")
 	get_tree().quit(0 if failures == 0 else 1)

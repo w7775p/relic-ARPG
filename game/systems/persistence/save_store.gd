@@ -26,10 +26,10 @@ func slot_path(group: String, slot: String) -> String:
 ## 从磁盘读取独立资源，缓存不会把旧槽位或运行期修改带入候选。
 func read_file(path: String) -> SaveResult:
 	if not FileAccess.file_exists(path):
-		return SaveResult.failure("read", ERR_FILE_NOT_FOUND, "存档文件缺失")
+		return SaveResult.failure("read", ERR_FILE_NOT_FOUND, "存档文件缺失", "", path)
 	var resource: Resource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
 	if not resource is SaveGameResource:
-		return SaveResult.failure("read", ERR_FILE_CORRUPT, "存档文件损坏或类型不正确")
+		return SaveResult.failure("read", ERR_FILE_CORRUPT, "存档文件损坏或类型不正确", "", path)
 	var result: SaveResult = registry.prepare(resource)
 	if not result.ok:
 		return result
@@ -53,7 +53,10 @@ func load_session(group: String, slot: String) -> SaveResult:
 	var prepared: SaveResult = registry.prepare(save)
 	if not prepared.ok:
 		return prepared
-	return SaveResult.success(GameSession.restored(save, prepared.value), "已读取存档，将返回据点")
+	var restored: SaveResult = SaveResult.success(GameSession.restored(save, prepared.value), "已读取存档，将返回据点")
+	restored.stage = "restore"
+	restored.field_path = slot_path(group, slot)
+	return restored
 
 ## 枚举正式槽和失败事务留下的回退副本；pending 文件不会成为可用存档。
 func _files() -> Array[String]:
@@ -162,21 +165,25 @@ func _commit(save: SaveGameResource, slot: String) -> SaveResult:
 	var backup: String = target.trim_suffix(".tres") + ".rollback.tres"
 	var error: Error = DirAccess.make_dir_recursive_absolute(target.get_base_dir())
 	if error != OK:
-		return SaveResult.failure("mkdir", error, "无法创建存档目录")
+		return SaveResult.failure("mkdir", error, "无法创建存档目录", "", target.get_base_dir())
 	error = ResourceSaver.save(save, pending)
 	if error != OK:
-		return SaveResult.failure("write", error, "临时存档写入失败，请检查磁盘和目录权限")
+		return SaveResult.failure("write", error, "临时存档写入失败，请检查磁盘和目录权限", "", pending)
 	var readback: SaveResult = read_file(pending)
-	if not readback.ok or ResourceFingerprint.digest(readback.value) != ResourceFingerprint.digest(save):
-		return SaveResult.failure("readback", ERR_FILE_CORRUPT, "临时存档读回校验失败")
+	if not readback.ok:
+		return SaveResult.failure("readback", readback.code, readback.message, readback.module_id, readback.field_path)
+	if ResourceFingerprint.digest(readback.value) != ResourceFingerprint.digest(save):
+		var difference: String = ResourceFingerprint.difference(save, readback.value)
+		if not difference.is_empty():
+			return SaveResult.failure("readback", ERR_FILE_CORRUPT, "临时存档读回字段发生变化", "", difference)
 	if FileAccess.file_exists(target):
 		error = DirAccess.copy_absolute(target, backup)
 		if error != OK:
-			return SaveResult.failure("backup", error, "无法保留上一份存档，已停止覆盖")
+			return SaveResult.failure("backup", error, "无法保留上一份存档，已停止覆盖", "", backup)
 	error = _replace_file(pending, target)
 	if error != OK:
 		_catalog = null
-		return SaveResult.failure("replace", error, "正式存档替换失败，原文件及恢复副本保留")
+		return SaveResult.failure("replace", error, "正式存档替换失败，原文件及恢复副本保留", "", target)
 	if FileAccess.file_exists(backup):
 		DirAccess.remove_absolute(backup)
 	# 当前正文已经提交，索引失败不应误报保存失败或重复结算。
@@ -189,6 +196,8 @@ func _commit(save: SaveGameResource, slot: String) -> SaveResult:
 	directory.fingerprint = _fingerprint(_files())
 	_catalog = directory
 	var result: SaveResult = SaveResult.success(save, "已保存")
+	result.stage = "commit"
+	result.field_path = target
 	if _write_index() != OK:
 		result.warning = "存档已成功，目录索引稍后重建"
 	result.value = save

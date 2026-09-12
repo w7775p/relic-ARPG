@@ -1,6 +1,7 @@
 extends PanelContainer
 ## 手动保存与整档回退共用面板，一个自动栏位展开最近成功历史。
 signal closed
+signal saved(result: SaveResult)
 var location: Node
 var session: GameSession
 var saving: bool = false
@@ -109,6 +110,7 @@ func _on_accept_pressed() -> void:
 func _on_overwrite_confirmed() -> void:
 	var index: int = int(selected.slot_id.get_slice("_", 1))
 	var result: SaveResult = SaveManager.save_game(session, location, index, "manual")
+	saved.emit(result)
 	$Rows/Message.text = result.message + ("；" + result.warning if not result.warning.is_empty() else "")
 	_rebuild()
 

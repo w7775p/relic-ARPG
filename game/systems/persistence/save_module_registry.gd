@@ -15,6 +15,8 @@ static func standard() -> SaveModuleRegistry:
 func register_module(prototype: SaveModule, introduced_version: int = 1) -> SaveResult:
 	if prototype == null or prototype.module_id.is_empty() or prototypes.has(prototype.module_id):
 		return SaveResult.failure("registry", ERR_ALREADY_EXISTS, "模块 ID 为空或重复")
+	# 版本字段默认零，创建新模块时显式赋值，确保 ResourceSaver 总是把版本写入文件。
+	prototype.module_version = prototype.current_version()
 	prototypes[prototype.module_id] = prototype
 	introduced_versions[prototype.module_id] = introduced_version
 	return SaveResult.success()

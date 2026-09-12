@@ -43,6 +43,7 @@ func _ready() -> void:
 	slots = SLOTS.instantiate()
 	add_child(slots)
 	slots.closed.connect(_on_slots_closed)
+	slots.saved.connect(_on_manual_saved)
 	get_tree().auto_accept_quit = false
 	_on_entered.call_deferred()
 
@@ -132,6 +133,14 @@ func _on_load_pressed() -> void:
 func _on_slots_closed() -> void:
 	if game_session.revision != game_session.saved_revision:
 		_timer.start()
+
+
+## 同步手动保存的真实反馈，完成后清除先前失败的离场意图。
+func _on_manual_saved(result: SaveResult) -> void:
+	$Toolbar/Rows/Status.text = result.message + ("；" + result.warning if not result.warning.is_empty() else "")
+	$Toolbar/Rows/Buttons/Retry.visible = not result.ok
+	if result.ok:
+		_pending_action = ""
 
 
 ## 返回菜单前保存最新据点状态。

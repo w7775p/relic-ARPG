@@ -9,6 +9,7 @@ import tempfile
 
 TEST_MARKERS = {
     "res://tests/resource_model.tscn": "RESOURCE_MODEL_RESULT: 0 failures",
+    "res://tests/resource_store.tscn": "RESOURCE_STORE_RESULT: 0 failures",
     "res://tests/m0_smoke.tscn": "M0_SMOKE_RESULT: 0 failures",
     "res://tests/m1_combat.tscn": "M1_COMBAT_RESULT: 0 failures",
     "res://tests/m2_loop.tscn": "M2_LOOP_RESULT: 0 failures",

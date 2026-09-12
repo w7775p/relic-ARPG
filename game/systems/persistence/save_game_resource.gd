@@ -8,6 +8,7 @@ const CONTENT_VERSION: int = 1
 @export var group_id: String = ""
 @export var checkpoint_id: String = ""
 @export var saved_at: int = 0
+@export var sequence: int = 0
 @export var reason: String = ""
 @export var modules: Array[SaveModule] = []
 

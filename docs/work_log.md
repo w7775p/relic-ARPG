@@ -75,3 +75,9 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 ## Resource 最终反馈修正（2026-09-12）
 
 最终差异检查发现 Hub 的出发业务接口在保存失败时仍返回“已出发”，与底部失败状态冲突。改为只有场景切换开始才返回成功，否则返回实际失败消息。真实 pending 写入阻塞覆盖整备面板出发入口，五项故障断言通过；原菜单重试和旧文件保持继续通过。该修复单独提交，之后重新运行 Windows 全量回归和导出，最终交付以新包为准。
+
+## Resource 最终交付（2026-09-12）
+
+最终代码提交 `95d3a0f2269f237c84982eb2f90820db67b87299`，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，base main、head feat/resource-save，未合并。对应 [Windows run 34716912163](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163) 全量场景/故障回归、Windows 导出和独立包启动全部通过；构建 [artifact 10305120887](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163/artifacts/10305120887)，压缩产物 SHA256 `048274d00ecab047fdb6523d21a62ddf9b6b082bce1f610aca3a184153a8f848`。
+
+最终差异、脚本中文注释/制表符、资源引用、UID、文档相对链接检查通过；运行代码与测试入口不再引用旧 JSON/in_town/旧探险。功能子任务已分别提交；本次提交仅记录交付，已验证代码未变。可见界面、中文排版、音效听感和操作手感仍待 Windows 人工验收；万件规模同步文本停顿为已知性能限制，详见 save_system.md。下一步使用本轮新包按 validation.md 验收，评审及合并由用户决定。

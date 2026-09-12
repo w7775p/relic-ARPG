@@ -1,12 +1,12 @@
 # 当前 Resource 重构验证（2026-09-12）
 
-代码提交 `dc6ab380a7e11ef1a10039dcaaaef370876aad26`，分支 `feat/resource-save`。引擎实测 `4.7.2.stable.official.ed1daf0bf`。以下是本轮证据；后文 M0/M1/M2/P1 为历史记录，其中位置、JSON 和战斗恢复断言已经退休，不能用作当前操作说明。
+代码提交 `95d3a0f2269f237c84982eb2f90820db67b87299`，分支 `feat/resource-save`。引擎实测 `4.7.2.stable.official.ed1daf0bf`。以下是本轮证据；后文 M0/M1/M2/P1 为历史记录，其中位置、JSON 和战斗恢复断言已经退休，不能用作当前操作说明。
 
 ```bash
 python3 tools/verify.py --godot /path/to/Godot_v4.7.2
 ```
 
-验证使用临时用户目录，包含编辑器导入、主菜单启动、10 个常规场景和 7 个独立故障进程。Linux 本地全部通过；对应 [Windows run 34716201490](https://github.com/w7775p/relic-ARPG/actions/runs/34716201490) 的同入口全量回归、导出与独立启动全部通过。
+验证使用临时用户目录，包含编辑器导入、主菜单启动、10 个常规场景和 7 个独立故障进程。Linux 在 `dc6ab38` 全量通过，最后出发提示修正后重跑实际写入故障五项通过；最终代码对应 [Windows run 34716912163](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163) 的同入口全量回归、导出与独立启动全部通过。
 
 | 内容 | 实际覆盖与结果 |
 | --- | --- |
@@ -17,16 +17,18 @@ python3 tools/verify.py --godot /path/to/Godot_v4.7.2
 | M2 | 35 项：1000 件生成规则、持有归属、UI 输入、拾取过滤、三趟清场、重复奖励、撤离与死亡；通过 |
 | P1Loadout / P1BleedSkills | 16 / 32 项：持久装配、技能效果/时序、暂停、收益一次性和新探险清理；通过 |
 | HubFlow / DebugConsole | 22 / 6 项：真实路由、自动去抖、手动槽、加载不写档、坏档保留会话、整体回退、新角色隔离及诊断；通过 |
-| 实际写入/替换失败 | 目录阻塞 pending 写入、替换瞬间真实文件系统竞争；保留当前会话和旧档/恢复副本，重试成功后离场；通过 |
+| 实际写入/替换失败 | 目录阻塞 pending 写入、替换瞬间真实文件系统竞争；保留当前会话和旧档/恢复副本，重试成功后离场，出发失败不显示已出发；通过 |
 | 损坏正文/缺失内容 | 实际坏 `.tres` 及未知底材，打开选择界面，失败不换当前会话，主动选择自动槽后成功；通过 |
 | 索引/中断事务 | 索引替换失败正文仍成功、坏索引重建、pending 不选入、正式文件删除后可重新保存；通过 |
 | 正常探险退出 | 真实探险 → Hub 结算 → 落盘成功 → 进程退出，文件金额正确；通过 |
 | Windows 包 | 使用同版模板导出，独立包 headless 启动到 `M2_EXPEDITION_BOOT_READY`，退出码和日志检查通过 |
-| 实际画面/字体/手感 | 未执行：当前环境无可用图形服务；逻辑布局断言不能替代可见试玩 |
+| 实际画面/字体/手感 | 待人工验收：当前环境无可用图形服务；逻辑布局断言不能替代可见试玩 |
 
 故障测试只放行对应隔离路径上的已知预期 I/O 错误；脚本错误、其他引擎错误、非零退出码或缺失完成标记仍使验证失败。
 
-Windows 包：[relic-arpg-m2-windows](https://github.com/w7775p/relic-ARPG/actions/runs/34716201490/artifacts/10304449478)，压缩产物 SHA256 `ccb21cb034526a1b13a2235bf5565591f24f9dc9a1a90edaacdc110e2db0944b`。名称沿用 M2 工作流，内容对应上述 Resource 代码提交。[独立启动日志](https://github.com/w7775p/relic-ARPG/actions/runs/34716201490/artifacts/10304289808)。
+Windows 包：[relic-arpg-m2-windows](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163/artifacts/10305120887)，压缩产物 SHA256 `048274d00ecab047fdb6523d21a62ddf9b6b082bce1f610aca3a184153a8f848`。名称沿用 M2 工作流，内容对应上述 Resource 代码提交。[独立启动日志](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163/artifacts/10305091043)。
+
+交付 [PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，等待评审及可见验收；后续交接文档提交没有修改上述已验证代码。
 
 ## 规模测量
 

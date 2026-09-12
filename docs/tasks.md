@@ -38,6 +38,6 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 | 任务 | 内容 | 状态 | 验证 |
 | --- | --- | --- | --- |
 | Hub 拆分 | MainMenu → 独立 Hub → ExpeditionRuntime → Hub | 已合入 main `30b85f0`，PR #7 | 历史证据见 hub_refactor.md |
-| [Resource 存档](resource_save_task.md) | 五模块、多角色多槽、Hub 检查点、整体回退、旧 JSON/旧探险移除 | 实现及 Linux 故障回归完成；Windows 与可见验收见执行记录 | 10 个常规场景＋7 个独立故障进程；规模限制见 save_system.md |
+| [Resource 存档](resource_save_task.md) | 五模块、多角色多槽、Hub 检查点、整体回退、旧 JSON/旧探险移除 | 实现完成；PR #8 待评审与人工可见验收 | 10 个常规场景＋7 个故障进程；Windows 回归/导出/独立启动通过，详见 validation.md |
 
 P1_Task1/2 的 v3/v4 描述属于原阶段交付历史。后续任务以 Resource 存档和真实 Hub 为准，保留新 Resource 已发布版本的升级链；不再要求 JSON 迁移或战斗中恢复。

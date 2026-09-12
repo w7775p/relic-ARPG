@@ -71,3 +71,7 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 代码提交 `dc6ab380a7e11ef1a10039dcaaaef370876aad26` 已同步远端；Windows [run 34716201490](https://github.com/w7775p/relic-ARPG/actions/runs/34716201490) 的全量回归、同版模板导出、独立包启动与上传全部成功。构建 [artifact 10304449478](https://github.com/w7775p/relic-ARPG/actions/runs/34716201490/artifacts/10304449478)，压缩产物 SHA256 `ccb21cb034526a1b13a2235bf5565591f24f9dc9a1a90edaacdc110e2db0944b`。
 
 新增 save_system.md，同步 README、工程、Hub、总体计划、任务总表、验证与后续任务卡；将旧 JSON/战斗恢复要求改为已冻结的 Resource Hub 检查点、整体回退和新探险重建。已完成 P1 卡和历史验证保留历史标识；本轮未提前实现后续玩法。字段、路径、版本说明与代码核对，文档差异/链接检查后单独提交；人工可见验收仍待执行，下一项为最终差异检查和 PR。
+
+## Resource 最终反馈修正（2026-09-12）
+
+最终差异检查发现 Hub 的出发业务接口在保存失败时仍返回“已出发”，与底部失败状态冲突。改为只有场景切换开始才返回成功，否则返回实际失败消息。真实 pending 写入阻塞覆盖整备面板出发入口，五项故障断言通过；原菜单重试和旧文件保持继续通过。该修复单独提交，之后重新运行 Windows 全量回归和导出，最终交付以新包为准。

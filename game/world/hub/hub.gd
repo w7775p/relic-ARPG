@@ -182,7 +182,7 @@ func inventory_action(action: String, source: int, index: int) -> String:
 		"retrieve": success = source == 2 and inventory.transfer(index, false)
 		"depart":
 			request_transition("depart")
-			return "已出发"
+			return "已出发" if _transitioning else $Toolbar/Rows/Status.text
 		"filter":
 			minimum_quality = (minimum_quality + 1) % 3
 			success = true

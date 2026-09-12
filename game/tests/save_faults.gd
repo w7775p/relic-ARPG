@@ -52,6 +52,8 @@ func _run() -> void:
 			var obstruction: String = store.slot_path(group, slot).trim_suffix(".tres") + ".pending.tres"
 			DirAccess.make_dir_absolute(obstruction)
 			hub.inventory.gold = 777
+			var departure_message: String = hub.inventory_action("depart", 0, 0)
+			check(get_tree().current_scene == hub and departure_message.contains("失败") and not departure_message.contains("已出发"), "出发前实际写入失败时，整备面板返回真实失败提示")
 			hub.request_transition("menu")
 			check(get_tree().current_scene == hub and hub.inventory.gold == 777 and hub.get_node("Toolbar/Rows/Buttons/Retry").visible, "真实写入失败阻止退出并展示重试，当前会话保留")
 			check(store.load_session(group, "manual_01").value.inventory.gold == 0, "写入失败保留上一份有效存档")

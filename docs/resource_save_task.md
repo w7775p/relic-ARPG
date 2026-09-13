@@ -16,7 +16,7 @@
 
 冻结边界：仅 Hub 保存；撤离、通关、死亡保留已拾取收益并回真实 Hub。正常退出经撤离、结算、保存后完成。异常退出回到最后成功检查点。所有模块整体回退，读取不自动覆盖；不恢复战斗、地面掉落或本趟地图。独立角色组，当前仓库归角色。设置文件独立。
 
-首次交付代码提交：`95d3a0f2269f237c84982eb2f90820db67b87299`。重构实现和自动验证子任务已完成；2026-09-13 拾取反馈跟进见下文。最新提交以远端分支及本文件提交历史为准。
+当前已验证代码：`708160e834cd1b36d4031ad83f2e30310ed9e47e`。首次交付代码为 `95d3a0f`；2026-09-13 拾取反馈跟进与新包见下文。重构实现和自动验证子任务已完成，最新文档提交以远端分支及本文件提交历史为准。
 
 | 子任务 | 提交 |
 | --- | --- |
@@ -27,17 +27,18 @@
 | 架构与后续任务文档 | `9b2fe71` |
 | 出发保存失败反馈修正 | `95d3a0f` |
 | 首次 Windows 与 PR 交付记录 | `3ad0783` |
-| 拾取反馈与横扫真实输入回归 | 本轮代码提交，Windows 新包待验证 |
+| 拾取反馈与横扫真实输入回归 | `708160e` |
+| 拾取跟进 Windows 验证与交付记录 | 本文件所在提交；仅文档 |
 
 最终检查：资源引用、UID、新增函数中文注释、制表符及差异检查通过；没有已跟踪的生成缓存或构建产物。旧 JSON、旧 expedition、SaveValidator、SessionSnapshot 和 in_town 在运行代码/测试入口中无剩余引用。main 仍为 `30b85f0`。
 
-最近验证：2026-09-12，Godot `4.7.2.stable.official.ed1daf0bf`。Linux `dc6ab38` 的 `python3 tools/verify.py --godot <4.7.2 引擎路径>` 通过导入、启动、10 个常规场景和 7 个故障进程；最后提示修正的真实写入故障五项通过。最终代码 `95d3a0f` 的 [Windows run 34716912163](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163) 全量回归、导出及独立包启动全部通过。
+最近验证：2026-09-13，Godot `4.7.2.stable.official.ed1daf0bf`。`708160e` 的 Linux `python3 tools/verify.py --godot <4.7.2 引擎路径>` 通过导入、启动、11 个常规场景和 7 个故障进程；对应 [Windows run 34745672581](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581) 的同入口全量回归、导出及独立包启动全部通过。
 
-交付：[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，base main，head feat/resource-save，未合并。[Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163/artifacts/10305120887)，压缩产物 SHA256 `048274d00ecab047fdb6523d21a62ddf9b6b082bce1f610aca3a184153a8f848`。完整验证和人工步骤见 [validation.md](validation.md)。
+交付：[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，base main，head feat/resource-save，未合并。[最新 Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581/artifacts/10314221276)，压缩产物 SHA256 `7718cc2b69fdd0cde0bd35c1d159166f4b49222fd98b97caf97b7a627074b67e`。完整验证和人工步骤见 [validation.md](validation.md)。
 
 待验收与限制：当前环境无图形服务，实际画面、中文排版、声音及操作手感尚未验收。10000 件单次 Linux 样本约 5.88 MB、保存 4.87 秒、读取 2.35 秒；同步文本存储还不满足大仓库流畅性目标。旧 JSON 不迁移，当前没有后台保存、云存档、共享仓库和战斗恢复。
 
-下一步：提交拾取修复后运行 Windows 全量验证、导出和独立启动，更新 PR #8 与新包入口，再进行可见验收。后续卡从包含本轮重构的基线接续，新增持久字段按所属模块扩展；大型数据性能另设阶段。合并由用户决定。
+下一步：使用上述新包复核横扫游玩时的 E 拾取，以及 Resource 槽位和正常退出保存。若近身、有容量且出现 E 候选仍失败，保留 HUD 与 F3 日志继续定位。后续卡按所属模块扩展持久字段；大型数据性能另设阶段。合并由用户决定。本轮代码与交付记录分别提交，没有遗留未提交实现。
 
 ## 拾取反馈跟进（2026-09-13）
 

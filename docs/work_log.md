@@ -87,3 +87,5 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 用户报告 E 拾取无反应，并补充已将技能换为横扫。真实引擎复现 Hub 换装配→右键直接/流血击杀→按住右键时 E 拾取，近处物品入包正常；确认超出 2.5 米无反馈及满包提示被逐帧 HUD 覆盖。新增统一数秒反馈，保留候选与常规状态；无候选给出距离/遮挡/过滤条件，成功显示物品名，异常物品独立提示并写 F3 诊断。用户原始故障是否由满包或距离造成仍未确认。
 
 修复前真实输入用例的五项反馈断言失败，修复后新增异常身份用例共 23 项通过；覆盖物品身份、满包保留、腾格重试、GUI 暂停/关闭、重复按键，以及撤离后 Resource 文件读回。M2 改用真实 E 事件，新场景接入统一验证。Godot 4.7.2 Linux 的 `python3 tools/verify.py --godot <引擎路径>` 全量通过：导入、主入口、11 个常规场景和 7 个故障进程。代码先提交，随后 Windows 全量验证和新包另行记录。`save_system.md` 已在 `9b2fe71` 提交并同步到 PR #8，本轮核对确认没有遗漏。
+
+拾取跟进交付：代码 `708160e834cd1b36d4031ad83f2e30310ed9e47e` 的 [Windows run 34745672581](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581) 全量回归、Windows 导出及独立包启动全部通过。新包 [artifact 10314221276](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581/artifacts/10314221276)，压缩产物 SHA256 `7718cc2b69fdd0cde0bd35c1d159166f4b49222fd98b97caf97b7a627074b67e`。文档与代码分别提交，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8) 已更新，main 仍为 `30b85f0`，未合并。本次仅记录已完成的验证，不新增代码改动；无窗口结果不代替用户原始现场和可见验收。

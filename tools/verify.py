@@ -15,6 +15,7 @@ TEST_MARKERS = {
     "res://tests/m0_smoke.tscn": "M0_SMOKE_RESULT: 0 failures",
     "res://tests/m1_combat.tscn": "M1_COMBAT_RESULT: 0 failures",
     "res://tests/m2_loop.tscn": "M2_LOOP_RESULT: 0 failures",
+    "res://tests/pickup_input.tscn": "PICKUP_INPUT_RESULT: 0 failures",
     "res://tests/p1_loadout.tscn": "P1_LOADOUT_RESULT: 0 failures",
     "res://tests/p1_bleed_skills.tscn": "P1_BLEED_SKILLS_RESULT: 0 failures",
     "res://tests/hub_flow.tscn": "HUB_FLOW_RESULT: 0 failures",

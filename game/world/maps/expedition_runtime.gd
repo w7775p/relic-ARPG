@@ -2,6 +2,7 @@ extends "res://world/maps/combat_arena.gd"
 ## 正式探险运行场景；长期收益写入会话模块，本趟世界随真实离场回收。
 const PANEL: Script = preload("res://ui/inventory/inventory_panel.gd")
 const FIRST_CLEAR_REWARDS: Array[String] = ["thunder_ring", "ember_mail", "energy_grips"]
+const PICKUP_RADIUS_M: float = 2.5
 var game_session: GameSession
 var inventory: InventoryState
 var generator: ItemGenerator
@@ -82,7 +83,7 @@ func _process(delta: float) -> void:
 	elif wave_completed:
 		text += "\n已清场，拾取战利品后按 T 撤离，提高下一趟难度"
 	_notice_remaining = maxf(0.0, _notice_remaining - delta)
-	status.text = _notice if _notice_remaining > 0.0 else text
+	status.text = text + "\n" + _notice if _notice_remaining > 0.0 else text
 
 ## M2 键位只控制真实流程，测试预设继续留在独立调试资源。
 func _unhandled_input(event: InputEvent) -> void:
@@ -212,23 +213,37 @@ func _render_drop(drop: Dictionary) -> void:
 func nearby_items() -> Array:
 	var result: Array = []
 	for drop: Dictionary in ground:
-		if drop.kind == "item" and int(drop.item.quality) >= minimum_quality and player.global_position.distance_to(drop.position) <= 2.5:
+		if drop.kind == "item" and int(drop.item.quality) >= minimum_quality and player.global_position.distance_to(drop.position) <= PICKUP_RADIUS_M:
 			if combat.has_line_of_sight(player.global_position, drop.position):
 				result.append(drop)
 	return result
 
-## 背包满时保留掉落；成功后同步回收视觉。
+## 保留失败掉落并提示原因；只有物品入包成功才回收地面视觉。
 func pickup_selected() -> bool:
+	if _ending:
+		return false
 	var nearby: Array = nearby_items()
-	if nearby.is_empty() or _ending:
+	if nearby.is_empty():
+		_show_notice("附近没有可拾取装备（需在 %.1f 米内，且无遮挡、未被过滤）" % PICKUP_RADIUS_M)
 		return false
 	var drop: Dictionary = nearby[posmod(pickup_index, nearby.size())]
 	if not inventory.pickup(drop.item):
-		status.text = "背包已满，请先整理"
+		if inventory.data.bag_ids.size() >= inventory.data.bag_capacity:
+			_show_notice("背包已满，请按 I 整理后再拾取")
+		else:
+			_show_notice("物品状态异常，未拾取；按 F3 查看日志")
+			SceneRouter.debug_log("WARN", "拾取失败 item_id=%s duplicate=%s %s" % [drop.item.id, inventory.data.instances.has(drop.item.id), drop.item.validate().diagnostic()])
 		return false
 	_remove_drop(drop)
+	_show_notice("已拾取：" + ItemGenerator.title(drop.item), 2.0)
 	AudioManager.play_cue()
 	return true
+
+## 操作反馈保留指定秒数，逐帧 HUD 刷新时与常规状态一起显示。
+func _show_notice(message: String, duration_sec: float = 4.0) -> void:
+	_notice = message
+	_notice_remaining = duration_sec
+	status.text = message
 
 ## 数据移除立即生效，视觉延迟回收不会重复拾取。
 func _remove_drop(drop: Dictionary) -> void:
@@ -298,10 +313,8 @@ func _on_player_died() -> void:
 ## 战斗快捷保存说明实际边界，并保留几秒供玩家阅读。
 func _request_save() -> Error:
 	var result: SaveResult = SaveManager.save_game(game_session, self)
-	_notice = result.message
-	_notice_remaining = 4.0
-	status.text = _notice
-	$Interface/Pause/Center/Rows/Status.text = _notice
+	_show_notice(result.message)
+	$Interface/Pause/Center/Rows/Status.text = result.message
 	return result.code as Error
 
 ## 暂停菜单的保存入口直接回据点，结算后由 Hub 保存。

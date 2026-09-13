@@ -88,7 +88,19 @@ func _run() -> void:
 	check(arena.inventory.gold == gold + 17, "金币接近自动拾取")
 	var unique: ItemInstanceResource = arena.generator.generate(3, true, "thunder_ring")
 	arena.add_drop("item", arena.player.position, unique)
-	check(arena.pickup_selected(), "地面真实装备进入背包")
+	get_tree().paused = false
+	var pickup_key: InputEventKey = InputEventKey.new()
+	pickup_key.physical_keycode = KEY_E
+	pickup_key.keycode = KEY_E
+	pickup_key.unicode = 101
+	pickup_key.pressed = true
+	Input.parse_input_event(pickup_key.duplicate())
+	pickup_key.pressed = false
+	Input.parse_input_event(pickup_key.duplicate())
+	Input.flush_buffered_events()
+	await frames()
+	get_tree().paused = true
+	check(arena.inventory.bag.size() == 1 and arena.inventory.bag[0] == unique, "真实 E 按键将地面装备放入背包")
 	var health: float = arena.player.health - 40
 	arena.player.health = health
 	arena.skills.energy = 21

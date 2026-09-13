@@ -1,12 +1,15 @@
 extends Node
-## 拾取输入回归：Hub 换横扫、右键击杀、流血掉落、真实 E、界面焦点和失败反馈。
+## 源码与成品包共用拾取回归：内容配置、真实击杀、E 输入和完整检查点。
 var checks: int = 0
 var failures: int = 0
 
 ## 保留跨场景测试节点，在正式服务就绪后开始。
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	get_tree().current_scene = null
+	if get_tree().current_scene == self:
+		get_tree().current_scene = null
+	SaveManager.store = SaveStore.new()
+	SaveManager.store.root = "user://pickup_smoke"
 	_run.call_deferred()
 
 ## 记录断言并保留失败后的其余检查。
@@ -84,6 +87,9 @@ func pick_drops(arena: Node3D, drops: Array) -> void:
 
 ## 覆盖玩家切换横扫后的拾取流程以及两种已复现的无反馈情况。
 func _run() -> void:
+	if not _check_loot_content():
+		_finish()
+		return
 	SceneRouter.start_session()
 	await frames()
 	var hub: Node = get_tree().current_scene
@@ -92,6 +98,7 @@ func _run() -> void:
 	await frames(8)
 	var arena: Node3D = get_tree().current_scene
 	check(arena.skills.loadout.slots.main == "sweep", "通过 Hub 装配入口将横扫带入正式探险")
+	print("PACKAGE_LOOT_BOOT_READY")
 	arena.encounters.clear()
 	arena.player.set_physics_process(false)
 	await frames()
@@ -157,7 +164,33 @@ func _run() -> void:
 			slot_id = entry.slot_id
 	var result: SaveResult = SaveManager.load_game(hub.game_session.group_id, slot_id)
 	check(result.ok and result.value.inventory.data.instances.has(overflow.id) and result.value.inventory.loadout.slots.main == "sweep", "横扫掉落拾取后撤离，装备身份和技能装配一起进入 Hub 检查点")
+	if result.ok:
+		check(ResourceFingerprint.digest(result.value.modules.items) == ResourceFingerprint.digest(hub.game_session.modules.items), "成品包检查点完整保留装备、词条实值、归属与随机状态")
+		check(ResourceFingerprint.digest(result.value.generator.generate(4, true)) == ResourceFingerprint.digest(hub.game_session.generator.generate(4, true)), "成品包读档后下一件装备编号和词条序列一致")
 	hub.queue_free()
 	await frames()
+	_finish()
+
+## 导出后仍须保留适用部位，并能生成所有品质的合法实例。
+func _check_loot_content() -> bool:
+	var definitions_ok: bool = true
+	for affix: AffixDefinition in ItemCatalog.AFFIXES:
+		definitions_ok = definitions_ok and not affix.slots.is_empty()
+		for slot: String in affix.slots:
+			definitions_ok = definitions_ok and ItemCatalog.SLOTS.has(slot)
+	check(definitions_ok, "打包后词条适用部位完整且引用有效装备槽")
+	var generator: ItemGenerator = ItemGenerator.new()
+	generator.rng.seed = 8912
+	var generation_ok: bool = true
+	var quality_counts: Array[int] = [0, 0, 0, 0]
+	for index: int in range(1000):
+		var item: ItemInstanceResource = generator.generate(1 + index % 6, index % 5 == 0)
+		generation_ok = item.validate().ok and generation_ok
+		quality_counts[item.quality] += 1
+	check(generation_ok and not quality_counts.has(0), "打包后跨等级生成一千件装备，覆盖四种品质且全部通过实例校验")
+	return failures == 0
+
+## 输出成品包与源码验证共用的完成标记，失败以非零退出码返回。
+func _finish() -> void:
 	print("PICKUP_INPUT_RESULT: %d failures / %d checks" % [failures, checks])
 	get_tree().quit(0 if failures == 0 else 1)

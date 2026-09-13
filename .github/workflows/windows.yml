@@ -47,16 +47,9 @@ jobs:
           & $env:GODOT_BIN --headless --path game --export-release "Windows Desktop" ../builds/windows/relic_arpg.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (!(Test-Path builds/windows/relic_arpg.exe)) { throw "导出未产生 exe" }
-      - name: 验证导出包独立启动
+      - name: 验证导出包拾取与存档
         shell: pwsh
-        run: |
-          $logPath = Join-Path $env:GITHUB_WORKSPACE 'package-smoke.log'
-          $process = Start-Process -FilePath ./builds/windows/relic_arpg.exe -ArgumentList '--headless','--fixed-fps','60','--quit-after','180','--log-file',$logPath,'--','--smoke-combat' -Wait -PassThru
-          if (!(Test-Path package-smoke.log)) { throw "导出包未产生验证日志" }
-          Get-Content package-smoke.log
-          if ($process.ExitCode -ne 0) { throw "导出包退出码 $($process.ExitCode)" }
-          if (Select-String -Path package-smoke.log -Pattern 'SCRIPT ERROR:|ERROR:') { throw "导出包运行报错" }
-          if (!(Select-String -Path package-smoke.log -Pattern 'M2_EXPEDITION_BOOT_READY')) { throw "导出包未进入战斗场景" }
+        run: python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log
       - name: 上传 Windows 包
         uses: actions/upload-artifact@v4
         with:

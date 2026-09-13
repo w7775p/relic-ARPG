@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from verify_package import verify_package
 
 
 TEST_MARKERS = {
@@ -97,6 +98,7 @@ def main():
                 marker = "SAVE_FAULT_RESULT: " + fault + " 0 failures"
             if marker is not None and marker not in output:
                 raise SystemExit("测试未运行到完成标记")
+    verify_package(godot=args.godot)
 
 
 if __name__ == "__main__":

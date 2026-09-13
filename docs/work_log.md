@@ -89,3 +89,9 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 修复前真实输入用例的五项反馈断言失败，修复后新增异常身份用例共 23 项通过；覆盖物品身份、满包保留、腾格重试、GUI 暂停/关闭、重复按键，以及撤离后 Resource 文件读回。M2 改用真实 E 事件，新场景接入统一验证。Godot 4.7.2 Linux 的 `python3 tools/verify.py --godot <引擎路径>` 全量通过：导入、主入口、11 个常规场景和 7 个故障进程。代码先提交，随后 Windows 全量验证和新包另行记录。`save_system.md` 已在 `9b2fe71` 提交并同步到 PR #8，本轮核对确认没有遗漏。
 
 拾取跟进交付：代码 `708160e834cd1b36d4031ad83f2e30310ed9e47e` 的 [Windows run 34745672581](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581) 全量回归、Windows 导出及独立包启动全部通过。新包 [artifact 10314221276](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581/artifacts/10314221276)，压缩产物 SHA256 `7718cc2b69fdd0cde0bd35c1d159166f4b49222fd98b97caf97b7a627074b67e`。文档与代码分别提交，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8) 已更新，main 仍为 `30b85f0`，未合并。本次仅记录已完成的验证，不新增代码改动；无窗口结果不代替用户原始现场和可见验收。
+
+## 词条数量拒绝的导出根因（2026-09-13）
+
+用户提交 F3 日志，明确物品 ID 2 不重复但词条数量非法。源码池和数量要求一致，改查导出资源：所有词条适用部位 PackedStringArray 在 PCK 中变为空。种子 8912 的 1000 次生成，源码 0 失败、旧导出 762 失败。普通 ResourceSaver 二进制往返正常，显式默认构造和脚本源码导出无效；仅关闭导出资源自动二进制转换即可修复。保留实例校验与已有 Resource 存档版本。
+
+拾取回归迁入 app/validation 并保留 UID，测试场景与 Boot 的 --smoke-loot 共用；补静态部位、1000 件生成、完整物品模块读回和下一次随机断言，共 27 项。tools/verify.py 增加隔离 PCK 验证，Windows 工作流对真正交付的 exe 执行同一套玩法检查。Linux 统一入口的导入、启动、11 个场景、7 个故障进程及 PCK 内 27 项全部通过。隔离副本改回旧转换设置，新成品回归捕获两项失败、退出码 1。代码和后续 Windows 交付分别提交；前次“包能启动”证据无法证明掉落配置完整。

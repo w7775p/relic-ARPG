@@ -57,7 +57,7 @@ Hub 整备的下拉页签选择“技能与被动”。左键基础槽可装普�
 python tools/verify.py --godot /path/to/godot
 ```
 
-在临时用户目录执行编辑器导入、主菜单启动、Resource 模型/存储/容量、M0/M1/M2、D1、HubFlow、DebugLog 及七类实际存储故障回归。失败、脚本错误与未出现完成标记均导致非零退出码。测试不会覆盖玩家存档。验证范围与实际结果见 `docs/validation.md`。
+在临时用户目录执行编辑器导入、主菜单启动、Resource 模型/存储/容量、M0/M1/M2、D1、HubFlow、DebugLog 及七类实际存储故障回归，随后实际导出 PCK，在无源码目录运行包内拾取与存档检查。失败、脚本错误与未出现完成标记均导致非零退出码。测试不会覆盖玩家存档。验证范围与实际结果见 `docs/validation.md`。
 
 安装同版导出模板后：
 
@@ -66,7 +66,9 @@ godot --headless --path game --editor --import --quit
 godot --headless --path game --export-release "Windows Desktop" ../builds/windows/relic_arpg.exe
 ```
 
-先创建 `builds/windows/`。Windows 产物为内嵌资源的 `relic_arpg.exe`；工作流成功后可下载 `relic-arpg-m2-windows`。发行 smoke 使用正式 `Hub → ExpeditionRuntime` 场景流自动出发，验证导出包可以进入战斗。
+先创建 `builds/windows/`。Windows 产物为内嵌资源的 `relic_arpg.exe`；工作流成功后可下载 `relic-arpg-m2-windows`。工作流使用 `python tools/verify_package.py --executable builds/windows/relic_arpg.exe` 验证实际成品，经正式 Hub 装配横扫、出发击杀、真实 E 拾取、撤离保存并读回。包内专用参数为 `--smoke-loot`，沿用源码拾取用例。
+
+当前关闭 `editor/export/convert_text_resources_to_binary`：4.7.2 导出转换会丢失词条的适用部位数组，导致魔法、稀有和独特装备生成零词条并被拒绝拾取。内容 `.tres` 保留为 Resource 文本，后续重新启用转换必须通过真实成品的掉落回归。
 
 ## 保留的 M1 测试入口
 

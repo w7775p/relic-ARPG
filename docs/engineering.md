@@ -7,6 +7,7 @@
 | 实现 | 职责 |
 | --- | --- |
 | `app/boot/` | 启动后延迟进入主菜单；发行 smoke 沿正式 Hub 路由运行 |
+| `app/validation/` | 源码与成品共用拾取回归；仅由测试场景或 Boot 的 `--smoke-loot` 参数启动 |
 | `app/services/scene_router.gd` | MainMenu / Hub / Expedition 场景切换、一次性跨场景角色状态交接、离场解除暂停 |
 | `app/services/settings_manager.gd` | ConfigFile 设置与原生窗口、音频总线应用 |
 | `app/services/audio_manager.gd` | 原生 WAV 短提示及 SFX 总线播放 |
@@ -29,6 +30,8 @@
 正式持久化使用五模块 Resource 完整检查点，只有 Hub 开放保存；设置继续使用 ConfigFile。旧 JSON 与旧探险兼容已按本轮决定移除，不提供旧档迁移。M0/M1 调试场地不保存位置。完整字段及扩展规则见 [save_system.md](save_system.md)。
 
 自动化测试使用临时用户目录；正式模板保存在引擎标准目录。Git 远端地址使用普通 HTTPS 地址，认证信息由外部连接管理。
+
+`project.godot` 明确关闭 `editor/export/convert_text_resources_to_binary`。4.7.2 实测导出二进制转换会将词条 `slots: PackedStringArray` 变为空，源码与普通 ResourceSaver 二进制往返正常；保留内容 `.tres` 后发布包恢复完整配置。`tools/verify.py` 除源码回归还导出并运行 PCK；Windows 进一步对实际 exe 执行同一拾取与存档用例，防止仅启动成功掩盖玩法数据丢失。
 
 官方实现依据：[CharacterBody3D](https://docs.godotengine.org/en/stable/classes/class_characterbody3d.html)、[命令行导入与导出](https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html)。实际 API 兼容性以本仓库 4.7.2 运行结果为准。
 

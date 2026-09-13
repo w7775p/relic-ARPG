@@ -4,8 +4,30 @@ extends RefCounted
 const SKILLS: Array[SkillDefinition] = [preload("res://content/skills/primary.tres"), preload("res://content/skills/whirlwind.tres"), preload("res://content/skills/sweep.tres"), preload("res://content/skills/warcry.tres")]
 const PASSIVES: Array[PassiveDefinition] = [preload("res://content/passives/might.tres"), preload("res://content/passives/precision.tres"), preload("res://content/passives/reach.tres"), preload("res://content/passives/vitality.tres"), preload("res://content/passives/guard.tres"), preload("res://content/passives/recovery.tres")]
 const LIMIT: int = 3
-var slots: Dictionary = {"basic":"primary", "main":"whirlwind", "auxiliary":""}
-var passives: Array = []
+var data: LoadoutResource
+var slots: Dictionary[String, String]:
+	get: return data.slots
+var passives: Array[String]:
+	get: return data.passives
+
+## 业务装配入口引用角色的权威 Resource。
+func _init(resource: LoadoutResource = null) -> void:
+	data = resource if resource != null else LoadoutResource.new()
+
+## 正式修改槽位并通知角色模块。
+func set_skill(slot: String, id: String) -> bool:
+	if not fits(slot, id):
+		return false
+	if data.slots[slot] != id:
+		data.slots[slot] = id
+		data.emit_changed()
+	return true
+
+## 据点重置被动；未变化时不通知自动保存。
+func reset_passives() -> void:
+	if not data.passives.is_empty():
+		data.passives.clear()
+		data.emit_changed()
 
 ## 稳定 ID 查询技能。
 static func skill(id: String) -> SkillDefinition:
@@ -35,6 +57,7 @@ func toggle(id: String) -> String:
 		return "最多选择三个被动，请先取消一项"
 	else:
 		passives.append(id)
+	data.emit_changed()
 	return ""
 
 ## 校验装配快照，包括数量、重复与未知字段。
@@ -52,12 +75,3 @@ static func valid(data: Variant) -> bool:
 			return false
 		seen.append(id)
 	return true
-
-## 创建独立存档数据。
-func snapshot() -> Dictionary:
-	return {"slots":slots.duplicate(), "passives":passives.duplicate()}
-
-## 恢复经过校验的会话选择。
-func restore(data: Dictionary) -> void:
-	slots = data.slots.duplicate()
-	passives = data.passives.duplicate()

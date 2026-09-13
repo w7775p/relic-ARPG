@@ -1,5 +1,5 @@
 extends Node
-## 验证 M0 的场景、移动碰撞、暂停、设置与位置存档。
+## 验证 M0 的场景、移动碰撞、暂停、设置与独立调试场地。
 
 var _failures: int = 0
 
@@ -63,7 +63,7 @@ func _run() -> void:
 	Input.action_release("dodge")
 	Input.action_release("move_right")
 	_check(player.position.x < 19.2, "闪避被边界墙阻挡")
-	_check(SaveManager.save_session(player.position) == OK, "贴墙位置可以保存")
+	_check(arena._request_save() == ERR_UNAVAILABLE, "调试场地提示从正式据点使用存档")
 	player.restore_position(Vector3(2, 0, 2))
 	await _frames(3)
 	arena._set_paused(true)
@@ -75,11 +75,6 @@ func _run() -> void:
 	_check(arena.get_node("Interface/Pause").visible, "暂停菜单显示")
 	arena._set_paused(false)
 	_check(not get_tree().paused, "恢复暂停状态")
-	_check(SaveManager.save_session(player.position) == OK, "位置存档写入")
-	var data: Dictionary = SaveManager.load_session()
-	_check(not data.is_empty() and absf(data.player_position[0] - 2.0) < 0.01, "位置存档读回")
-	_check(not SaveManager.is_valid_session({"version": 99}), "拒绝不支持的存档版本")
-	_check(not SaveManager.is_valid_session({"version": 1, "map_id": "map_m0_arena", "player_position": ["bad", 0, 0]}), "拒绝非法坐标")
 	_check(SettingsManager.set_master_volume(0.3) == OK, "音量设置保存")
 	_check(absf(db_to_linear(AudioServer.get_bus_volume_db(0)) - 0.3) < 0.001, "设置作用于音频总线")
 	var nav: NavigationRegion3D = arena.get_node("NavigationRegion")
@@ -88,16 +83,9 @@ func _run() -> void:
 	_check(path.size() > 2, "导航路径绕过障碍")
 	arena.queue_free()
 	await _frames(2)
-	SceneRouter.should_restore_session = true
-	var restored: Node3D = load("res://world/maps/test_arena.tscn").instantiate()
-	add_child(restored)
-	await _frames(5)
-	_check(restored.get_node("Player").position.distance_to(Vector3(2, 0, 2)) < 0.1, "重新创建场景恢复保存位置")
-	restored.queue_free()
-	await _frames(2)
 	var menu: Control = load("res://ui/menus/main_menu.tscn").instantiate()
 	add_child(menu)
-	_check(not menu.get_node("Center/Rows/Continue").disabled, "有效存档启用继续按钮")
+	_check(menu.get_node("Center/Rows/Start") != null, "主菜单保留独立角色新建入口")
 	menu._on_settings_pressed()
 	_check(menu.get_node("Settings").visible, "设置入口可打开")
 	print("M0_SMOKE_RESULT: ", _failures, " failures")

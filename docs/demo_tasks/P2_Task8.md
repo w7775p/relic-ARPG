@@ -13,6 +13,7 @@
 | [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
 | [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
+| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
 | [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
 | [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
 | [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
@@ -25,7 +26,7 @@
 
 ## 已经实现的功能
 
-仓库基线已完成 M0～M2：3D 即时战斗、雷霆旋风、随机装备、拾取换装、背包仓库、出售、成长、整备及完整探险存档。用户已试玩 M2 并反馈效果可以；历史自动化记录为 92 项回归及 Windows 导出/启动通过。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
 
 当前主体仍为 Godot 几何体和程序声音；已有十二个房间、六类敌人、一名首领和六个技能。资产规范要求 .glb 包装场景、米制和独立视觉子树。
 
@@ -51,11 +52,11 @@
 | `game/shared/、game/ui/、game/app/services/audio_manager.gd` | 材质、图标、声音和效果复用，避免每个实例独立加载同资源。 |
 | `docs/assets.md、docs/asset_sources.md` | 逐项记录作者、来源页面、许可证文件、修改与导入结果。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/maps/expedition.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
 
 ## 存档与兼容
 
-优先仅替换视觉与声音，保留稳定逻辑 ID、节点职责与碰撞；若动作接入增加真实战斗状态，必须同步保存。纯视觉补间允许重建，攻击预警必须从现有动作状态恢复。
+优先仅替换视觉与声音，保留稳定逻辑 ID、节点职责与碰撞；若动作接入增加真实战斗状态，需同步暂停与离场清理。纯视觉补间允许重建，攻击预警由现有动作状态驱动，不扩展为战斗存档。
 
 ## 验收标准
 

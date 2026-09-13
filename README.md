@@ -14,10 +14,10 @@
 | 恢复药剂 | Q；独立于装备与技能槽，按最大生命比例恢复 |
 | 闪避 | 空格 |
 | 背包与换装 | I；选择物品，左右查看词条与当前装备，点击穿戴 |
-| 拾取装备 | 靠近后 E；重叠候选按 Tab 切换 |
+| 拾取装备 | 靠近至 2.5 米内后 E；重叠候选按 Tab 切换；HUD 显示拾取结果 |
 | 金币与材料 | 两米内自动拾取 |
 | 撤离整备 | T，或背包里的撤离按钮 |
-| 保存完整进度 | F5；当前仍走旧 v4 JSON 兼容存档，下一轮迁移为 Resource |
+| 手动保存 | Hub 按 F5 选择槽位；探险中提示先撤离 |
 | DebugLog 控制台 | F3；发布包内可随时查看当前 Godot 日志与保存诊断 |
 | 暂停与设置 | Esc |
 
@@ -35,17 +35,21 @@ Hub 整备的下拉页签选择“技能与被动”。左键基础槽可装普�
 
 ## Hub 与探险场景边界
 
-正式新角色流程为 `MainMenu → Hub → ExpeditionRuntime → Hub`。`Hub` 持有当前会话的长期角色状态与据点服务；`ExpeditionRuntime` 负责战斗世界、敌人、地面掉落、技能瞬态与本趟状态。两者通过 SceneRouter 的一次性过渡引用交接 InventoryState、ItemGenerator 与掉落过滤设置，目标场景领取后立即清空引用。
+正式新角色流程为 `MainMenu → Hub → ExpeditionRuntime → Hub`。`Hub` 持有当前会话的长期角色状态与据点服务；`ExpeditionRuntime` 负责战斗世界、敌人、地面掉落、技能瞬态与本趟状态。两者通过 SceneRouter 一次性交接 GameSession；会话持有五个长期 Resource 模块及物品/掉落业务入口，目标场景领取后路由立即清空引用。
 
-旧 `world/maps/expedition.gd` 暂时保留原 `in_town`、弹窗式整备与 v4 JSON 快照，只用于旧存档兼容、历史回归和下一轮迁移输入。新的据点服务禁止继续接入该旧分支。详细边界见 `docs/hub_refactor.md`。
+`ExpeditionRuntime` 直接继承战斗场地，旧 `expedition.gd`、`in_town` 和 JSON 兼容层已移除。据点服务统一进入真实 Hub。详细边界见 [场景说明](docs/hub_refactor.md)。
 
 ## 存档
 
-当前仓库仍保留旧 Godot `user://session.json` v4 存档，用于旧角色继续、历史回归和迁移输入。它包含角色、背包、仓库、穿戴、等级、难度以及探险运行状态；`settings.cfg` 独立保存设置。Windows 默认目录：`%APPDATA%/Godot/app_userdata/Relic ARPG/`。
+正式存档使用 Godot Resource，开发阶段写入 `.tres`。每个新角色建立独立档案组，包含 **5 个手动槽**和 **1 个自动存档入口（保留最近 3 个成功版本）**；仓库属于当前角色。主菜单“继续 / 选择存档”与 Hub“读取 / 回退”可以选择角色和具体版本。手动覆盖已有槽位需要确认。
 
-正常 Hub→探险流程已经停止在“出发”时写旧 JSON 据点快照。下一轮存档重构必须使用 Godot Resource，目标为 `PlayerProfileResource`、`RunStateResource`、`SaveGameResource`，开发阶段优先写入 `user://save.tres`。旧 `session.json` 只保留一次性迁移入口；Resource 迁移与回归完成后删除 legacy `in_town` 路径。
+仅 Hub 可以保存。新角色建立、出发前、结算回城、正常退出及据点持久数据修改后自动保存；连续整备操作合并约 1 秒后写入，没有变化时跳过。探险中的正常返回菜单或退出会先撤离、结算并回 Hub，保存成功后才离开。强制结束或崩溃后恢复最后成功检查点，本趟尚未保存的收益丢失。
 
-旧存档版本为 4；兼容 v2 完整探险与 v3 装配存档。若旧发布包显示“保存失败”，按 F3 打开 DebugLog；旧保存流程会输出 `session.json` 的结构校验、临时文件写入与错误码。完整日志保存在 `user://logs/godot.log`。
+读档整体恢复角色、装备、经济、据点和进度，并进入 Hub。新探险重新建立地图、敌人、地面掉落和战斗计时；技能冷却、流血、战吼、药剂只在当前探险中运行。保存失败保留当前会话和之前成功的文件，可重试；损坏或缺失内容时可自行选择自动历史或其他手动槽回退。读取本身不会自动写档。
+
+路径为 `user://saves/index.tres` 与 `user://saves/<角色组 ID>/manual_01.tres`、`auto_01.tres` 等。`settings.cfg` 独立保存设置。Windows 默认目录为 `%APPDATA%/Godot/app_userdata/Relic ARPG/`。F3 查看具体失败阶段、字段、路径及错误码，日志位于 `user://logs/godot.log`。
+
+旧 `session.json` 不再读取或迁移，旧探险不再继续；该文件不会被新系统自动删除。已有旧版角色需要重新建立角色。架构、版本扩展及规模限制见 [存档系统](docs/save_system.md)。
 
 ## 验证与导出
 
@@ -53,7 +57,7 @@ Hub 整备的下拉页签选择“技能与被动”。左键基础槽可装普�
 python tools/verify.py --godot /path/to/godot
 ```
 
-在临时用户目录执行编辑器导入、主菜单启动、M0/M1/M2、D1、HubFlow 与 DebugLog 实际场景回归。失败、脚本错误与未出现完成标记均导致非零退出码。测试不会覆盖玩家存档。验证范围与实际结果见 `docs/validation.md`。
+在临时用户目录执行编辑器导入、主菜单启动、Resource 模型/存储/容量、M0/M1/M2、D1、HubFlow、DebugLog 及七类实际存储故障回归，随后实际导出 PCK，在无源码目录运行包内拾取与存档检查。失败、脚本错误与未出现完成标记均导致非零退出码。测试不会覆盖玩家存档。验证范围与实际结果见 `docs/validation.md`。
 
 安装同版导出模板后：
 
@@ -62,7 +66,9 @@ godot --headless --path game --editor --import --quit
 godot --headless --path game --export-release "Windows Desktop" ../builds/windows/relic_arpg.exe
 ```
 
-先创建 `builds/windows/`。Windows 产物为内嵌资源的 `relic_arpg.exe`；工作流成功后可下载 `relic-arpg-m2-windows`。发行 smoke 使用正式 `Hub → ExpeditionRuntime` 场景流自动出发，验证导出包可以进入战斗。
+先创建 `builds/windows/`。Windows 产物为内嵌资源的 `relic_arpg.exe`；工作流成功后可下载 `relic-arpg-m2-windows`。工作流使用 `python tools/verify_package.py --executable builds/windows/relic_arpg.exe` 验证实际成品，经正式 Hub 装配横扫、出发击杀、真实 E 拾取、撤离保存并读回。包内专用参数为 `--smoke-loot`，沿用源码拾取用例。
+
+当前关闭 `editor/export/convert_text_resources_to_binary`：4.7.2 导出转换会丢失词条的适用部位数组，导致魔法、稀有和独特装备生成零词条并被拒绝拾取。内容 `.tres` 保留为 Resource 文本，后续重新启用转换必须通过真实成品的掉落回归。
 
 ## 保留的 M1 测试入口
 
@@ -81,7 +87,8 @@ godot --headless --path game res://debug/stress_test.tscn -- --stress-seconds=18
 | `docs/plan.md` | MVP 与 Demo 完整规划 |
 | `docs/tasks.md` | 阶段任务状态 |
 | `docs/engineering.md` | 当前模块职责与规则 |
-| `docs/hub_refactor.md` | 独立 Hub、旧 in_town 兼容边界与 Resource 存档下一步 |
+| `docs/hub_refactor.md` | 独立 Hub 与探险生命周期 |
+| `docs/save_system.md`、`docs/resource_save_task.md` | Resource 存档架构、扩展协议与本轮交付记录 |
 | `docs/assets.md`、`docs/asset_sources.md` | 资产规范与来源 |
 | `docs/validation.md` | 自动验证与人工试玩步骤 |
 | `docs/work_log.md`、`known_trap.md` | 开发记录与实际问题 |

@@ -13,6 +13,7 @@
 | [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
 | [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
+| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
 | [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
 | [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
 | [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
@@ -23,7 +24,7 @@
 
 ## 已经实现的功能
 
-仓库基线已完成 M0～M2：3D 即时战斗、雷霆旋风、随机装备、拾取换装、背包仓库、出售、成长、整备及完整探险存档。用户已试玩 M2 并反馈效果可以；历史自动化记录为 92 项回归及 Windows 导出/启动通过。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
 
 M2 已有全部/魔法以上/稀有以上三个品质过滤档、附近候选 Tab 切换和双列装备说明。前置完成后已有两套构筑、四个主动技能、六个被动、拆解与重铸。
 
@@ -44,14 +45,14 @@ M2 已有全部/魔法以上/稀有以上三个品质过滤档、附近候选 Ta
 | 主要路径 | 实现落点 |
 | --- | --- |
 | `game/ui/inventory/、game/systems/items/、game/systems/skills/` | 统一当前说明与过滤状态，不重新创建一套背包。 |
-| `game/world/maps/expedition.gd、game/tests/、tools/verify.py` | 主流程集成和 D1 完成标记；扩展已有验证入口。 |
+| `game/world/maps/expedition_runtime.gd、game/tests/、tools/verify.py` | 主流程集成和 D1 完成标记；扩展已有验证入口。 |
 | `docs/validation.md、docs/engineering.md、docs/tasks.md` | 记录 D1 内容盘点、已验证场景与剩余手感问题。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/maps/expedition.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
 
 ## 存档与兼容
 
-沿用各前置已实现的迁移；过滤和说明若不增加持久状态就保持结构。整体验证 M2 v2 与 D1 各已发布存档，不能以新建角色覆盖旧档来通过验收。
+沿用各前置 Resource 模块升级链；过滤和说明若不增加持久状态则保持结构。验证此前已发布 Resource 检查点、多槽整体回退与读取不覆盖，旧 JSON 和战斗快照不在兼容范围。
 
 ## 验收标准
 
@@ -59,7 +60,7 @@ M2 已有全部/魔法以上/稀有以上三个品质过滤档、附近候选 Ta
 
 ② 两套构筑各连续完成三趟出发→清图→整备；拆解所得材料可用于重铸，换装带来对应机制变化。
 
-③ 隐藏一件掉落后保存重启，再显示并拾取，实例与词条不变；锁定物品经过出售、拆解、重铸均保持。
+③ 本趟隐藏掉落后再显示并拾取，实例与词条不变；回 Hub 保存重启保留过滤偏好和已拾取实例，地面物品不带入新探险。锁定物品经过出售、拆解、重铸均保持。
 
 ④ 既有回归与 D1 用例通过；导出 Windows 包并从正常入口验证，记录可操作步骤及画面/手感实际检查范围。
 

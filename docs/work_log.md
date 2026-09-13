@@ -45,3 +45,55 @@
 代码验证提交 `fba5f85e423c5273e950dbc3e8a4b622ad01b2b9`。Windows [run 34574865158](https://github.com/w7775p/relic-ARPG/actions/runs/34574865158) 的全量场景回归、Windows 导出及导出包独立启动全部通过；构建 [artifact 10189231734](https://github.com/w7775p/relic-ARPG/actions/runs/34574865158/artifacts/10189231734)，SHA256 `e6a0b9a7dfc16a61c8b6b0a20ee27e1757042f3b2a4de87298d6b23151d9ae87`。
 
 下一步为 Resource 存档重构：拆分 `PlayerProfileResource`、`RunStateResource`、`SaveGameResource`，将旧 `session.json` 作为一次性迁移输入；迁移和 Resource 回归完成后删除 `LEGACY_EXPEDITION`、运行期 `in_town` 及仅服务 JSON v4 的兼容代码。详细边界见 `docs/hub_refactor.md`。
+
+## Resource 存档重构 S1（2026-09-11）
+
+从 `30b85f0` 建立 `feat/resource-save`。新增角色、物品、经济、进度、据点五个 Resource 模块、嵌套实例/词条/装配、GameSession 和按依赖恢复的注册协议。基线原有回归通过；Godot 4.7.2 导入与 ResourceModel 13 项通过。现有玩法暂未切换；下一步为完整检查点存储和多槽位。进度见 `resource_save_task.md`。
+
+## Resource 存档重构 S2（2026-09-12）
+
+新增 SaveStore、可重建索引、槽位摘要、读回字段摘要；真实 Resource 写入/读回、多角色和手动槽隔离、自动最近三版、无效模块拒绝覆盖、索引重建通过。保存使用同目录 pending 文件，替换前保留旧文件恢复副本。旧系统仍运行，下一阶段统一接入正式业务和场景。
+
+## Resource 存档重构 S3～S5（2026-09-12）
+
+InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例表以 ID 保存唯一归属，独特装备使用稳定内容 ID，掉落种子/状态/计数归物品模块。SceneRouter 一次性交接 GameSession。Hub 接入手动槽、自动保存、回退和保存后离场；正式探险直接继承 combat_arena，结算一次后切回 Hub。移除旧 expedition、SaveValidator、SessionSnapshot 及 JSON 保存。
+
+模块类型切换与场景/回归存在编译依赖，因此 S3～S5 作为可运行集成提交。Godot 4.7.2 的九个实际场景验证全部通过（ResourceModel、ResourceStore、M0、M1、M2、Loadout、BleedSkills、HubFlow、DebugConsole）。保留物品、收益、技能时序规则测试；退休旧位置/战斗恢复及 JSON 迁移断言，新增完整 Hub 回退、新探险重建与去抖断言。后续故障、规模、Windows 与可见 UI 验证尚待执行。
+
+## Resource 存档重构 S6a（2026-09-12）
+
+新增七个隔离进程，实际制造临时文件不可写、正式文件替换失败、损坏正文、缺失内容 ID、索引失败、未提交 pending 和正常探险退出。验证失败时保留当前状态和旧档、手动选择回退、重试成功后离场、索引重建及读取不自动覆盖。补充旧模块版本一真实文件升级为版本二，保留原文件；索引成功路径直接更新摘要，避免每次保存重读全部正文。
+
+实际发现 `.tres` 的浮点十进制舍入会误判读回失败，以及默认版本值被 ResourceSaver 省略会使后续升级失效；修复和回归见 `known_trap.md` SAVE-01/02。完整 `tools/verify.py` 在 Godot 4.7.2 通过导入、启动、10 个常规场景与 7 个故障进程。另测 10000 件装备：约 5.88 MB，保存 4869.63 ms，读取 2349.67 ms，测量时保留堆内存增量 95598572 字节（包含快照与恢复对象，不是峰值）。当前同步 `.tres` 在该规模存在明显停顿，后续大数据需求需另做性能阶段。可见 UI 和 Windows 验证待执行。
+
+## Resource 存档重构 S6b：文档与 Windows 验证（2026-09-12）
+
+代码提交 `dc6ab380a7e11ef1a10039dcaaaef370876aad26` 已同步远端；Windows [run 34716201490](https://github.com/w7775p/relic-ARPG/actions/runs/34716201490) 的全量回归、同版模板导出、独立包启动与上传全部成功。构建 [artifact 10304449478](https://github.com/w7775p/relic-ARPG/actions/runs/34716201490/artifacts/10304449478)，压缩产物 SHA256 `ccb21cb034526a1b13a2235bf5565591f24f9dc9a1a90edaacdc110e2db0944b`。
+
+新增 save_system.md，同步 README、工程、Hub、总体计划、任务总表、验证与后续任务卡；将旧 JSON/战斗恢复要求改为已冻结的 Resource Hub 检查点、整体回退和新探险重建。已完成 P1 卡和历史验证保留历史标识；本轮未提前实现后续玩法。字段、路径、版本说明与代码核对，文档差异/链接检查后单独提交；人工可见验收仍待执行，下一项为最终差异检查和 PR。
+
+## Resource 最终反馈修正（2026-09-12）
+
+最终差异检查发现 Hub 的出发业务接口在保存失败时仍返回“已出发”，与底部失败状态冲突。改为只有场景切换开始才返回成功，否则返回实际失败消息。真实 pending 写入阻塞覆盖整备面板出发入口，五项故障断言通过；原菜单重试和旧文件保持继续通过。该修复单独提交，之后重新运行 Windows 全量回归和导出，最终交付以新包为准。
+
+## Resource 最终交付（2026-09-12）
+
+最终代码提交 `95d3a0f2269f237c84982eb2f90820db67b87299`，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，base main、head feat/resource-save，未合并。对应 [Windows run 34716912163](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163) 全量场景/故障回归、Windows 导出和独立包启动全部通过；构建 [artifact 10305120887](https://github.com/w7775p/relic-ARPG/actions/runs/34716912163/artifacts/10305120887)，压缩产物 SHA256 `048274d00ecab047fdb6523d21a62ddf9b6b082bce1f610aca3a184153a8f848`。
+
+最终差异、脚本中文注释/制表符、资源引用、UID、文档相对链接检查通过；运行代码与测试入口不再引用旧 JSON/in_town/旧探险。功能子任务已分别提交；本次提交仅记录交付，已验证代码未变。可见界面、中文排版、音效听感和操作手感仍待 Windows 人工验收；万件规模同步文本停顿为已知性能限制，详见 save_system.md。下一步使用本轮新包按 validation.md 验收，评审及合并由用户决定。
+
+## 横扫游玩时 E 拾取反馈跟进（2026-09-13）
+
+用户报告 E 拾取无反应，并补充已将技能换为横扫。真实引擎复现 Hub 换装配→右键直接/流血击杀→按住右键时 E 拾取，近处物品入包正常；确认超出 2.5 米无反馈及满包提示被逐帧 HUD 覆盖。新增统一数秒反馈，保留候选与常规状态；无候选给出距离/遮挡/过滤条件，成功显示物品名，异常物品独立提示并写 F3 诊断。用户原始故障是否由满包或距离造成仍未确认。
+
+修复前真实输入用例的五项反馈断言失败，修复后新增异常身份用例共 23 项通过；覆盖物品身份、满包保留、腾格重试、GUI 暂停/关闭、重复按键，以及撤离后 Resource 文件读回。M2 改用真实 E 事件，新场景接入统一验证。Godot 4.7.2 Linux 的 `python3 tools/verify.py --godot <引擎路径>` 全量通过：导入、主入口、11 个常规场景和 7 个故障进程。代码先提交，随后 Windows 全量验证和新包另行记录。`save_system.md` 已在 `9b2fe71` 提交并同步到 PR #8，本轮核对确认没有遗漏。
+
+拾取跟进交付：代码 `708160e834cd1b36d4031ad83f2e30310ed9e47e` 的 [Windows run 34745672581](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581) 全量回归、Windows 导出及独立包启动全部通过。新包 [artifact 10314221276](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581/artifacts/10314221276)，压缩产物 SHA256 `7718cc2b69fdd0cde0bd35c1d159166f4b49222fd98b97caf97b7a627074b67e`。文档与代码分别提交，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8) 已更新，main 仍为 `30b85f0`，未合并。本次仅记录已完成的验证，不新增代码改动；无窗口结果不代替用户原始现场和可见验收。
+
+## 词条数量拒绝的导出根因（2026-09-13）
+
+用户提交 F3 日志，明确物品 ID 2 不重复但词条数量非法。源码池和数量要求一致，改查导出资源：所有词条适用部位 PackedStringArray 在 PCK 中变为空。种子 8912 的 1000 次生成，源码 0 失败、旧导出 762 失败。普通 ResourceSaver 二进制往返正常，显式默认构造和脚本源码导出无效；仅关闭导出资源自动二进制转换即可修复。保留实例校验与已有 Resource 存档版本。
+
+拾取回归迁入 app/validation 并保留 UID，测试场景与 Boot 的 --smoke-loot 共用；补静态部位、1000 件生成、完整物品模块读回和下一次随机断言，共 27 项。tools/verify.py 增加隔离 PCK 验证，Windows 工作流对真正交付的 exe 执行同一套玩法检查。Linux 统一入口的导入、启动、11 个场景、7 个故障进程及 PCK 内 27 项全部通过。隔离副本改回旧转换设置，新成品回归捕获两项失败、退出码 1。代码和后续 Windows 交付分别提交；前次“包能启动”证据无法证明掉落配置完整。
+
+根因修复交付：`992532a08bef65d4b07f148bcab297bafe110ba5` 的 [Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 完成全量源码/PCK 回归、导出及实际 exe 的 27 项检查。修正包 [artifact 10317558351](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317558351)，压缩产物 SHA256 `5a29494cbd9b1126b6128aebbc6336e2f83bf79b8c6d681b941b62f4dc91cd09`；[成品日志](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317927889)。PR #8 已替换下载入口，工作分支 feat/resource-save，main 仍为 30b85f0，未合并。本次提交仅记录交付；实际画面和用户试玩仍需复核，有效 Resource 存档可继续使用。

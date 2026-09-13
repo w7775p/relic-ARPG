@@ -28,6 +28,10 @@ window/stretch/mode="canvas_items"
 [gui]
 theme/custom="res://ui/theme/base_theme.tres"
 
+[editor]
+; 4.7.2 导出转换会丢失词条的 PackedStringArray 部位列表；保留内容 Resource 的文本格式。
+export/convert_text_resources_to_binary=false
+
 [rendering]
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

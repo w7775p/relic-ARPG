@@ -1,105 +1,182 @@
 class_name InventoryState
 extends RefCounted
-## 管理装备的唯一归属、容量与锁定；持有实例只存在于一个容器。
+## 物品事务入口；数据由五个业务 Resource 持有，属性汇总显式读取角色与装配。
 signal changed
 const BAG_CAPACITY: int = 40
 const STASH_CAPACITY: int = 120
-var loadout: LoadoutState = LoadoutState.new()
-var bag: Array = []
-var stash: Array = []
-var equipment: Dictionary = {}
-var gold: int = 0
-var materials: int = 0
-var level: int = 1
-var experience: int = 0
-var difficulty: int = 1
-var completed: int = 0
+var data: ItemsResource
+var character: CharacterResource
+var economy: EconomyResource
+var progression: ProgressionResource
+var loadout: LoadoutState
+var bag: Array[ItemInstanceResource]:
+	get: return _resolve(data.bag_ids)
+var stash: Array[ItemInstanceResource]:
+	get: return _resolve(data.stash_ids)
+var equipment: Dictionary[String, ItemInstanceResource]:
+	get:
+		var result: Dictionary[String, ItemInstanceResource] = {}
+		for slot: String in data.equipment_ids:
+			result[slot] = data.instances[data.equipment_ids[slot]]
+		return result
+var gold: int:
+	get: return economy.gold
+	set(value):
+		if economy.gold != value:
+			economy.gold = value
+			economy.touch()
+var materials: int:
+	get: return economy.materials
+	set(value):
+		if economy.materials != value:
+			economy.materials = value
+			economy.touch()
+var level: int:
+	get: return character.level
+	set(value):
+		if character.level != value:
+			character.level = value
+			character.touch()
+var experience: int:
+	get: return character.experience
+	set(value):
+		if character.experience != value:
+			character.experience = value
+			character.touch()
+var difficulty: int:
+	get: return progression.difficulty
+	set(value):
+		if progression.difficulty != value:
+			progression.difficulty = value
+			progression.touch()
+var completed: int:
+	get: return progression.completed
+	set(value):
+		if progression.completed != value:
+			progression.completed = value
+			progression.touch()
 
-## 拾取整件实例，满包保留地面物品。
-func pickup(item: Dictionary) -> bool:
-	if bag.size() >= BAG_CAPACITY:
-		return false
-	bag.append(item)
+## 绑定业务模块；独立测试可使用默认空角色。
+func _init(items: ItemsResource = null, profile: CharacterResource = null, currency: EconomyResource = null, progress: ProgressionResource = null) -> void:
+	data = items if items != null else ItemsResource.new()
+	character = profile if profile != null else CharacterResource.new()
+	economy = currency if currency != null else EconomyResource.new()
+	progression = progress if progress != null else ProgressionResource.new()
+	loadout = LoadoutState.new(character.loadout)
+	character.loadout.changed.connect(character.touch)
+	for module: SaveModule in [data, character, economy, progression]:
+		module.changed.connect(_on_changed)
+
+## 转发业务事务完成通知，驱动 UI 与战斗属性刷新。
+func _on_changed() -> void:
 	changed.emit()
+
+## 提供容器的只读列表视图；修改必须通过事务入口。
+func _resolve(ids: Array[String]) -> Array[ItemInstanceResource]:
+	var result: Array[ItemInstanceResource] = []
+	for id: String in ids:
+		result.append(data.instances[id])
+	return result
+
+## 拾取时检查身份和容量，满包保持地面归属。
+func pickup(item: ItemInstanceResource) -> bool:
+	if item == null or data.bag_ids.size() >= data.bag_capacity or data.instances.has(item.id):
+		return false
+	if not item.validate().ok:
+		return false
+	data.instances[item.id] = item
+	data.bag_ids.append(item.id)
+	data.next_id = maxi(data.next_id, int(item.id) + 1)
+	data.touch()
 	return true
 
-## 同部位原装备与选中物品交换，满包仍能换装。
+## 同部位交换，满包仍可换装，事务结束后统一通知。
 func equip(index: int) -> bool:
-	if index < 0 or index >= bag.size():
+	if index < 0 or index >= data.bag_ids.size():
 		return false
-	var item: Dictionary = bag[index]
-	var slot: String = ItemCatalog.base(item.base).slot
-	bag.remove_at(index)
-	if equipment.has(slot):
-		bag.append(equipment[slot])
-	equipment[slot] = item
-	changed.emit()
+	var id: String = data.bag_ids[index]
+	var slot: String = ItemCatalog.base(data.instances[id].base).slot
+	data.bag_ids.remove_at(index)
+	if data.equipment_ids.has(slot):
+		data.bag_ids.append(data.equipment_ids[slot])
+	data.equipment_ids[slot] = id
+	data.touch()
 	return true
 
-## 卸下装备时检查背包剩余容量。
+## 卸下时检查容量，失败保持原槽位。
 func unequip(slot: String) -> bool:
-	if not equipment.has(slot) or bag.size() >= BAG_CAPACITY:
+	if not data.equipment_ids.has(slot) or data.bag_ids.size() >= data.bag_capacity:
 		return false
-	bag.append(equipment[slot])
-	equipment.erase(slot)
-	changed.emit()
+	data.bag_ids.append(data.equipment_ids[slot])
+	data.equipment_ids.erase(slot)
+	data.touch()
 	return true
 
-## 整备时在背包与仓库之间搬移，失败保持原容器。
+## 在背包和本角色仓库之间原子移动 ID。
 func transfer(index: int, to_stash: bool) -> bool:
-	var source: Array = bag if to_stash else stash
-	var target: Array = stash if to_stash else bag
-	var capacity: int = STASH_CAPACITY if to_stash else BAG_CAPACITY
+	var source: Array[String] = data.bag_ids if to_stash else data.stash_ids
+	var target: Array[String] = data.stash_ids if to_stash else data.bag_ids
+	var capacity: int = data.stash_capacity if to_stash else data.bag_capacity
 	if index < 0 or index >= source.size() or target.size() >= capacity:
 		return false
 	target.append(source[index])
 	source.remove_at(index)
-	changed.emit()
+	data.touch()
 	return true
 
-## 锁定阻止出售和丢弃，允许正常穿戴。
+## 锁定阻止误卖与丢弃，允许穿戴和转移。
 func toggle_lock(index: int) -> void:
-	if index >= 0 and index < bag.size():
-		bag[index].locked = not bag[index].locked
-		changed.emit()
+	if index >= 0 and index < data.bag_ids.size():
+		var item: ItemInstanceResource = data.instances[data.bag_ids[index]]
+		item.locked = not item.locked
+		data.touch()
 
-## 原子出售单件未锁定物品。
+## 出售完成实例删除与余额入账后统一通知。
 func sell(index: int) -> bool:
-	if index < 0 or index >= bag.size() or bag[index].locked:
+	if index < 0 or index >= data.bag_ids.size():
 		return false
-	gold += ItemGenerator.price(bag[index])
-	bag.remove_at(index)
-	changed.emit()
+	var item: ItemInstanceResource = data.instances[data.bag_ids[index]]
+	if item.locked:
+		return false
+	economy.gold += ItemGenerator.price(item)
+	data.bag_ids.remove_at(index)
+	data.instances.erase(item.id)
+	data.touch()
+	economy.touch()
 	return true
 
-## 丢弃返回实例，由世界创建地面物品。
-func discard(index: int) -> Dictionary:
-	if index < 0 or index >= bag.size() or bag[index].locked:
-		return {}
-	var item: Dictionary = bag.pop_at(index)
-	changed.emit()
+## 丢弃时移出实例表，调用者接管地面实例。
+func discard(index: int) -> ItemInstanceResource:
+	if index < 0 or index >= data.bag_ids.size():
+		return null
+	var item: ItemInstanceResource = data.instances[data.bag_ids[index]]
+	if item.locked:
+		return null
+	data.bag_ids.remove_at(index)
+	data.instances.erase(item.id)
+	data.touch()
 	return item
 
-## 连续升级消耗递增经验；换装重算时加入等级属性。
+## 完成一笔经验结算后通知，避免升级循环中的中间状态被观察。
 func grant_experience(amount: int) -> void:
-	experience += amount
-	while experience >= level * 60:
-		experience -= level * 60
-		level += 1
-	changed.emit()
+	character.experience += amount
+	while character.experience >= character.level * 60:
+		character.experience -= character.level * 60
+		character.level += 1
+	character.touch()
 
 ## 汇总装备成新的属性快照，卸下独特装备会移除相应机制。
 func build() -> BuildDefinition:
 	var result: BuildDefinition = BuildDefinition.new()
 	result.display_name = "实装构筑 · 等级 %d" % level
 	result.damage += (level - 1) * 2.0
-	for item: Dictionary in equipment.values():
+	for item: ItemInstanceResource in equipment.values():
 		var definition: ItemBase = ItemCatalog.base(item.base)
 		_apply_stat(result, definition.stat, definition.value)
-		for rolled: Dictionary in item.affixes:
+		for rolled: AffixRollResource in item.affixes:
 			_apply_stat(result, ItemCatalog.affix(rolled.id).stat, rolled.value)
-		for stat: String in ItemCatalog.unique_stats(int(item.unique)):
-			var value: Variant = ItemCatalog.unique_stats(int(item.unique))[stat]
+		for stat: String in ItemCatalog.unique_stats(item.unique_id):
+			var value: Variant = ItemCatalog.unique_stats(item.unique_id)[stat]
 			if stat == "death_explosion":
 				result.death_explosion = true
 			else:
@@ -115,11 +192,11 @@ func build() -> BuildDefinition:
 ## 生命与护甲独立于技能数值汇总。
 func defense(stat: String) -> float:
 	var total: float = 300.0 + (level - 1) * 15.0 if stat == "max_health" else 15.0
-	for item: Dictionary in equipment.values():
+	for item: ItemInstanceResource in equipment.values():
 		var definition: ItemBase = ItemCatalog.base(item.base)
 		if definition.stat == stat:
 			total += definition.value
-		for rolled: Dictionary in item.affixes:
+		for rolled: AffixRollResource in item.affixes:
 			if ItemCatalog.affix(rolled.id).stat == stat:
 				total += float(rolled.value)
 	for id: String in loadout.passives:
@@ -139,13 +216,3 @@ func _apply_stat(result: BuildDefinition, stat: String, value: float) -> void:
 		result.chain_count += int(value)
 	else:
 		result.set(stat, float(result.get(stat)) + value)
-
-## 复制完整持有与成长数据用于 JSON。
-func snapshot() -> Dictionary:
-	return {"bag":bag.duplicate(true), "stash":stash.duplicate(true), "equipment":equipment.duplicate(true), "gold":gold, "materials":materials, "level":level, "experience":experience, "difficulty":difficulty, "completed":completed}
-
-## 已校验快照恢复为独立容器。
-func restore(data: Dictionary) -> void:
-	for key: String in data:
-		set(key, data[key].duplicate(true) if data[key] is Array or data[key] is Dictionary else int(data[key]))
-	changed.emit()

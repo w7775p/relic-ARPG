@@ -1,6 +1,6 @@
 extends Node
-## D1 技能回归：横扫几何、流血边界、战吼、药剂、暂停和 v4 状态往返。
-const ARENA: PackedScene = preload("res://world/maps/expedition.tscn")
+## D1 技能回归：横扫几何、流血边界、战吼、药剂、暂停和探险瞬态重置。
+const ARENA: PackedScene = preload("res://world/maps/expedition_runtime.tscn")
 const BLEED_BUILD: BuildDefinition = preload("res://debug/bleed_test.tres")
 var failures: int = 0
 var checks: int = 0
@@ -8,6 +8,7 @@ var checks: int = 0
 ## 服务就绪后启动测试；测试节点保持暂停时可运行断言。
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().current_scene = null
 	_run.call_deferred()
 
 ## 记录验收断言。
@@ -66,13 +67,17 @@ func bleeding_target(arena: Node3D) -> EnemyController:
 
 ## 完整覆盖任务卡核心规则和状态恢复。
 func _run() -> void:
+	var game: GameSession = GameSession.new_character()
+	game.inventory.loadout.set_skill("main", "sweep")
+	game.inventory.loadout.set_skill("auxiliary", "warcry")
+	SceneRouter.stage_session(game)
 	var arena: Node3D = ARENA.instantiate()
-	add_child(arena)
+	get_tree().root.add_child(arena)
+	get_tree().current_scene = arena
 	check(LoadoutState.skill("sweep") != null and LoadoutState.skill("warcry") != null, "横扫与战吼进入稳定技能目录")
 	check(is_equal_approx(SkillRunner.SWEEP.range_m, 8.0) and is_equal_approx(SkillRunner.SWEEP.bleed_damage_multiplier, 0.84), "横扫试玩参数为8米范围与0.84流血倍率")
-	check(arena.loadout_action("skill", "sweep", "main").contains("更新"), "据点可把右键主要技能替换为横扫")
-	check(arena.loadout_action("skill", "warcry", "auxiliary").contains("更新"), "据点可把战吼装入 F 辅助槽")
-	arena.depart()
+	check(arena.skills.loadout.slots.main == "sweep", "据点可把右键主要技能替换为横扫")
+	check(arena.skills.loadout.slots.auxiliary == "warcry", "据点可把战吼装入 F 辅助槽")
 	await clear_targets(arena)
 	arena.skills.equip(BLEED_BUILD)
 	arena.player.restore_position(Vector3.ZERO)
@@ -214,39 +219,22 @@ func _run() -> void:
 	arena.skills._potion_remaining = potion_before_paused_use
 	get_tree().paused = false
 
-	check(arena._save_position() == OK, "战斗中流血、战吼与药剂状态可写入完整存档")
-	var saved: Dictionary = SaveManager.load_session()
-	check(saved.version == 4 and SaveManager.is_valid_session(saved), "D1 完整存档使用 v4 并通过结构校验")
-	var saved_enemy: Dictionary = {}
-	for entry: Dictionary in saved.expedition.enemies:
-		if not entry.bleeds.is_empty():
-			saved_enemy = entry
-			break
-	check(not saved_enemy.is_empty() and saved.expedition.skills._warcry_applied, "v4 保存流血层与战吼生效状态")
-	var saved_bleed: Dictionary = saved_enemy.bleeds[0]
-	var saved_warcry: float = saved.expedition.skills._warcry_remaining
-	var saved_warcry_cd: float = saved.expedition.skills._warcry_cooldown_remaining
-	var saved_potion_cd: float = saved.expedition.skills._potion_remaining
-	var saved_armor: float = saved.expedition.player.armor
-	arena.restore_expedition(saved.expedition)
-	var restored_target: EnemyController = bleeding_target(arena)
-	if restored_target != null:
-		restored_target.set_physics_process(false)
-	check(restored_target != null and is_equal_approx(float(restored_target.bleeds[0].remaining_sec), float(saved_bleed.remaining_sec)) and is_equal_approx(float(restored_target.bleeds[0].next_tick_sec), float(saved_bleed.next_tick_sec)), "重载保留流血剩余时间与下一跳")
-	check(is_equal_approx(arena.skills._warcry_remaining, saved_warcry) and is_equal_approx(arena.skills._warcry_cooldown_remaining, saved_warcry_cd) and is_equal_approx(arena.player.armor, saved_armor), "重载保留战吼持续、冷却与临时护甲")
-	check(is_equal_approx(arena.skills._potion_remaining, saved_potion_cd), "重载保留药剂冷却")
-	if restored_target != null:
-		var health_before_tick: float = restored_target.health
-		arena.effects.advance_bleeds(float(saved_bleed.next_tick_sec) + 0.01)
-		arena.effects.drain()
-		check(restored_target.health < health_before_tick, "重载后流血从保存的下一跳继续造成剩余伤害")
-	var advance_time: float = saved_warcry + 0.01
-	arena.skills.advance(advance_time)
-	check(not arena.skills._warcry_applied and is_equal_approx(arena.player.armor, arena.inventory.defense("armor")), "重载后的战吼按剩余时间结束并恢复基础护甲")
-	check(is_equal_approx(arena.skills._warcry_cooldown_remaining, maxf(0.0, saved_warcry_cd - advance_time)) and is_equal_approx(arena.skills._potion_remaining, maxf(0.0, saved_potion_cd - advance_time)), "重载后的战吼与药剂冷却按剩余时间继续")
-
+	check(arena._request_save() == ERR_UNAVAILABLE, "存在持续战斗状态时保存请求仍遵循 Hub 能力边界")
 	arena.return_to_town()
-	check(arena.skills._potion_remaining == 0.0 and not arena.skills._warcry_applied, "返回据点整备重置药剂冷却与战吼临时状态")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var hub: Control = get_tree().current_scene
+	check(hub.is_hub() and SaveManager.save_game(hub.game_session, hub, 1).ok, "回到据点后完成全模块检查点保存")
+	var loaded: SaveResult = SaveManager.load_game(game.group_id, "manual_01")
+	check(loaded.ok and loaded.value.inventory.loadout.slots.main == "sweep", "角色装配经 Resource 文件往返保持")
+	SceneRouter.stage_session(loaded.value)
+	SceneRouter.open_expedition()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	arena = get_tree().current_scene
+	get_tree().paused = true
+	check(arena.skills._potion_remaining == 0.0 and not arena.skills._warcry_applied and arena.skills._warcry_cooldown_remaining == 0.0, "新探险重置药剂、战吼持续和冷却")
+	check(arena.combat.enemies.size() == 48 and bleeding_target(arena) == null and arena.player.health == arena.player.max_health, "新探险重新生成敌人，生命回满且旧流血消失")
 	arena.queue_free()
 	await get_tree().process_frame
 	get_tree().paused = false

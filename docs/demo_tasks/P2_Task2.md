@@ -13,6 +13,7 @@
 | [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
 | [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
+| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
 | [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
 | [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
 | [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
@@ -23,7 +24,7 @@
 
 ## 已经实现的功能
 
-仓库基线已完成 M0～M2：3D 即时战斗、雷霆旋风、随机装备、拾取换装、背包仓库、出售、成长、整备及完整探险存档。用户已试玩 M2 并反馈效果可以；历史自动化记录为 92 项回归及 Windows 导出/启动通过。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
 
 当前有近战、远程、冲锋三类普通敌人，采用 NavigationAgent3D 局部避让；D1 已有两种精英修饰。
 
@@ -45,13 +46,13 @@
 | --- | --- |
 | `game/actors/enemies/、game/content/enemies/` | 复用现有控制器，确有不同动作状态才添加组件或子场景。 |
 | `game/systems/encounters/、game/systems/effects/、game/shared/vfx/` | 定义遭遇组合、危险区与反馈；伤害和奖励沿用统一结算。 |
-| `game/systems/persistence/、game/tests/` | 扩展敌人内容白名单及新增阶段/弹体/危险区恢复。 |
+| `game/systems/encounters/、game/tests/` | 校验敌人定义和实例身份；覆盖动作、弹体、危险区暂停及离场清理。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/maps/expedition.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
 
 ## 存档与兼容
 
-新敌人类型、修饰、剩余动作和持续危险区需要可序列化；旧敌人定义路径可迁移到稳定 ID，但必须保留历史映射。死亡危险区的创建状态保存，读档不重放死亡奖励。
+敌人定义使用稳定内容 ID，运行实例 ID 用于本趟命中和死亡去重。修饰、剩余动作、危险区留在运行态，离场清理；已获得长期收益通过 Hub 检查点保存，读取不重放死亡奖励。
 
 ## 验收标准
 
@@ -59,7 +60,7 @@
 
 ② 四种修饰与允许组合能正确应用，禁止组合被筛除，多个实例之间无共享数值污染。
 
-③ 落点伤害、齐射和死亡危险区分别测试暂停、离场清理与读档续行；伤害和奖励保持一次性。
+③ 落点伤害、齐射和死亡危险区分别测试暂停、离场清理与下一趟无残留；伤害和奖励保持一次性。
 
 ④ 以 100 怪固定短样本比较当前改动前后物理开销，若出现具体退化再定位；完整 200 怪验证归 P3_Task5。
 

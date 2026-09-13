@@ -66,11 +66,9 @@ func _ready() -> void:
 	rows.add_child(hint)
 	refresh()
 
-## 当前会话是否处于据点；新 Hub 场景优先提供显式接口，旧探险场景保留兼容回退。
+## 地点能力由真实场景明确提供。
 func _is_hub() -> bool:
-	if session != null and session.has_method("is_hub"):
-		return bool(session.call("is_hub"))
-	return bool(session.get("in_town")) if session != null else false
+	return session != null and session.has_method("is_hub") and session.is_hub()
 
 ## 每个说明列独立滚动，低分辨率下仍可访问全部词条。
 func _description_column(parent: Control) -> Label:
@@ -105,10 +103,10 @@ func refresh() -> void:
 	loadout_view.get_parent().visible = source == 3
 	_refresh_loadout()
 	var inventory: InventoryState = session.inventory
-	summary.text = "%s · 等级 %d · 经验 %d/%d · 金币 %d · 材料 %d\n背包 %d/40 · 仓库 %d/120 · 难度 %d · 通关 %d 次" % ["据点整备" if hub else "探险中", inventory.level, inventory.experience, inventory.level * 60, inventory.gold, inventory.materials, inventory.bag.size(), inventory.stash.size(), inventory.difficulty, inventory.completed]
+	summary.text = "%s · 等级 %d · 经验 %d/%d · 金币 %d · 材料 %d\n背包 %d/%d · 仓库 %d/%d · 难度 %d · 通关 %d 次" % ["据点整备" if hub else "探险中", inventory.level, inventory.experience, inventory.level * 60, inventory.gold, inventory.materials, inventory.bag.size(), inventory.data.bag_capacity, inventory.stash.size(), inventory.data.stash_capacity, inventory.difficulty, inventory.completed]
 	items.clear()
 	var values: Array = entries()
-	for item: Dictionary in values:
+	for item: ItemInstanceResource in values:
 		items.add_item(("[锁] " if item.locked else "") + ItemGenerator.title(item))
 	selected = mini(selected, values.size() - 1)
 	if selected >= 0:
@@ -117,7 +115,8 @@ func refresh() -> void:
 	for key: String in action_buttons:
 		var enabled: bool = selected >= 0
 		match key:
-			"equip", "lock", "discard": enabled = enabled and source == 0
+			"equip", "lock": enabled = enabled and source == 0
+			"discard": enabled = enabled and source == 0 and not hub
 			"unequip": enabled = enabled and source == 1
 			"store", "sell": enabled = enabled and source == 0 and hub
 			"retrieve": enabled = enabled and source == 2 and hub
@@ -144,7 +143,7 @@ func _show_comparison() -> void:
 	right_text.text = "当前穿戴：无"
 	if selected < 0:
 		return
-	var item: Dictionary = entries()[selected]
+	var item: ItemInstanceResource = entries()[selected]
 	left_text.text = "选中物品\n" + ItemGenerator.describe(item)
 	var slot: String = ItemCatalog.base(item.base).slot
 	if session.inventory.equipment.has(slot):

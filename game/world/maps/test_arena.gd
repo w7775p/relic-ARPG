@@ -1,22 +1,13 @@
 extends Node3D
-## M0 运行场地：恢复位置、暂停、保存和导航样板烘焙。
+## M0 运行场地：操控、暂停和导航样板烘焙。
 
 @onready var player: PlayerController = $Player
 @onready var pause_panel: Control = $Interface/Pause
 @onready var status: Label = $Interface/Hud/Rows/Status
 
 
-## 恢复位置并对齐镜头，烘焙场地静态碰撞的导航网格。
+## 对齐镜头并烘焙场地静态碰撞的导航网格。
 func _ready() -> void:
-	if SceneRouter.should_restore_session:
-		var data: Dictionary = SaveManager.load_session()
-		if not data.is_empty():
-			var values: Array = data["player_position"]
-			player.restore_position(Vector3(values[0], values[1], values[2]))
-			status.text = "已恢复保存位置"
-		else:
-			status.text = "存档无法读取，已回到出生点"
-	SceneRouter.should_restore_session = false
 	$FollowCamera.snap_to_target()
 	$NavigationRegion.bake_navigation_mesh.call_deferred(false)
 	get_tree().auto_accept_quit = false
@@ -42,7 +33,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_set_paused(not get_tree().paused)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("quick_save"):
-		_save_position()
+		_request_save()
 		get_viewport().set_input_as_handled()
 
 
@@ -54,12 +45,11 @@ func _set_paused(value: bool) -> void:
 		$Interface/Pause/Center/Rows/Resume.grab_focus()
 
 
-## 保存当前角色位置，并向用户报告真实结果。
-func _save_position() -> Error:
-	var error: Error = SaveManager.save_session(player.global_position)
-	status.text = "位置已保存" if error == OK else "保存失败：%s" % error
+## 调试场地只验证操控，正式存档从独立 Hub 使用。
+func _request_save() -> Error:
+	status.text = "请从主菜单进入据点使用存档"
 	$Interface/Pause/Center/Rows/Status.text = status.text
-	return error
+	return ERR_UNAVAILABLE
 
 
 ## 恢复物理更新。
@@ -69,13 +59,12 @@ func _on_resume_pressed() -> void:
 
 ## 暂停状态下保存。
 func _on_save_pressed() -> void:
-	_save_position()
+	_request_save()
 
 
-## 返回主菜单前保存；失败时留在当前场景以便重试。
+## 调试场地返回主菜单。
 func _on_menu_pressed() -> void:
-	if _save_position() == OK:
-		SceneRouter.open_main_menu()
+	SceneRouter.open_main_menu()
 
 
 ## 打开设置并保持世界暂停。
@@ -83,10 +72,9 @@ func _on_settings_pressed() -> void:
 	$Interface/Settings.show()
 
 
-## 保存后退出；失败时保留现场。
+## 调试场地正常退出。
 func _on_quit_pressed() -> void:
-	if _save_position() == OK:
-		get_tree().quit()
+	get_tree().quit()
 
 
 ## 恢复默认关闭行为，避免影响主菜单。

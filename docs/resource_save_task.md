@@ -16,7 +16,7 @@
 
 冻结边界：仅 Hub 保存；撤离、通关、死亡保留已拾取收益并回真实 Hub。正常退出经撤离、结算、保存后完成。异常退出回到最后成功检查点。所有模块整体回退，读取不自动覆盖；不恢复战斗、地面掉落或本趟地图。独立角色组，当前仓库归角色。设置文件独立。
 
-上一版已验证代码：`708160e834cd1b36d4031ad83f2e30310ed9e47e`。该版的成品仅验证启动，随后用户日志暴露词条配置导出丢失；当前根因修复见文末。首次重构代码为 `95d3a0f`，最新提交以远端分支及本文件提交历史为准。
+当前已验证代码：`992532a08bef65d4b07f148bcab297bafe110ba5`。该版修复词条配置导出丢失，并验证真实成品的生成、拾取和存档；详见文末。首次重构代码为 `95d3a0f`，最新文档提交以远端分支及本文件提交历史为准。
 
 | 子任务 | 提交 |
 | --- | --- |
@@ -29,17 +29,18 @@
 | 首次 Windows 与 PR 交付记录 | `3ad0783` |
 | 拾取反馈与横扫真实输入回归 | `708160e` |
 | 拾取跟进 Windows 验证与交付记录 | `1242176` |
-| 词条配置导出丢失修复、成品玩法回归 | 本轮代码提交；Windows 新包待验证 |
+| 词条配置导出丢失修复、成品玩法回归 | `992532a` |
+| 成品拾取与存档验证交付记录 | 本文件所在提交；仅文档 |
 
 最终检查：资源引用、UID、新增函数中文注释、制表符及差异检查通过；没有已跟踪的生成缓存或构建产物。旧 JSON、旧 expedition、SaveValidator、SessionSnapshot 和 in_town 在运行代码/测试入口中无剩余引用。main 仍为 `30b85f0`。
 
-最近验证：2026-09-13，Godot `4.7.2.stable.official.ed1daf0bf`。`708160e` 的 Linux `python3 tools/verify.py --godot <4.7.2 引擎路径>` 通过导入、启动、11 个常规场景和 7 个故障进程；对应 [Windows run 34745672581](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581) 的同入口全量回归、导出及独立包启动全部通过。
+最近验证：2026-09-13，Godot `4.7.2.stable.official.ed1daf0bf`。`992532a` 的 Linux 统一入口通过导入、启动、11 个常规场景、7 个故障进程及隔离 PCK 的 27 项；对应 [Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 的同入口全量回归、导出和实际 exe 内 27 项拾取/存档检查全部通过。
 
-交付：[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，base main，head feat/resource-save，未合并。[最新 Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581/artifacts/10314221276)，压缩产物 SHA256 `7718cc2b69fdd0cde0bd35c1d159166f4b49222fd98b97caf97b7a627074b67e`。完整验证和人工步骤见 [validation.md](validation.md)。
+交付：[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，base main，head feat/resource-save，未合并。[最新 Windows 构建](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317558351)，压缩产物 SHA256 `5a29494cbd9b1126b6128aebbc6336e2f83bf79b8c6d681b941b62f4dc91cd09`。完整验证和人工步骤见 [validation.md](validation.md)。
 
 待验收与限制：当前环境无图形服务，实际画面、中文排版、声音及操作手感尚未验收。10000 件单次 Linux 样本约 5.88 MB、保存 4.87 秒、读取 2.35 秒；同步文本存储还不满足大仓库流畅性目标。旧 JSON 不迁移，当前没有后台保存、云存档、共享仓库和战斗恢复。
 
-下一步：提交导出根因修复后运行 Windows 全量回归、导出和成品拾取/存档检查，更新 PR #8 与新包入口。上方旧包仍含词条导出问题。后续卡按所属模块扩展持久字段；大型数据性能另设阶段。合并由用户决定。
+下一步：使用上述修正包继续现有有效 Resource 角色，复核横扫击杀后的 E 拾取和回城保存。此前 `708160e` 及更早包仍含词条导出问题。代码和交付记录分别提交，无遗留未提交实现；实际画面与手感仍需用户验收。后续卡按所属模块扩展持久字段；大型数据性能另设阶段。合并由用户决定。
 
 ## 拾取反馈跟进（2026-09-13）
 
@@ -53,4 +54,4 @@
 
 用户日志为 `duplicate=false`、`instances.2.affixes`、`装备词条数量不合法`。相同种子 8912、1000 次生成在源码中全部合法；正式导出 PCK 后所有词条的 `slots` 数组为空，762 件装备零词条并被校验拒绝。普通 ResourceSaver 二进制往返正常；改变脚本导出格式或显式 PackedStringArray 构造无效。关闭文本资源导出自动转换后完整恢复，源码生成与实例数量规则均保持原样。
 
-修复将该设置写入 project.godot；原 PickupInput 脚本和 UID 迁到 `app/validation/pickup_smoke.gd`，源码场景及 Boot 专用参数共用。增加静态部位、1000 件四品质生成、完整物品模块读回及下一件随机结果断言，共 27 项。统一验证新增真实 PCK 执行，Windows exe 使用相同入口；测试用户目录与正式档案隔离。Linux 统一入口的导入、启动、11 个常规场景、7 个故障进程和 PCK 内 27 项全部通过。将隔离副本改回旧转换设置后，新成品入口以两项失败和退出码 1 拒绝交付；Windows 成品结果在下一阶段补齐。
+修复将该设置写入 project.godot；原 PickupInput 脚本和 UID 迁到 `app/validation/pickup_smoke.gd`，源码场景及 Boot 专用参数共用。增加静态部位、1000 件四品质生成、完整物品模块读回及下一件随机结果断言，共 27 项。统一验证新增真实 PCK 执行，Windows exe 使用相同入口；测试用户目录与正式档案隔离。Linux 统一入口的导入、启动、11 个常规场景、7 个故障进程和 PCK 内 27 项全部通过。将隔离副本改回旧转换设置后，新成品入口以两项失败和退出码 1 拒绝交付；修正后 Windows 成品已通过同一套 27 项检查。

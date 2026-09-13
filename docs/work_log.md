@@ -95,3 +95,5 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 用户提交 F3 日志，明确物品 ID 2 不重复但词条数量非法。源码池和数量要求一致，改查导出资源：所有词条适用部位 PackedStringArray 在 PCK 中变为空。种子 8912 的 1000 次生成，源码 0 失败、旧导出 762 失败。普通 ResourceSaver 二进制往返正常，显式默认构造和脚本源码导出无效；仅关闭导出资源自动二进制转换即可修复。保留实例校验与已有 Resource 存档版本。
 
 拾取回归迁入 app/validation 并保留 UID，测试场景与 Boot 的 --smoke-loot 共用；补静态部位、1000 件生成、完整物品模块读回和下一次随机断言，共 27 项。tools/verify.py 增加隔离 PCK 验证，Windows 工作流对真正交付的 exe 执行同一套玩法检查。Linux 统一入口的导入、启动、11 个场景、7 个故障进程及 PCK 内 27 项全部通过。隔离副本改回旧转换设置，新成品回归捕获两项失败、退出码 1。代码和后续 Windows 交付分别提交；前次“包能启动”证据无法证明掉落配置完整。
+
+根因修复交付：`992532a08bef65d4b07f148bcab297bafe110ba5` 的 [Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 完成全量源码/PCK 回归、导出及实际 exe 的 27 项检查。修正包 [artifact 10317558351](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317558351)，压缩产物 SHA256 `5a29494cbd9b1126b6128aebbc6336e2f83bf79b8c6d681b941b62f4dc91cd09`；[成品日志](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317927889)。PR #8 已替换下载入口，工作分支 feat/resource-save，main 仍为 30b85f0，未合并。本次提交仅记录交付；实际画面和用户试玩仍需复核，有效 Resource 存档可继续使用。

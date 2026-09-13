@@ -1,8 +1,14 @@
 # 词条配置导出丢失修复（2026-09-13）
 
+代码 `992532a08bef65d4b07f148bcab297bafe110ba5`，分支 `feat/resource-save`，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，未合并。[Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 的全量源码/PCK 回归、同版模板导出及实际 exe 的生成/拾取/存档检查全部通过。
+
+[修正后的 Windows 包](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317558351)，压缩产物 SHA256 `5a29494cbd9b1126b6128aebbc6336e2f83bf79b8c6d681b941b62f4dc91cd09`；[成品验证日志](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317927889)。交付记录提交仅修改文档，包内代码对应上述提交。
+
 用户提供 `instances.2.affixes`、`装备词条数量不合法` 日志，确认实际拾取被实例校验拒绝。复现条件为 Godot `4.7.2.stable.official.ed1daf0bf` 的正式 Windows 导出预设；将所得 PCK 放到无源码目录后运行，所有词条 `slots` 为空。同种子 8912 的 1000 件跨等级样本：源码 0 失败，导出后 762 失败。普通 ResourceSaver 二进制往返仍保留数组；显式 PackedStringArray 默认构造及改为源码脚本导出均无法修复。关闭 `editor/export/convert_text_resources_to_binary` 后导出样本全部合法。
 
-新增 `tools/verify_package.py`：本地引擎导出 PCK 后隔离运行，Windows 直接启动交付 exe；都经 Boot 的 `--smoke-loot` 执行共用回归，覆盖部位数组、1000 件四品质生成、横扫直接/流血击杀、真实 E、暂停焦点、满包反馈、物品归属、Hub 检查点词条实值及下一件掉落。Linux `python3 tools/verify.py --godot <4.7.2 引擎>` 的导入、启动、11 个常规场景、7 个故障进程及 PCK 的 27 项全部通过。隔离项目改回旧转换设置后，新成品入口捕获两个失败并以退出码 1 结束，证明可以拦住该故障。Windows 回归、导出及 exe 测试在代码提交后执行。
+新增 `tools/verify_package.py`：本地引擎导出 PCK 后隔离运行，Windows 直接启动交付 exe；都经 Boot 的 `--smoke-loot` 执行共用回归，覆盖部位数组、1000 件四品质生成、横扫直接/流血击杀、真实 E、暂停焦点、满包反馈、物品归属、Hub 检查点词条实值及下一件掉落。Linux `python3 tools/verify.py --godot <4.7.2 引擎>` 的导入、启动、11 个常规场景、7 个故障进程及 PCK 的 27 项全部通过。隔离项目改回旧转换设置后，新成品入口捕获两个失败并以退出码 1 结束，证明可以拦住该故障。Windows 同入口全量及最终 exe 的 27 项全部通过，完成标记为 `PACKAGE_LOOT_RESULT: 0 failures`。
+
+人工复核：用本节新包继续有效 Resource 角色，在 Hub 装配横扫后出发，击杀并靠近魔法/稀有/独特装备，确认 E 入包后能看到词条；撤离保存、重启继续，核对已拾取装备。当前自动结果包含真实成品逻辑，画面、声音与手感仍待人工验收。
 
 此前包验证只要求进入战斗，无法发现资源数据丢失；下方 `708160e` 及更早包均受此问题影响。新修复保持存档版本和词条校验，已保存的有效 Resource 检查点可继续使用。地面未拾取物品属于旧进程运行态，退出后不会跨版本保留。
 

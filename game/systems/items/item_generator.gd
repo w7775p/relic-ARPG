@@ -20,7 +20,65 @@ func synchronize() -> void:
 		data.rng_state = rng.state
 		data.touch()
 
-## 按普通与精英权重抽品质，再按等级、部位、互斥组筛词条。
+## 返回某件装备在指定替换位置可抽到的合法词条；空 definitions 使用正式目录，测试可传入小候选池。
+static func affix_candidates(item: ItemInstanceResource, replace_index: int = -1, definitions: Array = []) -> Array[AffixDefinition]:
+	var result: Array[AffixDefinition] = []
+	if item == null:
+		return result
+	var base_definition: ItemBase = ItemCatalog.base(item.base)
+	if base_definition == null:
+		return result
+	var source: Array = definitions if not definitions.is_empty() else ItemCatalog.AFFIXES
+	var blocked_ids: Dictionary = {}
+	var blocked_groups: Dictionary = {}
+	for index: int in range(item.affixes.size()):
+		if index == replace_index:
+			continue
+		var roll: AffixRollResource = item.affixes[index]
+		if roll == null:
+			continue
+		blocked_ids[roll.id] = true
+		var occupied: AffixDefinition = _affix_in(source, roll.id)
+		if occupied == null:
+			occupied = ItemCatalog.affix(roll.id)
+		if occupied != null and not occupied.group.is_empty():
+			blocked_groups[occupied.group] = true
+	for value: Variant in source:
+		var candidate: AffixDefinition = value as AffixDefinition
+		if candidate == null or candidate.min_level > item.level or not candidate.slots.has(base_definition.slot):
+			continue
+		if blocked_ids.has(candidate.id) or (not candidate.group.is_empty() and blocked_groups.has(candidate.group)):
+			continue
+		result.append(candidate)
+	return result
+
+## 按权重从合法候选中抽一个词条并写入实际数值；允许抽回当前词条和相同数值。
+static func roll_affix(random: RandomNumberGenerator, pool: Array[AffixDefinition]) -> AffixRollResource:
+	if random == null or pool.is_empty():
+		return null
+	var total: float = 0.0
+	for candidate: AffixDefinition in pool:
+		total += maxf(0.0, candidate.weight)
+	if total <= 0.0:
+		return null
+	var ticket: float = random.randf() * total
+	var chosen: AffixDefinition = pool.back()
+	for candidate: AffixDefinition in pool:
+		ticket -= maxf(0.0, candidate.weight)
+		if ticket <= 0.0:
+			chosen = candidate
+			break
+	return AffixRollResource.create(chosen.id, snappedf(random.randf_range(chosen.minimum, chosen.maximum), 0.001))
+
+## 在给定候选池按稳定内容 ID 找定义，供小候选池测试和互斥检查共用。
+static func _affix_in(definitions: Array, id: String) -> AffixDefinition:
+	for value: Variant in definitions:
+		var definition: AffixDefinition = value as AffixDefinition
+		if definition != null and definition.id == id:
+			return definition
+	return null
+
+## 按普通与精英权重抽品质，再复用合法候选规则逐条生成随机词条。
 func generate(level: int, elite: bool = false, unique_id: String = "") -> ItemInstanceResource:
 	var definition: ItemBase = ItemCatalog.BASES[rng.randi_range(0, ItemCatalog.BASES.size() - 1)]
 	var roll: float = rng.randf()
@@ -44,27 +102,12 @@ func generate(level: int, elite: bool = false, unique_id: String = "") -> ItemIn
 		count = rng.randi_range(3, 4)
 	elif quality == 3:
 		count = 1
-	var pool: Array[AffixDefinition] = []
-	for candidate: AffixDefinition in ItemCatalog.AFFIXES:
-		if candidate.min_level <= level and candidate.slots.has(definition.slot):
-			pool.append(candidate)
 	for index: int in range(count):
-		var total: float = 0.0
-		for candidate: AffixDefinition in pool:
-			total += candidate.weight
-		if total <= 0.0:
+		var pool: Array[AffixDefinition] = affix_candidates(item)
+		var rolled: AffixRollResource = roll_affix(rng, pool)
+		if rolled == null:
 			break
-		var ticket: float = rng.randf() * total
-		var chosen: AffixDefinition = pool.back()
-		for candidate: AffixDefinition in pool:
-			ticket -= candidate.weight
-			if ticket <= 0.0:
-				chosen = candidate
-				break
-		item.affixes.append(AffixRollResource.create(chosen.id, snappedf(rng.randf_range(chosen.minimum, chosen.maximum), 0.001)))
-		for pool_index: int in range(pool.size() - 1, -1, -1):
-			if pool[pool_index].group == chosen.group:
-				pool.remove_at(pool_index)
+		item.affixes.append(rolled)
 	synchronize()
 	return item
 

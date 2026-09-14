@@ -124,4 +124,14 @@ Hub 背包操作区新增拆解按钮，选中装备时并列展示“出售 X �
 
 第一轮新回归中四品质及全部失败事务前 27 项通过，最后模块合法性断言因独立测试直接 `new()` 的模块版本为 0 失败；该行为属于既有 SAVE-02，改为正式当前模块版本初始化后通过，本轮没有新增 `known_trap.md` 条目。`p1_salvage.tscn` 覆盖四品质、重复请求、列表重排和地点/归属失败；`hub_flow.tscn` 额外覆盖真实 UI、拆解/出售/入仓、手动检查点和文件读回。
 
-最终代码 head `4a6c5e21aec0151782d9d00ec915cc1fd547b2c7` 的 [Windows run 34813005120](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120) 已通过官方 Godot 4.7.2 的全量源码场景、存储故障、隔离 PCK、Windows exe 导出与实际成品包拾取/存档回归。构建 [artifact 10335855806](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855806)，SHA256 `160230324f9d1455a90483c090b5ed04bd11224fa18c7b322f968433f3bd760a`；启动日志 [artifact 10335855812](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855812)。当前自动验收完成，Windows 可见界面与操作手感待用户试玩；通过并合入后进入 P1_Task5。
+最终代码 head `4a6c5e21aec0151782d9d00ec915cc1fd547b2c7` 的 [Windows run 34813005120](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120) 已通过官方 Godot 4.7.2 的全量源码场景、存储故障、隔离 PCK、Windows exe 导出与实际成品包拾取/存档回归。构建 [artifact 10335855806](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855806)，SHA256 `160230324f9d1455a90483c090b5ed04bd11224fa18c7b322f968433f3bd760a`；启动日志 [artifact 10335855812](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855812)。用户于 2026-09-14 完成人工试玩并确认验收通过；[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 已合入 main `4798f7b83dcb01405e1e8b7ab175a4c2b6c63284`，拆解数值与交互优化留待后期。
+
+## P1_Task5：单词条位置重铸（2026-09-14）
+
+从最新 main `77948dcd` 建立 `feat/p1-task5-reforge`。`ItemInstanceResource` 新增 `reforge_index=-1`；items 模块升为 v2，加入独立 `reforge_rng_seed/state`。v1→v2 从原掉落种子确定性派生重铸序列并保持原 `rng_seed/state`，旧装备初始化为未选择位置。`ItemGenerator` 抽出合法候选和加权抽取供掉落/重铸共用，`ReforgeService` 与 `InventoryState.reforge()` 完成 Hub 规则、费用、固定位置、单次扣费、独立 RNG 和失败原子性。
+
+Hub 对未锁定的魔法/稀有背包装备显示位置、当前词条、合法候选范围、材料费用和结果；首次成功后位置选择器锁定。当前费用为魔法基础 2、稀有基础 4，每 4 个物品等级档再加 1。相同词条或相同数值允许再次出现；独特装备、穿戴/仓库、探险、材料不足、零候选和失效实例拒绝提交。
+
+独立提交：`261e8a0d` 持久状态与 items v2；`3b50f2e0` 共用候选/抽取规则；`b472ee23` 重铸事务；`a92035cd` Hub UI；`527c7d46` 专项回归；`a921da3f` 发布包 Hub 重铸 smoke；`6753e618` 修正 smoke 在生成下一件掉落后才核对保存前 RNG 的测试顺序。专项回归覆盖小候选池、等级/部位/互斥、零候选、重复请求、材料不足、同底材实例隔离、静态定义不变、穿戴属性生效、下一件掉落不受影响、真实检查点和 v1→v2 确定性迁移。
+
+最终代码 head `6753e61811cbb041892408e86b30bddd13f030ea` 的 [Windows run 34826805034](https://github.com/w7775p/relic-ARPG/actions/runs/34826805034) 全量源码场景、专项重铸、存储故障、隔离 PCK、Windows exe 导出和实际成品 Hub 重铸/检查点读回均通过。构建 [artifact 10340134660](https://github.com/w7775p/relic-ARPG/actions/runs/34826805034/artifacts/10340134660)，SHA256 `84fbaa2d5b228482bd094e3ea32a244987c01880a761bb6089c625f193417f8d`。当前状态待人工试玩；通过并合入后进入 P1_Task6。本轮没有新增项目级 `known_trap`。

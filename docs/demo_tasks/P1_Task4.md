@@ -2,7 +2,7 @@
 
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
-阶段：D1。状态：待验收。任务 ID：`P1_Task4`。工作分支：`feat/p1-task4-salvage`。
+阶段：D1。状态：已完成。任务 ID：`P1_Task4`。工作分支：`feat/p1-task4-salvage`。
 
 前置任务：[P1_Task 3](P1_Task3.md)。本次从最新 `main` `2cc76de50a526c06a3a1e398fbd0a29abcbf143e` 开始；前置任务已验收并通过 PR #10 合入，Resource 存档与词条导出修复也已在 main。
 
@@ -60,7 +60,7 @@ InventoryState 已管理背包、仓库、锁定与出售；材料余额归 econ
 
 ③ 出售/拆解/仓库转移连续操作后保存重启，物品归属、金币和材料正确；失败条件余额不变。
 
-功能验证通过 `python tools/verify.py --godot <引擎路径>` 执行，包含源码场景、存储故障及隔离 PCK 的拾取/存档回归；新增 `P1_SALVAGE_RESULT` 场景已实际运行到完成标记。Windows 成品继续通过 `python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log`。显示、中文排版和实际操作感受留给人工试玩。
+功能验证通过 `python tools/verify.py --godot <引擎路径>` 执行，包含源码场景、存储故障及隔离 PCK 的拾取/存档回归；新增 `P1_SALVAGE_RESULT` 场景已实际运行到完成标记。Windows 成品继续通过 `python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log`。显示、中文排版和实际操作感受已由用户试玩确认通过；细节优化后置。
 
 ## 要求
 
@@ -85,6 +85,6 @@ InventoryState 已管理背包、仓库、锁定与出售；材料余额归 econ
 
 第一次 Windows 回归中，拆解行为前 27 项均通过，最后模块合法性断言因测试直接 `new()` 的 SaveModule 版本仍为 0 失败；该行为已记录在既有 `known_trap.md` 的 SAVE-02，本轮没有新增项目级陷阱。改为使用正式当前模块版本后回归通过。
 
-最终代码 head `4a6c5e21aec0151782d9d00ec915cc1fd547b2c7` 的 Windows [run 34813005120](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120) 使用 `windows-latest`、PowerShell/Python 与官方 Godot 4.7.2：全量源码场景、存储故障、隔离 PCK 回归通过；Windows `.exe` 导出通过；实际成品包拾取与存档验证通过。构建：[artifact 10335855806](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855806)，SHA256 `160230324f9d1455a90483c090b5ed04bd11224fa18c7b322f968433f3bd760a`；启动日志：[artifact 10335855812](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855812)。
+最终 PR head `180f52403a959e885e03d69bbc47dc78290830cd` 的 Windows [run 34813475464](https://github.com/w7775p/relic-ARPG/actions/runs/34813475464) 使用 `windows-latest`、PowerShell/Python 与官方 Godot 4.7.2：全量源码场景、存储故障、隔离 PCK 回归通过；Windows `.exe` 导出通过；实际成品包拾取与存档验证通过。最终构建：[artifact 10336200563](https://github.com/w7775p/relic-ARPG/actions/runs/34813475464/artifacts/10336200563)，SHA256 `c6a324c3f543fc5cec30622cc2fa0a7ef15d3f281c3172a0b484b88ed6fd9a6e`。
 
-自动验收已覆盖四种品质收益、锁定/穿戴/仓库/探险拒绝、重复请求、列表重排后的稳定 ID、真实 Hub 的出售/拆解收益显示、拆解/出售/入仓连续操作及 Resource 文件读回。存档格式保持不变。当前只剩 Windows 可见界面与操作手感人工试玩，因此状态为“待验收”；通过并合入后下一张任务为 P1_Task5。
+用户于 2026-09-14 完成人工试玩并确认验收通过，拆解数值与交互细节优化留到后期统一处理。[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 已合入 main `4798f7b83dcb01405e1e8b7ab175a4c2b6c63284`。P1_Task4 已完成，下一张任务为 P1_Task5。

@@ -83,12 +83,12 @@ M2 已有 10 底材、12 随机词条、3 独特装备、三类普通敌人和�
 
 ## 执行记录
 
-2026-09-14 从 `main` `55529f7` 建立 `feat/p1-task3-d1-content`。独立提交依次为：`82901c5` 扩展装备池和第四独特；`5722c9d` 清理未索引备用词条并锁定 18 条普通词条口径；`592c1c1` 实现最多 3 目标、最多 1 代的流血击杀传播；`07747f3` 实现坚韧/迅捷精英修饰及实例隔离；`de4f176` 实现 `corner_grid` / `cross_lanes` 两套本趟场地变体；`377b508` 把 14/18/4、四个稳定独特 ID 和第四独特掉落可达检查加入源码/成品共用回归。
+2026-09-14 从 `main` `55529f7` 建立 `feat/p1-task3-d1-content`。独立提交依次为：`82901c5` 扩展装备池和第四独特；`5722c9d` 清理未索引备用词条并锁定 18 条普通词条口径；`592c1c1` 实现最多 3 目标、最多 1 代的流血击杀传播；`07747f3` 实现坚韧/迅捷精英修饰及实例隔离；`de4f176` 实现 `corner_grid` / `cross_lanes` 两套本趟场地变体；`377b508` 把 14/18/4、四个稳定独特 ID 和第四独特掉落可达检查加入源码/成品共用回归；`6e252e8` 显式验证雷霆与流血构筑均能通过真实技能结算击杀固定精英；`ee4a636` 补齐本卡新增 GDScript 的 `.gd.uid`。
 
 装备累计达到 14 底材、18 普通词条、4 独特。第四独特稳定 ID 为 `blood_echo`，底材 `serrated_blade`；流血伤害倍率进入横扫真实结算，击杀传播半径 4 米、最多 3 个目标、继承 65% 流血伤害、最多传播 1 代。卸装后的新攻击快照传播参数归零。已有 `thunder_ring`、`ember_mail`、`energy_grips` ID 保持原含义。
 
 精英修饰使用 `EliteModifierDefinition` 静态配置，`坚韧`提高生命/护甲，`迅捷`提高移动与攻击节奏；运行时只复制到当前敌人实例，未改写共享 `EnemyDefinition`。正式探险每趟选择一个场地变体和一个精英修饰，HUD 显示中文名称；布局、修饰和本趟种子均留在运行态，不进入长期存档。
 
-Windows CLI 验证对应代码 head `377b508f6978209a5747269914fbe3dd4d98c0bd`：[run 34803499160](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160) 使用 `windows-latest`、PowerShell、Python 与官方 Godot 4.7.2，同版导入与 `python tools/verify.py --godot <Godot.exe>` 全量场景/故障/PCK 回归通过；Windows `.exe` 导出通过；`python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log` 对实际成品的拾取、14/18/4 内容、存档读回和下一件掉落验证通过。构建：[artifact 10333060066](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160/artifacts/10333060066)，SHA256 `5509c6b7530baddda5912a31a3ddba9f1c6b6ee5b7b4a0686f77b0746edf1afa`；启动日志：[artifact 10332082295](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160/artifacts/10332082295)。
+Windows CLI 最终验证对应代码 head `ee4a636d7fd77106519aeb836a493472f5fb836e`：[run 34803911579](https://github.com/w7775p/relic-ARPG/actions/runs/34803911579) 使用 `windows-latest`、PowerShell、Python 与官方 Godot 4.7.2，同版导入与 `python tools/verify.py --godot <Godot.exe>` 全量场景/故障/PCK 回归通过；Windows `.exe` 导出通过；`python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log` 对实际成品的拾取、14/18/4 内容、存档读回和下一件掉落验证通过。构建：[artifact 10333135206](https://github.com/w7775p/relic-ARPG/actions/runs/34803911579/artifacts/10333135206)，SHA256 `9ea1a05e022e8ea511525377b061a373204bdd6cc17ae2fc4cffca573b02a967`；启动日志：[artifact 10332352054](https://github.com/w7775p/relic-ARPG/actions/runs/34803911579/artifacts/10332352054)。
 
-交付 PR：[PR #10](https://github.com/w7775p/relic-ARPG/pull/10)。自动验收已经覆盖内容额度、随机生成合法性、有限传播、卸装、两种精英修饰、实例隔离、两种变体清场/撤离/再出发、Hub 长期进度，以及实际 Windows 成品。可见画面、声音、中文排版和操作手感仍待人工试玩，因此状态保持“待验收”。本轮没有发现需要新增到 `known_trap.md` 的项目级陷阱。P1_Task3 合入并完成人工验收后，下一张为 P1_Task4。
+交付 PR：[PR #10](https://github.com/w7775p/relic-ARPG/pull/10)。自动验收已经覆盖内容额度、随机生成合法性、有限传播、卸装、两种精英修饰、实例隔离、两种变体清场/撤离/再出发、Hub 长期进度、雷霆与流血构筑真实击杀固定精英，以及实际 Windows 成品。可见画面、声音、中文排版和操作手感仍待人工试玩，因此状态保持“待验收”。本轮没有发现需要新增到 `known_trap.md` 的项目级陷阱。P1_Task3 合入并完成人工验收后，下一张为 P1_Task4。

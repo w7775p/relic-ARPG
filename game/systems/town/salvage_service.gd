@@ -1,6 +1,6 @@
 class_name SalvageService
 extends RefCounted
-## 据点单件拆解事务；始终按稳定实例 ID 重新查询归属并一次提交物品与材料变化。
+## 据点单件拆解服务；规则和地点判断在此完成，最终归属变更交给 InventoryState。
 const RULES: SalvageRules = preload("res://content/town/salvage_rules.tres")
 var inventory: InventoryState
 var at_hub: bool = false
@@ -30,20 +30,14 @@ func preview(item_id: String) -> Dictionary:
 		return _failure("拆解收益配置无效")
 	return {"ok":true, "message":"可拆解为 %d 材料" % amount, "materials":amount, "item_id":item_id}
 
-## 再次按 ID 校验后提交单次拆解；重复请求的第二次会因实例已删除而失败。
+## 再次按稳定 ID 提交；库存事务入口会重新校验归属并保证单次结算。
 func salvage(item_id: String) -> Dictionary:
 	var result: Dictionary = preview(item_id)
 	if not bool(result.ok):
 		return result
-	var index: int = inventory.data.bag_ids.find(item_id)
-	if index < 0 or not inventory.data.instances.has(item_id):
-		return _failure("物品状态已变化，请重新选择")
 	var amount: int = int(result.materials)
-	inventory.data.bag_ids.remove_at(index)
-	inventory.data.instances.erase(item_id)
-	inventory.economy.materials += amount
-	inventory.data.touch()
-	inventory.economy.touch()
+	if not inventory.salvage(item_id, amount):
+		return _failure("物品状态已变化，请重新选择")
 	return {"ok":true, "message":"拆解完成：+%d 材料" % amount, "materials":amount, "item_id":item_id}
 
 ## 统一失败结构，保证失败路径不修改物品与余额。

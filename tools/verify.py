@@ -23,6 +23,7 @@ TEST_MARKERS = {
     "res://tests/p1_task3_elites.tscn": "P1_TASK3_ELITES_RESULT: 0 failures",
     "res://tests/p1_task3_variants.tscn": "P1_TASK3_VARIANTS_RESULT: 0 failures",
     "res://tests/p1_salvage.tscn": "P1_SALVAGE_RESULT: 0 failures",
+    "res://tests/p1_reforge.tscn": "P1_REFORGE_RESULT: 0 failures",
     "res://tests/hub_flow.tscn": "HUB_FLOW_RESULT: 0 failures",
     "res://tests/debug_console.tscn": "DEBUG_CONSOLE_RESULT: 0 failures",
 }

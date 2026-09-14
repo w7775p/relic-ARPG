@@ -97,3 +97,9 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 拾取回归迁入 app/validation 并保留 UID，测试场景与 Boot 的 --smoke-loot 共用；补静态部位、1000 件生成、完整物品模块读回和下一次随机断言，共 27 项。tools/verify.py 增加隔离 PCK 验证，Windows 工作流对真正交付的 exe 执行同一套玩法检查。Linux 统一入口的导入、启动、11 个场景、7 个故障进程及 PCK 内 27 项全部通过。隔离副本改回旧转换设置，新成品回归捕获两项失败、退出码 1。代码和后续 Windows 交付分别提交；前次“包能启动”证据无法证明掉落配置完整。
 
 根因修复交付：`992532a08bef65d4b07f148bcab297bafe110ba5` 的 [Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 完成全量源码/PCK 回归、导出及实际 exe 的 27 项检查。修正包 [artifact 10317558351](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317558351)，压缩产物 SHA256 `5a29494cbd9b1126b6128aebbc6336e2f83bf79b8c6d681b941b62f4dc91cd09`；[成品日志](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317927889)。PR #8 已替换下载入口，工作分支 feat/resource-save，main 仍为 30b85f0，未合并。本次提交仅记录交付；实际画面和用户试玩仍需复核，有效 Resource 存档可继续使用。
+
+## TASK 与合入状态同步（2026-09-13）
+
+远端 PR #8 已合入 main `3cdc6122e66b1aa16eb4c8b52d98b80cf4141aec`，合并树与 `3784f21` 一致；从该节点建立 `docs/task-save-sync`。核对全部 21 张任务卡，更新 19 张待执行卡的基线、成品验收入口和子任务 commit 规则。装备扩容、随机区域、宝箱、输入、引导及阶段交付补充对应检查，拆解/重铸的服务路径改为真实 Hub；总表和重构记录同步合入状态。P1_Task1/2 的历史验收与后续玩法状态保持。
+
+检查结果：文档差异、21 张卡状态、302 个相对链接/锚点和新增引用路径通过；game/、tools/、.github/ 与已验证代码 `992532a` 无差异。此次仅改文档，玩法、存档及可见专项不适用，未重跑 Godot；已有实际 Windows 成品证据对应 run 34757117119。本子任务独立 commit，提交以 Git 历史为准，文档 PR 使用 `docs/task-save-sync → main`。下一张玩法任务为 P1_Task3，新包画面与手感继续待人工验收。

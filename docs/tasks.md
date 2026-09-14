@@ -38,6 +38,8 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 | 任务 | 内容 | 状态 | 验证 |
 | --- | --- | --- | --- |
 | Hub 拆分 | MainMenu → 独立 Hub → ExpeditionRuntime → Hub | 已合入 main `30b85f0`，PR #7 | 历史证据见 hub_refactor.md |
-| [Resource 存档](resource_save_task.md) | 五模块、多角色多槽、Hub 检查点、整体回退、旧 JSON/旧探险移除 | 实现完成；PR #8 待评审与人工可见验收 | 11 个常规场景＋7 个故障进程＋PCK 成品回归；Windows exe 的生成/拾取/存档通过，详见 validation.md |
+| [Resource 存档](resource_save_task.md) | 五模块、多角色多槽、Hub 检查点、整体回退、旧 JSON/旧探险移除 | 已合入 main `3cdc612`，PR #8；可见画面与手感待验收 | 11 个常规场景＋7 个故障进程＋PCK 成品回归；Windows exe 的生成/拾取/存档通过，详见 validation.md |
 
 P1_Task1/2 的 v3/v4 描述属于原阶段交付历史。后续任务以 Resource 存档和真实 Hub 为准，保留新 Resource 已发布版本的升级链；不再要求 JSON 迁移或战斗中恢复。
+
+2026-09-13 已同步 19 张待执行卡的 main 基线、成品验证和子任务 commit 要求；装备扩容、随机区域、拾取输入及阶段包按 [成品验收约定](demo_tasks/README.md#成品验收约定) 接续。据点服务使用 Hub。下一张为 P1_Task3，P1_Task3～P3_Task6 仍待执行；本次为文档同步。

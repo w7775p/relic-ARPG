@@ -4,11 +4,11 @@
 
 ## 当前存档边界
 
-Hub 已在 main `30b85f0` 完成拆分；Resource 重构状态见 [执行记录](../resource_save_task.md)，架构见 [save_system.md](../save_system.md)。后续任务仅在 Hub 保存长期状态，正常退出经撤离和成功保存；地图、房间、敌人、宝箱、地面物品与战斗计时属于本趟运行态。随机地图仍需稳定 ID 与种子复现，退出后建立新探险。多槽整体回退，读取不写档，旧 JSON 不迁移。
+Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通过 [PR #8](https://github.com/w7775p/relic-ARPG/pull/8) 合入 main `3cdc6122e66b1aa16eb4c8b52d98b80cf4141aec`。执行记录见 [resource_save_task.md](../resource_save_task.md)，架构见 [save_system.md](../save_system.md)。后续任务仅在 Hub 保存长期状态，正常退出经撤离和成功保存；地图、房间、敌人、宝箱、地面物品与战斗计时属于本趟运行态。随机地图仍需稳定 ID 与种子复现，退出后建立新探险。多槽整体回退，读取不写档，旧 JSON 不迁移。
 
 2026-09-13 试玩跟进：用户日志确认拾取因词条数量不合法被拒绝。代码 `992532a` 修复 4.7.2 导出自动转换丢失词条适用部位数组；Linux/Windows 全量、PCK 和 Windows exe 内 27 项全部通过，覆盖生成、真实 E 拾取、保存读回及下一件掉落。新包见 [验证记录](../validation.md)。此前 `708160e` 的修改只解决反馈可见性，旧包仍受该导出问题影响。
 
-以下任务卡已经同步该边界，P1_Task1/2 原交付记录保留为历史；本轮仅修改任务要求，没有提前实现 D1 后续或 D2/D3 内容。
+2026-09-13 TASK 同步：19 张待执行卡统一使用已合入的 Resource 基线、成品验收入口与子任务 commit 要求；装备扩容、随机区域、输入和阶段交付卡补充对应回归，据点服务路径改为真实 Hub。P1_Task1/2 原交付记录保留为历史；后续卡状态仍为待执行。重构的可见画面与手感范围仍待人工验收，合并状态与试玩结果分别记录。
 
 ## 基线与模板调整
 
@@ -20,13 +20,13 @@ Hub 已在 main `30b85f0` 完成拆分；Resource 重构状态见 [执行记录]
 
 ## 使用方法
 
-默认按 P1_Task 1→6、P2_Task 1→9、P3_Task 1→6 执行，一次交给新窗口一张卡。阶段最后一张负责集成验收；它通过后进入下一阶段。共用热点包括 `hub.gd`、`expedition_runtime.gd`、`inventory_state.gd`、`skill_runner.gd` 和 Resource 持久模块 和 `tools/verify.py`，按顺序接续可减少冲突。
+默认按 P1_Task 1→6、P2_Task 1→9、P3_Task 1→6 执行，一次交给新窗口一张卡；当前下一张为 P1_Task3。阶段最后一张负责集成验收；它通过后进入下一阶段。共用热点包括 `hub.gd`、`expedition_runtime.gd`、`inventory_state.gd`、`skill_runner.gd`、Resource 持久模块及源码/成品验证入口，按顺序接续可减少冲突。
 
-任务文档提交于 `docs/demo-task-cards`。优先在文档合入 main 后使用；尚未合入时，从该文档分支读取本卡及配套规范，基于最新 main 建功能分支，并把本包所需文档带入该功能分支。代码的起点始终是包含前置功能的最新 main；若前置未合入，先报告具体依赖缺口，用户已有接续分支授权时按该授权衔接。不要回到旧 M0/M1/M2 功能分支重新开发。
+原任务包与 Resource 重构均已合入 main，开工从最新 main 读取本卡及配套规范；本次 TASK 同步分支为 `docs/task-save-sync`，是否已合入以远端为准。同步尚未合入时可从该分支读取更新要求，代码仍基于包含前置功能的最新 main 建分支。若后续前置未合入，报告具体依赖缺口，用户已有接续分支授权时按该授权衔接。
 
 新窗口可直接发送：
 
-> 在 w7775p/relic-ARPG 执行 docs/demo_tasks/P1_Task1.md。先读取最新 main 和任务卡；任务卡若尚未合入 main，从 docs/demo-task-cards 读取并带入功能分支。按卡内范围实现、验证、提交 PR。无需使用 global-work-rules。
+> 在 w7775p/relic-ARPG 执行 docs/demo_tasks/P1_Task3.md。先读取最新 main 和任务卡，核对 Resource 重构、前置功能与任务总表的最新交接；按卡内范围实现和验证，每完成一个子任务立即 commit，提交 PR。无需使用 global-work-rules。
 
 之后替换任务文件名。完整单卡可以直接复制到新窗口；标题保留 `P1_Task 1` 形式，文件名使用 `P1_Task1.md`，方便链接和命令行读取。
 
@@ -36,7 +36,7 @@ Hub 已在 main `30b85f0` 完成拆分；Resource 重构状态见 [执行记录]
 | --- | --- | --- | --- |
 | [P1_Task 1](P1_Task1.md) | 技能装配与被动选择 | main 的 M2 | 已完成 |
 | [P1_Task 2](P1_Task2.md) | 流血横扫、战吼与恢复药剂 | P1_Task 1 | 已完成 |
-| [P1_Task 3](P1_Task3.md) | D1 装备池、精英修饰与地图变体 | P1_Task 2 | 待执行 |
+| [P1_Task 3](P1_Task3.md) | D1 装备池、精英修饰与地图变体 | P1_Task 2、已合入的 Resource 重构与词条导出修复 | 待执行 |
 | [P1_Task 4](P1_Task4.md) | 据点拆解与材料循环 | P1_Task 3 | 待执行 |
 | [P1_Task 5](P1_Task5.md) | 单词条位置重铸 | P1_Task 4 | 待执行 |
 | [P1_Task 6](P1_Task6.md) | D1 过滤、属性解释与阶段验收 | P1_Task 1、P1_Task 2、P1_Task 3、P1_Task 4、P1_Task 5 | 待执行 |
@@ -105,8 +105,30 @@ Hub 已在 main `30b85f0` 完成拆分；Resource 重构状态见 [执行记录]
 
 ## 交接与完成规则
 
-每次完成后更新单卡顶部状态与执行记录，再同步本总表、`docs/tasks.md`、`docs/work_log.md`；状态区分待执行、进行中、待验收、已完成和阻塞。实现完成但人工标准未验证时写待验收，注明具体范围。
+每个独立子任务通过最小验证后立即 commit；更新单卡顶部状态与执行记录，再同步本总表、`docs/tasks.md`、`docs/work_log.md`。状态区分待执行、进行中、待验收、已完成和阻塞；实现完成但人工标准未验证时写待验收，注明具体范围。合并记录单列实际提交。
 
 新增持久字段随所属 Resource 模块同步完成数据、变化通知、捕获、校验、升级和准备恢复。以开工时 main 为准递增模块版本，保留本轮 Resource 首版开始的已发布升级链。独特使用稳定字符串 ID，RNG 使用原生整数；历史 JSON、固定地图坐标校验和旧探险恢复已退休。
 
 每张卡都按 `AGENTS.md` 的完成检查执行。`known_trap.md` 只记录本轮真正遇到的问题；本次规划发现的未来接入注意已写入任务卡。新任务根据实际交付填写四项汇报，附版本、测试证据、PR 与构建链接。合并遵循用户当前授权。
+
+## 成品验收约定
+
+`python tools/verify.py --godot <引擎路径>` 已包含源码回归和无源码目录中的实际 PCK 验证。交付 Windows 包时，对将要交付的 exe 执行：
+
+```bash
+python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log
+```
+
+脚本使用隔离用户目录；包内 --smoke-loot 经正式 Hub 装配横扫、进入探险、真实右键击杀和 E 拾取，再撤离保存、读回检查点并核对下一件掉落。当前共用用例为 `game/app/validation/pickup_smoke.gd`，源码入口为 `game/tests/pickup_input.tscn`，当前检查数为 27；后续按功能扩展，记录当次实际数量。
+
+完成需退出码为零、无脚本/引擎错误，并出现 `PACKAGE_LOOT_BOOT_READY`、`PICKUP_INPUT_RESULT: 0 failures` 及脚本汇总 `PACKAGE_LOOT_RESULT: 0 failures`。记录代码提交、构建链接与成品日志；画面、声音和手感单列人工验收范围。
+
+| 任务改动 | 需同步的成品覆盖 |
+| --- | --- |
+| 装备、词条、独特与掉落表扩容 | 检查包内目录和适用部位，按来源/等级/品质生成合法实例；通过正式拾取及保存读回核对词条实值。 |
+| 随机区域、敌人、首领和宝箱 | 共用用例进入当期正式区域，验证实际来源的击杀/开箱、拾取与回 Hub；保留奖励和实例唯一性。 |
+| 输入、过滤和 UI | 通过当前键位的真实输入操作，覆盖持续施法中拾取、候选切换、焦点恢复及满包提示/重试。 |
+| 存档模块与版本 | 检查完整检查点恢复和下一次随机结果；故障、整体回退与升级沿用源码专项回归。 |
+| 导出配置与阶段包 | 对最终 exe 运行上述命令，保留共用用例所需资源，并记录当次成品验证与可见试玩。 |
+
+Godot 4.7.2 的词条数组导出丢失已在 `992532a` 修复；当前 `editor/export/convert_text_resources_to_binary=false`。后续调整引擎或导出配置时需重新通过同一成品用例。装备品质要求、持有归属和保存校验继续约束新内容，修改配置时同步维护合法生成规则。已验证基线与修正包见 [validation.md](../validation.md)。

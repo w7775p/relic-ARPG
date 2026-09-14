@@ -1,6 +1,6 @@
 # 词条配置导出丢失修复（2026-09-13）
 
-代码 `992532a08bef65d4b07f148bcab297bafe110ba5`，分支 `feat/resource-save`，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8)，未合并。[Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 的全量源码/PCK 回归、同版模板导出及实际 exe 的生成/拾取/存档检查全部通过。
+代码 `992532a08bef65d4b07f148bcab297bafe110ba5`，分支 `feat/resource-save`，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8) 已于 2026-09-13 合入 main `3cdc612`。[Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 的全量源码/PCK 回归、同版模板导出及实际 exe 的生成/拾取/存档检查全部通过。
 
 [修正后的 Windows 包](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317558351)，压缩产物 SHA256 `5a29494cbd9b1126b6128aebbc6336e2f83bf79b8c6d681b941b62f4dc91cd09`；[成品验证日志](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119/artifacts/10317927889)。交付记录提交仅修改文档，包内代码对应上述提交。
 

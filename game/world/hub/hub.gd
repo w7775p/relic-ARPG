@@ -8,6 +8,7 @@ var game_session: GameSession
 var inventory: InventoryState
 var generator: ItemGenerator
 var salvage_service: SalvageService
+var reforge_service: ReforgeService
 var minimum_quality: int:
 	get: return game_session.modules.character.minimum_quality
 	set(value):
@@ -16,10 +17,14 @@ var minimum_quality: int:
 var panel: InventoryPanel
 var salvage_button: Button
 var salvage_info: Label
+var reforge_selector: OptionButton
+var reforge_button: Button
+var reforge_info: Label
 var slots: Control
 var _timer: Timer
 var _transitioning: bool = false
 var _pending_action: String = ""
+var _reforge_refreshing: bool = false
 
 
 ## 领取会话并装配据点 UI；保存触发放到场景就绪后。
@@ -30,6 +35,7 @@ func _ready() -> void:
 	inventory = game_session.inventory
 	generator = game_session.generator
 	salvage_service = SalvageService.new(inventory, true)
+	reforge_service = ReforgeService.new(inventory, true)
 	inventory.changed.connect(_on_inventory_changed)
 	_timer = Timer.new()
 	_timer.wait_time = 1.0
@@ -45,6 +51,7 @@ func _ready() -> void:
 	panel.show()
 	panel.refresh()
 	_setup_salvage_ui()
+	_setup_reforge_ui()
 	slots = SLOTS.instantiate()
 	add_child(slots)
 	slots.closed.connect(_on_slots_closed)
@@ -169,6 +176,7 @@ func toggle_inventory() -> void:
 	if panel.visible:
 		panel.refresh()
 		_refresh_salvage_ui()
+		_refresh_reforge_ui()
 
 
 ## 在现有出售操作旁追加拆解按钮和同物品收益预览。
@@ -224,6 +232,7 @@ func _on_salvage_pressed() -> void:
 	var result: Dictionary = salvage_service.salvage(item_id)
 	panel.refresh()
 	_refresh_salvage_ui()
+	_refresh_reforge_ui()
 	panel.hint.text = str(result.message) + "\n" + panel.hint.text
 
 
@@ -235,6 +244,123 @@ func salvage_preview(item_id: String) -> Dictionary:
 ## 提供给测试和后续入口的稳定 ID 拆解提交。
 func salvage_item(item_id: String) -> Dictionary:
 	return salvage_service.salvage(item_id)
+
+
+## 在据点背包操作区加入重铸位置、按钮与规则说明。
+func _setup_reforge_ui() -> void:
+	reforge_selector = OptionButton.new()
+	reforge_selector.tooltip_text = "首次成功后，该装备只能继续重铸同一位置"
+	reforge_selector.item_selected.connect(_on_reforge_position_changed)
+	panel.inventory_actions.add_child(reforge_selector)
+	reforge_button = Button.new()
+	reforge_button.text = "重铸词条"
+	reforge_button.pressed.connect(_on_reforge_pressed)
+	panel.inventory_actions.add_child(reforge_button)
+	reforge_info = Label.new()
+	reforge_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var rows: Node = panel.hint.get_parent()
+	rows.add_child(reforge_info)
+	rows.move_child(reforge_info, panel.hint.get_index())
+	panel.items.item_selected.connect(_on_reforge_selection_changed)
+	panel.tabs.item_selected.connect(_on_reforge_tab_changed)
+	_refresh_reforge_ui()
+
+
+## 物品选择改变后刷新可重铸位置及当前预览。
+func _on_reforge_selection_changed(_index: int) -> void:
+	_refresh_reforge_ui()
+
+
+## 容器切换后重算背包归属限制。
+func _on_reforge_tab_changed(_index: int) -> void:
+	_refresh_reforge_ui.call_deferred()
+
+
+## 玩家改变首次重铸位置时刷新候选范围和费用。
+func _on_reforge_position_changed(_index: int) -> void:
+	if not _reforge_refreshing:
+		_refresh_reforge_preview()
+
+
+## 依据当前稳定实例重新填充词条位置；成功过的装备锁定选择器。
+func _refresh_reforge_ui() -> void:
+	if reforge_selector == null or reforge_button == null or reforge_info == null or panel == null:
+		return
+	var previous_index: int = reforge_selector.selected
+	_reforge_refreshing = true
+	reforge_selector.clear()
+	var values: Array = panel.entries()
+	var valid: bool = panel.source == 0 and panel.selected >= 0 and panel.selected < values.size()
+	if not valid:
+		reforge_selector.disabled = true
+		reforge_button.disabled = true
+		reforge_info.text = "词条重铸：仅据点背包内未锁定的魔法/稀有装备可用。"
+		_reforge_refreshing = false
+		return
+	var item: ItemInstanceResource = values[panel.selected]
+	if item.quality != 1 and item.quality != 2:
+		reforge_selector.disabled = true
+		reforge_button.disabled = true
+		reforge_info.text = "词条重铸：当前装备品质不可重铸，仅支持魔法与稀有。"
+		_reforge_refreshing = false
+		return
+	for index: int in range(item.affixes.size()):
+		var roll: AffixRollResource = item.affixes[index]
+		var definition: AffixDefinition = ItemCatalog.affix(roll.id)
+		var label: String = "位置 %d · %s" % [index + 1, definition.display_name if definition != null else roll.id]
+		reforge_selector.add_item(label)
+	var selected_index: int = item.reforge_index if item.reforge_index >= 0 else clampi(previous_index, 0, maxi(item.affixes.size() - 1, 0))
+	if not item.affixes.is_empty():
+		reforge_selector.select(selected_index)
+	reforge_selector.disabled = item.reforge_index >= 0 or item.affixes.is_empty()
+	_reforge_refreshing = false
+	_refresh_reforge_preview()
+
+
+## 显示当前词条、合法候选区间、单次费用和相同结果可能性。
+func _refresh_reforge_preview() -> void:
+	if reforge_selector == null or reforge_button == null or reforge_info == null or panel == null:
+		return
+	var values: Array = panel.entries()
+	if panel.source != 0 or panel.selected < 0 or panel.selected >= values.size() or reforge_selector.item_count == 0:
+		reforge_button.disabled = true
+		return
+	var item: ItemInstanceResource = values[panel.selected]
+	var index: int = item.reforge_index if item.reforge_index >= 0 else reforge_selector.selected
+	var preview: Dictionary = reforge_service.preview(item.id, index)
+	reforge_button.disabled = not bool(preview.get("ok", false))
+	var current_text: String = str(preview.get("current", ""))
+	var candidates: String = str(preview.get("candidates", ""))
+	var cost: int = int(preview.get("cost", ReforgeService.RULES.materials_for(item)))
+	var fixed_text: String = "已固定位置 %d；" % (item.reforge_index + 1) if item.reforge_index >= 0 else "首次成功后固定本位置；"
+	reforge_info.text = "重铸位置 %d：%s\n候选：%s\n费用 %d 材料（当前 %d）；%s可能获得相同词条或相同数值。\n%s" % [index + 1, current_text, candidates, cost, inventory.materials, fixed_text, str(preview.get("message", ""))]
+
+
+## 捕获稳定实例 ID 与位置执行一次请求；每次按钮点击生成独立请求 ID。
+func _on_reforge_pressed() -> void:
+	var values: Array = panel.entries()
+	if panel.source != 0 or panel.selected < 0 or panel.selected >= values.size() or reforge_selector.item_count == 0:
+		panel.hint.text = "重铸失败：请先在背包选择魔法或稀有装备"
+		_refresh_reforge_ui()
+		return
+	var item: ItemInstanceResource = values[panel.selected]
+	var index: int = item.reforge_index if item.reforge_index >= 0 else reforge_selector.selected
+	var request_id: String = "ui:%s:%d:%d" % [item.id, index, Time.get_ticks_usec()]
+	var result: Dictionary = reforge_service.reforge(item.id, index, request_id)
+	panel.refresh()
+	_refresh_salvage_ui()
+	_refresh_reforge_ui()
+	panel.hint.text = str(result.message) + "\n" + panel.hint.text
+
+
+## 提供给测试的稳定 ID 重铸预览。
+func reforge_preview(item_id: String, affix_index: int) -> Dictionary:
+	return reforge_service.preview(item_id, affix_index)
+
+
+## 提供给测试的稳定 ID 重铸提交，可传请求 ID 验证重复提交保护。
+func reforge_item(item_id: String, affix_index: int, request_id: String = "") -> Dictionary:
+	return reforge_service.reforge(item_id, affix_index, request_id)
 
 
 ## 据点物品服务只处理长期角色状态；丢弃与撤离由探险场景负责。
@@ -277,11 +403,12 @@ func loadout_action(action: String, id: String = "", slot: String = "") -> Strin
 	return "装配已更新"
 
 
-## 长期状态变化刷新据点 UI 与拆解收益；战斗属性由进入探险后重新构建。
+## 长期状态变化刷新据点 UI、处置收益与重铸预览；战斗属性由进入探险后重新构建。
 func _on_inventory_changed() -> void:
 	if panel != null:
 		panel.refresh()
 		_refresh_salvage_ui()
+		_refresh_reforge_ui()
 
 
 ## 据点场景只处理整备开关与返回主菜单。

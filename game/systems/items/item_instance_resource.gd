@@ -1,6 +1,6 @@
 class_name ItemInstanceResource
 extends Resource
-## 动态装备实例，以内容 ID 引用底材和独特配置，保留实际词条值。
+## 动态装备实例，以内容 ID 引用底材和独特配置，保留实际词条值与固定重铸位置。
 @export var id: String = ""
 @export var base: String = ""
 @export var level: int = 1
@@ -8,6 +8,7 @@ extends Resource
 @export var unique_id: String = ""
 @export var affixes: Array[AffixRollResource] = []
 @export var locked: bool = false
+@export var reforge_index: int = -1
 
 ## 查找独特定义，身份不依赖目录数组顺序。
 func unique_definition() -> UniqueDefinition:
@@ -29,6 +30,8 @@ func validate() -> SaveResult:
 		return SaveResult.failure("validate", ERR_INVALID_DATA, "独特装备内容缺失或底材不匹配", "items", path + ".unique_id")
 	if (quality == 0 and not affixes.is_empty()) or (quality == 1 and (affixes.size() < 1 or affixes.size() > 2)) or (quality == 2 and (affixes.size() < 3 or affixes.size() > 4)) or (quality == 3 and affixes.size() != 1):
 		return SaveResult.failure("validate", ERR_INVALID_DATA, "装备词条数量不合法", "items", path + ".affixes")
+	if reforge_index < -1 or reforge_index >= affixes.size() or ((quality == 0 or quality == 3) and reforge_index != -1):
+		return SaveResult.failure("validate", ERR_INVALID_DATA, "装备重铸位置不合法", "items", path + ".reforge_index")
 	var seen: Dictionary = {}
 	for roll: AffixRollResource in affixes:
 		if roll == null:

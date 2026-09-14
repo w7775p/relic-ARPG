@@ -1,5 +1,6 @@
 extends Node
-## P1_Task3 内容回归：装备额度、稳定 ID、词条合法性与流血装备属性。
+## P1_Task3 回归：装备额度、稳定 ID、生成合法性与有限流血传播。
+const ARENA: PackedScene = preload("res://world/maps/combat_arena.tscn")
 var failures: int = 0
 var checks: int = 0
 
@@ -16,7 +17,7 @@ func check(value: bool, message: String) -> void:
 func _ready() -> void:
 	_run.call_deferred()
 
-## 核对累计 14/18/4，并抽样生成各等级装备。
+## 核对累计 14/18/4、随机实例与第四独特传播边界。
 func _run() -> void:
 	check(ItemCatalog.BASES.size() == 14, "累计底材数量为 14")
 	check(ItemCatalog.AFFIXES.size() == 18, "累计普通随机词条数量为 18")
@@ -60,5 +61,38 @@ func _run() -> void:
 	var build: BuildDefinition = inventory.build()
 	check(build.bleed_damage_multiplier > 1.0 and build.bleed_spread_max_targets == 3 and build.bleed_spread_max_generation == 1, "流血底材与独特传播参数进入真实属性汇总")
 	check(ItemGenerator.describe(blood).contains("流血击杀传播"), "第四件独特说明展示真实传播参数")
+	await _check_bleed_spread(inventory)
 	print("P1_CONTENT_RESULT: ", failures, " failures; ", checks, " checks")
 	get_tree().quit(0 if failures == 0 else 1)
+
+## 在真实战斗系统中验证传播一次最多三个目标、只传播一代，卸装后新流血失去传播能力。
+func _check_bleed_spread(inventory: InventoryState) -> void:
+	var arena: Node3D = ARENA.instantiate()
+	arena.auto_spawn = false
+	get_tree().root.add_child(arena)
+	await get_tree().process_frame
+	get_tree().paused = true
+	arena.skills.equip(inventory.build())
+	var definition: EnemyDefinition = EncounterDirector.DEFINITIONS[0]
+	var origin: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(10.0, 0.05, 0.0))
+	var near_a: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(11.0, 0.05, 0.0))
+	var near_b: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(9.0, 0.05, 0.0))
+	var near_c: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(10.0, 0.05, 1.0))
+	var second_only: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(14.2, 0.05, 0.0))
+	origin.health = 1.0
+	origin.apply_bleed(arena.skills._bleed_snapshot(7001), SkillRunner.SWEEP.bleed_max_stacks)
+	arena.effects.advance_bleeds(SkillRunner.SWEEP.bleed_tick_sec)
+	arena.effects.drain(1000)
+	check(origin.is_dead and arena.effects.bleed_spread_count == 3, "流血击杀最多向三个附近目标传播")
+	check(near_a.bleeds.size() == 1 and near_b.bleeds.size() == 1 and near_c.bleeds.size() == 1 and second_only.bleeds.is_empty(), "首代传播受半径和目标数约束")
+	near_a.health = 1.0
+	arena.effects.advance_bleeds(SkillRunner.SWEEP.bleed_tick_sec)
+	arena.effects.drain(1000)
+	check(near_a.is_dead and second_only.bleeds.is_empty() and arena.effects.bleed_spread_count == 3, "传播流血击杀不会产生第二代链式放大")
+	check(inventory.unequip("weapon"), "第四件独特可正常卸下")
+	arena.skills.equip(inventory.build())
+	var clean_snapshot: Dictionary = arena.skills._bleed_snapshot(7002)
+	check(int(clean_snapshot.bleed_spread_max_targets) == 0 and int(clean_snapshot.bleed_spread_max_generation) == 0, "卸下后新攻击快照失去流血传播")
+	get_tree().paused = false
+	arena.queue_free()
+	await get_tree().process_frame

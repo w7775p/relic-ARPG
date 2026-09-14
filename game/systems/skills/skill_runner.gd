@@ -138,7 +138,7 @@ func cast_sweep() -> void:
 		target.push_back(direction, 1.6)
 
 
-## 创建可序列化流血层；伤害和击杀触发参数固定为本次横扫施放时的值。
+## 创建可序列化流血层；传播代数随本次施放从零开始并受装备配置上限约束。
 func _bleed_snapshot(root_id: int) -> Dictionary:
 	return {
 		"source":"player:sweep",
@@ -147,6 +147,13 @@ func _bleed_snapshot(root_id: int) -> Dictionary:
 		"remaining_sec":SWEEP.bleed_duration_sec,
 		"next_tick_sec":SWEEP.bleed_tick_sec,
 		"tick_interval_sec":SWEEP.bleed_tick_sec,
+		"bleed_duration_sec":SWEEP.bleed_duration_sec,
+		"bleed_tick_sec":SWEEP.bleed_tick_sec,
+		"bleed_spread_radius_m":build.bleed_spread_radius_m,
+		"bleed_spread_max_targets":build.bleed_spread_max_targets,
+		"bleed_spread_damage_ratio":build.bleed_spread_damage_ratio,
+		"bleed_spread_max_generation":build.bleed_spread_max_generation,
+		"bleed_spread_generation":0,
 		"kill_energy":build.kill_energy,
 		"death_explosion":build.death_explosion,
 		"explosion_radius_m":build.explosion_radius_m,
@@ -177,7 +184,7 @@ func _remove_warcry() -> void:
 	_warcry_remaining = 0.0
 
 
-## Q 药剂按最大生命比例治疗；满血、死亡、暂停或冷却中均保持状态不变。
+## Q 药剂按最大生命比例治疗并进入冷却。
 func use_potion() -> bool:
 	if not is_instance_valid(actor) or actor.is_dead or actor.health >= actor.max_health or _potion_remaining > 0.0:
 		return false

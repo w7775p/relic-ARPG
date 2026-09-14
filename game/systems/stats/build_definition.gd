@@ -28,6 +28,12 @@ extends Resource
 @export var explosion_damage: float = 45.0
 @export var death_explosion: bool = false
 
+# 流血传播运行快照只存在于单次伤害事件，不进入装备或存档配置。
+var bleed_snapshot_damage: float = 0.0
+var bleed_snapshot_duration_sec: float = 0.0
+var bleed_snapshot_tick_sec: float = 0.0
+var bleed_spread_generation: int = 0
+
 
 ## 从真实参数生成预设说明，避免文本与计算分离。
 func describe() -> String:

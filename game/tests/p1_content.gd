@@ -1,5 +1,5 @@
 extends Node
-## P1_Task3 回归：装备额度、稳定 ID、生成合法性与有限流血传播。
+## P1_Task3 回归：装备额度、稳定 ID、生成合法性、构筑击杀与有限流血传播。
 const ARENA: PackedScene = preload("res://world/maps/combat_arena.tscn")
 var failures: int = 0
 var checks: int = 0
@@ -17,7 +17,7 @@ func check(value: bool, message: String) -> void:
 func _ready() -> void:
 	_run.call_deferred()
 
-## 核对累计 14/18/4、随机实例与第四独特传播边界。
+## 核对累计 14/18/4、随机实例、两套构筑与第四独特传播边界。
 func _run() -> void:
 	check(ItemCatalog.BASES.size() == 14, "累计底材数量为 14")
 	check(ItemCatalog.AFFIXES.size() == 18, "累计普通随机词条数量为 18")
@@ -61,9 +61,45 @@ func _run() -> void:
 	var build: BuildDefinition = inventory.build()
 	check(build.bleed_damage_multiplier > 1.0 and build.bleed_spread_max_targets == 3 and build.bleed_spread_max_generation == 1, "流血底材与独特传播参数进入真实属性汇总")
 	check(ItemGenerator.describe(blood).contains("流血击杀传播"), "第四件独特说明展示真实传播参数")
+	await _check_elite_builds(inventory)
 	await _check_bleed_spread(inventory)
 	print("P1_CONTENT_RESULT: ", failures, " failures; ", checks, " checks")
 	get_tree().quit(0 if failures == 0 else 1)
+
+## 使用真实技能结算确认历史雷霆预设和新增流血构筑都能击杀固定精英原型。
+func _check_elite_builds(inventory: InventoryState) -> void:
+	var arena: Node3D = ARENA.instantiate()
+	arena.auto_spawn = false
+	get_tree().root.add_child(arena)
+	await get_tree().process_frame
+	get_tree().paused = true
+	arena.player.restore_position(Vector3.ZERO)
+	arena.skills.equip(SkillRunner.THUNDER)
+	var thunder_elite: EnemyController = arena.encounters.spawn_enemy(EncounterDirector.ELITE, Vector3(0.0, 0.05, -2.0))
+	thunder_elite.set_physics_process(false)
+	for index: int in range(64):
+		if thunder_elite.is_dead:
+			break
+		arena.skills.cast_whirlwind()
+		arena.effects.drain(1000)
+	check(thunder_elite.is_dead, "历史雷霆构筑可通过真实旋风结算击杀固定精英")
+	arena.encounters.clear()
+	await get_tree().process_frame
+	arena.effects.reset()
+	arena.skills.equip(inventory.build())
+	var bleed_elite: EnemyController = arena.encounters.spawn_enemy(EncounterDirector.ELITE, Vector3(0.0, 0.05, -2.0))
+	bleed_elite.set_physics_process(false)
+	for index: int in range(64):
+		if bleed_elite.is_dead:
+			break
+		arena.skills.cast_sweep()
+		arena.effects.drain(1000)
+		arena.effects.advance_bleeds(SkillRunner.SWEEP.bleed_tick_sec)
+		arena.effects.drain(1000)
+	check(bleed_elite.is_dead, "blood_echo 流血构筑可通过真实横扫与流血结算击杀固定精英")
+	get_tree().paused = false
+	arena.queue_free()
+	await get_tree().process_frame
 
 ## 在真实战斗系统中验证传播一次最多三个目标、只传播一代，卸装后新流血失去传播能力。
 func _check_bleed_spread(inventory: InventoryState) -> void:

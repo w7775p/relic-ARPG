@@ -101,7 +101,7 @@ func _check_elite_builds(inventory: InventoryState) -> void:
 	arena.queue_free()
 	await get_tree().process_frame
 
-## 在真实战斗系统中验证传播一次最多三个目标、只传播一代，卸装后新流血失去传播能力。
+## 在真实战斗系统中验证传播重置完整时长、最多三个目标、只传播一代，卸装后失去传播能力。
 func _check_bleed_spread(inventory: InventoryState) -> void:
 	var arena: Node3D = ARENA.instantiate()
 	arena.auto_spawn = false
@@ -115,12 +115,18 @@ func _check_bleed_spread(inventory: InventoryState) -> void:
 	var near_b: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(9.0, 0.05, 0.0))
 	var near_c: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(10.0, 0.05, 1.0))
 	var second_only: EnemyController = arena.encounters.spawn_enemy(definition, Vector3(14.2, 0.05, 0.0))
-	origin.health = 1.0
+	origin.health = 10000.0
 	origin.apply_bleed(arena.skills._bleed_snapshot(7001), SkillRunner.SWEEP.bleed_max_stacks)
+	var elapsed_before_kill: float = SkillRunner.SWEEP.bleed_duration_sec - SkillRunner.SWEEP.bleed_tick_sec
+	arena.effects.advance_bleeds(elapsed_before_kill)
+	arena.effects.drain(1000)
+	check(origin.bleeds.size() == 1 and is_equal_approx(float(origin.bleeds[0].remaining_sec), SkillRunner.SWEEP.bleed_tick_sec), "源流血推进到最后一个跳伤周期")
+	origin.health = 1.0
 	arena.effects.advance_bleeds(SkillRunner.SWEEP.bleed_tick_sec)
 	arena.effects.drain(1000)
-	check(origin.is_dead and arena.effects.bleed_spread_count == 3, "流血击杀最多向三个附近目标传播")
+	check(origin.is_dead and arena.effects.bleed_spread_count == 3, "流血末段击杀仍最多向三个附近目标传播")
 	check(near_a.bleeds.size() == 1 and near_b.bleeds.size() == 1 and near_c.bleeds.size() == 1 and second_only.bleeds.is_empty(), "首代传播受半径和目标数约束")
+	check(is_equal_approx(float(near_a.bleeds[0].remaining_sec), SkillRunner.SWEEP.bleed_duration_sec) and is_equal_approx(float(near_a.bleeds[0].next_tick_sec), SkillRunner.SWEEP.bleed_tick_sec), "传播目标从完整流血持续时间和首跳间隔重新计时")
 	near_a.health = 1.0
 	arena.effects.advance_bleeds(SkillRunner.SWEEP.bleed_tick_sec)
 	arena.effects.drain(1000)

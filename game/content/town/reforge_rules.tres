@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ReforgeRules" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/town/reforge_rules.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quality_base_materials = PackedInt32Array(0, 2, 4, 0)
+levels_per_bonus = 4
+level_bonus_materials = 1

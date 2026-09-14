@@ -162,6 +162,36 @@ func salvage(item_id: String, material_amount: int) -> bool:
 	economy.touch()
 	return true
 
+## 按稳定实例 ID 提交单词条重铸；材料、固定位置、词条和独立 RNG 状态一次更新。
+func reforge(item_id: String, affix_index: int, new_roll: AffixRollResource, material_cost: int, new_rng_seed: int, new_rng_state: int) -> bool:
+	if material_cost <= 0 or new_roll == null or new_rng_seed == 0 or new_rng_state == 0 or not data.instances.has(item_id):
+		return false
+	if not data.bag_ids.has(item_id) or data.stash_ids.has(item_id) or data.equipment_ids.values().has(item_id):
+		return false
+	var item: ItemInstanceResource = data.instances[item_id]
+	if item == null or item.locked or (item.quality != 1 and item.quality != 2):
+		return false
+	if affix_index < 0 or affix_index >= item.affixes.size() or (item.reforge_index >= 0 and item.reforge_index != affix_index):
+		return false
+	if economy.materials < material_cost:
+		return false
+	var previous_roll: AffixRollResource = item.affixes[affix_index]
+	var previous_index: int = item.reforge_index
+	item.affixes[affix_index] = new_roll
+	if item.reforge_index < 0:
+		item.reforge_index = affix_index
+	var validation: SaveResult = item.validate()
+	if not validation.ok:
+		item.affixes[affix_index] = previous_roll
+		item.reforge_index = previous_index
+		return false
+	economy.materials -= material_cost
+	data.reforge_rng_seed = new_rng_seed
+	data.reforge_rng_state = new_rng_state
+	data.touch()
+	economy.touch()
+	return true
+
 ## 丢弃时移出实例表，调用者接管地面实例。
 func discard(index: int) -> ItemInstanceResource:
 	if index < 0 or index >= data.bag_ids.size():

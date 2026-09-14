@@ -48,7 +48,7 @@
 
 ## Resource 存档重构 S1（2026-09-11）
 
-从 `30b85f0` 建立 `feat/resource-save`。新增角色、物品、经济、进度、据点五个 Resource 模块、嵌套实例/词条/装配、GameSession 和按依赖恢复的注册协议。基线原有回归通过；Godot 4.7.2 导入与 ResourceModel 13 项通过。现有玩法暂未切换；下一步为完整检查点存储和多槽位。进度见 `resource_save_task.md`。
+从 `30b85f0` 建立 `feat/resource-save`。新增角色、物品、经济、进度、据点五个 Resource 模块、嵌套实例/词条/装配、GameSession 和按依赖恢复的注册协议。基线原有回归通过；Godot 4.7.2 导入与 ResourceModel 13 项通过。现有玩法暂未切换；下一步为完整检查点存储和多槽位。
 
 ## Resource 存档重构 S2（2026-09-12）
 
@@ -64,7 +64,7 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 
 新增七个隔离进程，实际制造临时文件不可写、正式文件替换失败、损坏正文、缺失内容 ID、索引失败、未提交 pending 和正常探险退出。验证失败时保留当前状态和旧档、手动选择回退、重试成功后离场、索引重建及读取不自动覆盖。补充旧模块版本一真实文件升级为版本二，保留原文件；索引成功路径直接更新摘要，避免每次保存重读全部正文。
 
-实际发现 `.tres` 的浮点十进制舍入会误判读回失败，以及默认版本值被 ResourceSaver 省略会使后续升级失效；修复和回归见 `known_trap.md` SAVE-01/02。完整 `tools/verify.py` 在 Godot 4.7.2 通过导入、启动、10 个常规场景与 7 个故障进程。另测 10000 件装备：约 5.88 MB，保存 4869.63 ms，读取 2349.67 ms，测量时保留堆内存增量 95598572 字节（包含快照与恢复对象，不是峰值）。当前同步 `.tres` 在该规模存在明显停顿，后续大数据需求需另做性能阶段。可见 UI 和 Windows 验证待执行。
+实际发现 `.tres` 的浮点十进制舍入会误判读回失败，以及默认版本值被 ResourceSaver 省略会使后续升级失效；修复和回归见 `known_trap.md` SAVE-01/02。完整 `tools/verify.py` 在 Godot 4.7.2 通过导入、启动、10 个常规场景与 7 个故障进程。另测 10000 件装备：约 5.88 MB，保存 4869.63 ms，读取 2349.67 ms，测量时保留堆内存增量 95598572 字节（包含快照与恢复对象，不是峰值）。当前同步 `.tres` 在该规模存在明显停顿，后续大数据需求需另做性能阶段验证；可见 UI 和 Windows 验证待执行。
 
 ## Resource 存档重构 S6b：文档与 Windows 验证（2026-09-12）
 
@@ -103,3 +103,11 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 远端 PR #8 已合入 main `3cdc6122e66b1aa16eb4c8b52d98b80cf4141aec`，合并树与 `3784f21` 一致；从该节点建立 `docs/task-save-sync`。核对全部 21 张任务卡，更新 19 张待执行卡的基线、成品验收入口和子任务 commit 规则。装备扩容、随机区域、宝箱、输入、引导及阶段交付补充对应检查，拆解/重铸的服务路径改为真实 Hub；总表和重构记录同步合入状态。P1_Task1/2 的历史验收与后续玩法状态保持。
 
 检查结果：文档差异、21 张卡状态、302 个相对链接/锚点和新增引用路径通过；game/、tools/、.github/ 与已验证代码 `992532a` 无差异。此次仅改文档，玩法、存档及可见专项不适用，未重跑 Godot；已有实际 Windows 成品证据对应 run 34757117119。本子任务独立 commit，提交以 Git 历史为准，文档 PR 使用 `docs/task-save-sync → main`。下一张玩法任务为 P1_Task3，新包画面与手感继续待人工验收。
+
+## P1_Task3：D1 装备池、精英修饰与地图变体（2026-09-14）
+
+从最新 main `55529f7` 建立 `feat/p1-task3-d1-content`。累计装备池扩至 14 底材、18 普通随机词条和 4 独特；新增 `blood_echo`，把流血伤害倍率接入横扫真实结算，并实现 4 米内最多 3 目标、65% 伤害、最多 1 代的击杀传播。新增坚韧/迅捷两种精英修饰，运行属性只落在敌人实例；固定场地增加 `corner_grid` / `cross_lanes` 两种本趟布局，正式探险每次选择并显示布局与精英修饰。
+
+独立提交：`82901c5` 装备内容，`5722c9d` 清理备用词条，`592c1c1` 有限流血传播，`07747f3` 精英修饰，`de4f176` 场地变体，`377b508` 成品包 D1 内容门禁。没有新增持久字段，五模块 Resource 版本保持原样；变体、精英修饰和本趟种子均为探险运行态。
+
+代码 head `377b508f6978209a5747269914fbe3dd4d98c0bd` 的 [Windows run 34803499160](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160) 使用官方 Godot 4.7.2、PowerShell/Python CLI：全量源码场景/故障/PCK 回归通过，Windows exe 导出通过，实际成品拾取、14/18/4 内容、存档读回和下一件掉落验证通过。构建 [artifact 10333060066](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160/artifacts/10333060066)，SHA256 `5509c6b7530baddda5912a31a3ddba9f1c6b6ee5b7b4a0686f77b0746edf1afa`；启动日志 [artifact 10332082295](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160/artifacts/10332082295)。交付 [PR #10](https://github.com/w7775p/relic-ARPG/pull/10)。自动门禁完成；画面、声音、中文排版和手感仍待 Windows 人工试玩，任务保持待验收。P1_Task3 合入并验收后进入 P1_Task4。

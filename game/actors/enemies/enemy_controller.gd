@@ -66,7 +66,7 @@ func _physics_process(delta: float) -> void:
 	_cooldown = maxf(0.0, _cooldown - delta)
 	_path_remaining -= delta
 	_flash_remaining = maxf(0.0, _flash_remaining - delta)
-	_material.albedo_color = Color.WHITE if _flash_remaining > 0.0 else (Color(0.25, 0.8, 1.0) if shock_remaining_sec > 0.0 else runtime_tint)
+	_material.albedo_color = Color.WHITE if _flash_remaining > 0.0 else _status_tint()
 	var offset: Vector3 = combat.player.global_position - global_position
 	offset.y = 0.0
 	var distance: float = offset.length()
@@ -106,6 +106,42 @@ func _physics_process(delta: float) -> void:
 		state_remaining = 0.4
 	if movement.length_squared() > 0.1:
 		$Visual.rotation.y = atan2(-movement.x, -movement.z)
+
+
+## 状态色优先显示感电，其次显示持续流血；流血结束后恢复原型或精英修饰颜色。
+func _status_tint() -> Color:
+	if shock_remaining_sec > 0.0:
+		return Color(0.25, 0.8, 1.0)
+	if not bleeds.is_empty():
+		return runtime_tint.lerp(Color(0.78, 0.05, 0.08), 0.58)
+	return runtime_tint
+
+
+## 各类敌人使用不同启动距离；攻击前检查地形视线。
+func _can_attack(distance: float) -> bool:
+	if _cooldown > 0.0:
+		return false
+	var reach: float = 1.7
+	if definition.kind == EnemyDefinition.Kind.RANGED:
+		reach = 10.0
+	elif definition.kind == EnemyDefinition.Kind.CHARGER:
+		reach = 8.0
+	return distance <= reach and combat.has_line_of_sight(global_position, combat.player.global_position)
+
+
+## 每 0.4 秒更新目的地，逐物理帧推进原生导航路径。
+func _chase_velocity() -> Vector3:
+	if NavigationServer3D.map_get_iteration_id(navigation.get_navigation_map()) == 0:
+		return Vector3.ZERO
+	if _path_remaining <= 0.0:
+		_path_remaining = 0.4
+		navigation.target_position = combat.player.global_position
+	var next: Vector3 = navigation.get_next_path_position()
+	var direction: Vector3 = next - global_position
+	direction.y = 0.0
+	if direction.length_squared() < 0.01:
+		return Vector3.ZERO
+	return direction.normalized() * runtime_speed_mps
 
 
 ## 各类敌人使用不同启动距离；攻击前检查地形视线。

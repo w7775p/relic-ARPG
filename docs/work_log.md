@@ -115,3 +115,13 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 人工试玩确认地图变体、坚韧/迅捷功能、装备掉落拾取和保存重开正常；坚韧/迅捷数值体感留待后期平衡。Blood Echo 首次试玩出现传播持续表现疑似继承源目标剩余时间的反馈，随后增加末段击杀完整 4 秒回归、`apply_fresh_bleed` 双重重置和持续流血暗红状态色。最终交付 head `de0f22e2a3664ab4ef5ce48e17892b19368cfad8` 的 [Windows run 34808913642](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642) 全量源码/PCK 回归、Windows exe 导出及实际成品包验证通过；最终构建 [artifact 10334056782](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642/artifacts/10334056782)，SHA256 `e2a0a23545f4806bbece9a5734d000f361c8f0c781b88a7af8a1c5a938443318`。
 
 用户于 2026-09-14 完成最终修补包复测并明确确认验收通过。[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 已合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task3 状态更新为已完成，下一张玩法任务为 P1_Task4。
+
+## P1_Task4：据点拆解与材料循环（2026-09-14）
+
+从最新 main `2cc76de` 建立 `feat/p1-task4-salvage`。新增 `SalvageRules` 与 `.tres` 集中配置拆解收益：普通/魔法/稀有/独特基础材料为 `1/2/4/7`，物品等级从 1 级起每跨 3 级增加 1 材料。`SalvageService` 负责 Hub 地点、锁定和归属失败原因；`InventoryState.salvage()` 最终按稳定实例 ID 重新定位并提交删除实例与材料入账。装备已穿戴、位于仓库、锁定、已不存在或处于探险时均拒绝且保持原值。
+
+Hub 背包操作区新增拆解按钮，选中装备时并列展示“出售 X 金｜拆解 Y 材料”；出售仍沿原金币规则。拆解点击先捕获稳定实例 ID，再由服务和库存事务入口重新查询，因此背包顺序变化或同一 ID 连续请求不会改错目标或重复发材料。拆解、出售、入仓连续操作继续触发原 GameSession 变更和 Hub 去抖保存，没有增加持久字段或提升 Resource 版本。
+
+第一轮新回归中四品质及全部失败事务前 27 项通过，最后模块合法性断言因独立测试直接 `new()` 的模块版本为 0 失败；该行为属于既有 SAVE-02，改为正式当前模块版本初始化后通过，本轮没有新增 `known_trap.md` 条目。`p1_salvage.tscn` 覆盖四品质、重复请求、列表重排和地点/归属失败；`hub_flow.tscn` 额外覆盖真实 UI、拆解/出售/入仓、手动检查点和文件读回。
+
+最终代码 head `4a6c5e21aec0151782d9d00ec915cc1fd547b2c7` 的 [Windows run 34813005120](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120) 已通过官方 Godot 4.7.2 的全量源码场景、存储故障、隔离 PCK、Windows exe 导出与实际成品包拾取/存档回归。构建 [artifact 10335855806](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855806)，SHA256 `160230324f9d1455a90483c090b5ed04bd11224fa18c7b322f968433f3bd760a`；启动日志 [artifact 10335855812](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855812)。当前自动验收完成，Windows 可见界面与操作手感待用户试玩；通过并合入后进入 P1_Task5。

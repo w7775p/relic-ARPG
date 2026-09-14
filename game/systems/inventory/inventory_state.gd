@@ -145,6 +145,23 @@ func sell(index: int) -> bool:
 	economy.touch()
 	return true
 
+## 按稳定实例 ID 拆解背包装备；成功时删除一个实例并只结算一次材料。
+func salvage(item_id: String, material_amount: int) -> bool:
+	if material_amount <= 0 or not data.instances.has(item_id):
+		return false
+	var index: int = data.bag_ids.find(item_id)
+	if index < 0 or data.stash_ids.has(item_id) or data.equipment_ids.values().has(item_id):
+		return false
+	var item: ItemInstanceResource = data.instances[item_id]
+	if item == null or item.locked:
+		return false
+	data.bag_ids.remove_at(index)
+	data.instances.erase(item_id)
+	economy.materials += material_amount
+	data.touch()
+	economy.touch()
+	return true
+
 ## 丢弃时移出实例表，调用者接管地面实例。
 func discard(index: int) -> ItemInstanceResource:
 	if index < 0 or index >= data.bag_ids.size():

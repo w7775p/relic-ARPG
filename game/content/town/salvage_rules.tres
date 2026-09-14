@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="SalvageRules" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/town/salvage_rules.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quality_base_materials = PackedInt32Array(1, 2, 4, 7)
+levels_per_bonus = 3
+level_bonus_materials = 1

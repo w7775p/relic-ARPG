@@ -2,9 +2,9 @@
 
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
-阶段：D1。状态：待执行。任务 ID：`P1_Task4`。建议分支：`feat/p1-task4-salvage`。
+阶段：D1。状态：待验收。任务 ID：`P1_Task4`。工作分支：`feat/p1-task4-salvage`。
 
-前置任务：[P1_Task 3](P1_Task3.md)。执行时以包含前置功能和 [Resource 重构](../resource_save_task.md) 的最新 `main` 为代码起点；存档重构及词条导出修复已在 `3cdc612` 合入。跨窗口接续先核对 [任务总表](README.md) 与实际代码。`313ac7f` 仅作 M2 历史对照。
+前置任务：[P1_Task 3](P1_Task3.md)。本次从最新 `main` `2cc76de50a526c06a3a1e398fbd0a29abcbf143e` 开始；前置任务已验收并通过 PR #10 合入，Resource 存档与词条导出修复也已在 main。
 
 ## 开始前先阅读以下文档
 
@@ -24,11 +24,9 @@
 
 ## 已经实现的功能
 
-历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
+历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。P1_Task3 已把装备池扩至 D1 额度，并完成有限流血传播、精英修饰和固定场地双变体。
 
-InventoryState 已管理背包、仓库、锁定与出售；材料余额归 economy 模块，能够通过掉落获得，尚无拆解服务。前置完成后装备池达到 D1 额度。
-
-上述后续阶段功能须在开工时核实。本卡的“前置完成后”描述属于依赖条件，不能直接当作当前已完成事实。
+InventoryState 已管理背包、仓库、锁定与出售；材料余额归 economy 模块，可通过战斗掉落获得。本卡在该边界上新增据点拆解，不增加持久字段。
 
 ## 本次要做的任务
 
@@ -44,15 +42,15 @@ InventoryState 已管理背包、仓库、锁定与出售；材料余额归 econ
 
 | 主要路径 | 实现落点 |
 | --- | --- |
-| `game/systems/town/（新增）、game/systems/inventory/inventory_state.gd` | 拆解服务计算并提交单次物品交易；保持唯一持有归属。 |
-| `game/ui/inventory/inventory_panel.gd、game/world/hub/hub.gd` | 界面发出操作请求，Hub 通过 GameSession 确认地点能力并调用服务。 |
-| `game/content/（服务数值资源）、game/tests/` | 材料产出配置与收益边界回归。 |
+| `game/systems/town/、game/systems/inventory/inventory_state.gd` | `SalvageRules` 集中计算收益，`SalvageService` 处理地点与失败原因，最终按稳定实例 ID 交给 InventoryState 提交归属与材料事务。 |
+| `game/world/hub/hub.gd` | 在现有背包操作区增加拆解按钮和出售/拆解并列收益；点击时捕获稳定实例 ID，再由服务重新定位。 |
+| `game/content/town/salvage_rules.tres、game/tests/` | 配置品质/等级收益，并覆盖四品质、失败路径、重复请求、列表重排、Hub/探险与保存往返。 |
 
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+共用存档格式没有变化；相关回归已接入 `tools/verify.py`。新增类、函数、回调与功能均写简明中文注释。
 
 ## 存档与兼容
 
-复用已持久化的材料余额与背包数据，通常无需新增存档字段。拆解成功保存后重启，材料保留且原物品不存在；保存失败时显示真实结果，保留当前会话可再次保存。
+复用已持久化的 `items` 与 `economy.materials`，没有新增存档字段，也没有提升模块版本。拆解成功后物品实例从 items 模块消失、材料进入 economy 模块；Hub 现有变更去抖与手动/自动检查点负责持久化。保存失败仍沿现有 SaveResult 反馈和重试入口处理，当前会话保持可继续保存。
 
 ## 验收标准
 
@@ -62,14 +60,14 @@ InventoryState 已管理背包、仓库、锁定与出售；材料余额归 econ
 
 ③ 出售/拆解/仓库转移连续操作后保存重启，物品归属、金币和材料正确；失败条件余额不变。
 
-功能验证通过 `python tools/verify.py --godot <引擎路径>` 执行，包含源码场景、存储故障及隔离 PCK 的拾取/存档回归；新增用例需要实际运行到完成标记。交付 Windows 包时按 [成品验收约定](README.md#成品验收约定) 验证实际 exe。显示、声音和手感按本次可见试玩记录验收。
+功能验证通过 `python tools/verify.py --godot <引擎路径>` 执行，包含源码场景、存储故障及隔离 PCK 的拾取/存档回归；新增 `P1_SALVAGE_RESULT` 场景已实际运行到完成标记。Windows 成品继续通过 `python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log`。显示、中文排版和实际操作感受留给人工试玩。
 
 ## 要求
 
-1. 先检查当前项目状态：分支、工作区、最新 main、前置合入、实际代码与验证入口；保护现有未提交修改。先完成可以核实的工作，具体依赖缺失时说明缺失文件或功能。
+1. 先检查当前项目状态：分支、工作区、最新 main、前置合入、实际代码与验证入口；保护现有未提交修改。
 2. 不要实现与本任务无关的系统。只参考本仓库与所需官方资料，沿用本项目约定，无需使用 `global-work-rules`。
-3. 优先最小可用实现，以本卡验收为完成边界；从当前主入口可以观察到功能，必要存档与基础反馈同批完成。具体数值可调整并记录原因。
-4. 完成后按 AGENTS.md「完成任务前必须检查」逐条执行，更新本卡状态、任务总表和工作日志；实际遇到新坑才更新 `known_trap.md`。每完成一个独立且验证通过的子任务立即 commit，再同步任务分支和 PR（合并请求）；合并按用户当前授权执行。
+3. 优先最小可用实现，以本卡验收为完成边界；从当前主入口可以观察到功能，必要存档与基础反馈同批完成。
+4. 完成后按 AGENTS.md「完成任务前必须检查」逐条执行，更新本卡状态、任务总表和工作日志；实际遇到新坑才更新 `known_trap.md`。每完成一个独立且验证通过的子任务立即 commit，再同步任务分支和 PR；合并按用户当前授权执行。
 5. 最后按下表汇报，并附分支/提交、测试命令与实际结果、PR 和可用构建链接。
 
 | 汇报项 | 必须包含 |
@@ -81,4 +79,12 @@ InventoryState 已管理背包、仓库、锁定与出售；材料余额归 econ
 
 ## 执行记录
 
-尚未执行。完成时填写实际基线、分支/提交、PR、验收结果、存档迁移、构建位置和遗留项；更新顶部状态。推荐步骤：待执行 → 进行中 → 待验收 → 已完成，阻塞时写明原因。
+2026-09-14 从 `main` `2cc76de` 建立 `feat/p1-task4-salvage`。拆解收益使用集中资源：普通/魔法/稀有/独特基础材料分别为 `1/2/4/7`，物品等级从 1 级起每跨 3 级额外增加 1 材料。界面与实际事务读取同一 `SalvageRules`，出售仍使用原 `ItemGenerator.price()` 金币规则。
+
+独立提交包括：`4fc5afe` 新增拆解收益规则；`4e142ec` 补规则 UID；`ab2d150` 增加 D1 收益资源；`ce11721` 实现稳定 ID 拆解服务；`3fe9efc` 补服务 UID；`dc46039` 增加四品质与失败事务回归；`e5dc6ff` / `de5d8b6` 补测试 UID 与场景；`7f860bd` 接入统一验证；`98266f7` 在真实 Hub 接入拆解按钮及出售/拆解收益预览；`c050605` 修正独立测试的正式模块版本初始化；`f32e2b5` 覆盖 Hub 中拆解、出售、入仓、手动保存及文件读回；`e96857d` 将拆解最终提交纳入 InventoryState；`4a6c5e2` 令 SalvageService 通过库存事务入口提交。
+
+第一次 Windows 回归中，拆解行为前 27 项均通过，最后模块合法性断言因测试直接 `new()` 的 SaveModule 版本仍为 0 失败；该行为已记录在既有 `known_trap.md` 的 SAVE-02，本轮没有新增项目级陷阱。改为使用正式当前模块版本后回归通过。
+
+最终代码 head `4a6c5e21aec0151782d9d00ec915cc1fd547b2c7` 的 Windows [run 34813005120](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120) 使用 `windows-latest`、PowerShell/Python 与官方 Godot 4.7.2：全量源码场景、存储故障、隔离 PCK 回归通过；Windows `.exe` 导出通过；实际成品包拾取与存档验证通过。构建：[artifact 10335855806](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855806)，SHA256 `160230324f9d1455a90483c090b5ed04bd11224fa18c7b322f968433f3bd760a`；启动日志：[artifact 10335855812](https://github.com/w7775p/relic-ARPG/actions/runs/34813005120/artifacts/10335855812)。
+
+自动验收已覆盖四种品质收益、锁定/穿戴/仓库/探险拒绝、重复请求、列表重排后的稳定 ID、真实 Hub 的出售/拆解收益显示、拆解/出售/入仓连续操作及 Resource 文件读回。存档格式保持不变。当前只剩 Windows 可见界面与操作手感人工试玩，因此状态为“待验收”；通过并合入后下一张任务为 P1_Task5。

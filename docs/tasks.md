@@ -31,9 +31,9 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 | [P1_Task1](demo_tasks/P1_Task1.md) | 技能装配、六被动、据点调整与 v3 迁移 | 已完成 | 自动回归通过；2026-09-11 用户可见试玩验收通过 |
 | [P1_Task2](demo_tasks/P1_Task2.md) | 流血横扫、战吼、恢复药剂与 v4 持续状态存档 | 已完成 | 最终 166 项自动回归通过；Windows 导出与独立启动通过；2026-09-11 用户可见试玩验收通过 |
 | [P1_Task3](demo_tasks/P1_Task3.md) | 14/18/4 装备池、流血传播、两种精英修饰、固定场地双变体 | 已完成 | 最终 Windows run 34808913642 全量源码/PCK、Windows exe 与成品包验证通过；2026-09-14 用户最终复测验收通过；PR #10 已合入 main `48479ed` |
-| [P1_Task4](demo_tasks/P1_Task4.md) | 据点单件拆解、出售/拆解收益选择与材料循环 | 待验收 | Windows run 34813005120：四品质、稳定 ID、失败事务、Hub 连续操作、Resource 读回及最终 Windows 成品门禁通过；待人工试玩 |
+| [P1_Task4](demo_tasks/P1_Task4.md) | 据点单件拆解、出售/拆解收益选择与材料循环 | 已完成 | Windows run 34813475464 全量源码/PCK、Windows exe 与成品包验证通过；2026-09-14 用户试玩验收通过；PR #11 已合入 main `4798f7b`；数值与交互优化后置 |
 
-后续顺序见 [任务总表](demo_tasks/README.md)。P1_Task4 人工验收并合入后进入 P1_Task5。
+后续顺序见 [任务总表](demo_tasks/README.md)。P1_Task5 已解锁。
 
 ## 架构重构
 
@@ -44,4 +44,4 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 
 P1_Task1/2 的 v3/v4 描述属于原阶段交付历史。后续任务以 Resource 存档和真实 Hub 为准，保留新 Resource 已发布版本的升级链；不再要求 JSON 迁移或战斗中恢复。
 
-2026-09-14 P1_Task3 已完成并通过人工验收；[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task4 从最新 main `2cc76de` 实现据点拆解，代码 head `4a6c5e2` 的 Windows run 34813005120 全量自动门禁通过，当前等待人工试玩验收。
+2026-09-14 P1_Task3 已完成并通过人工验收；[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task4 已完成自动与人工验收；[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 合入 main `4798f7b83dcb01405e1e8b7ab175a4c2b6c63284`。拆解相关数值与交互细节留待后期统一优化，当前下一张玩法任务为 P1_Task5。

@@ -144,33 +144,6 @@ func _chase_velocity() -> Vector3:
 	return direction.normalized() * runtime_speed_mps
 
 
-## 各类敌人使用不同启动距离；攻击前检查地形视线。
-func _can_attack(distance: float) -> bool:
-	if _cooldown > 0.0:
-		return false
-	var reach: float = 1.7
-	if definition.kind == EnemyDefinition.Kind.RANGED:
-		reach = 10.0
-	elif definition.kind == EnemyDefinition.Kind.CHARGER:
-		reach = 8.0
-	return distance <= reach and combat.has_line_of_sight(global_position, combat.player.global_position)
-
-
-## 每 0.4 秒更新目的地，逐物理帧推进原生导航路径。
-func _chase_velocity() -> Vector3:
-	if NavigationServer3D.map_get_iteration_id(navigation.get_navigation_map()) == 0:
-		return Vector3.ZERO
-	if _path_remaining <= 0.0:
-		_path_remaining = 0.4
-		navigation.target_position = combat.player.global_position
-	var next: Vector3 = navigation.get_next_path_position()
-	var direction: Vector3 = next - global_position
-	direction.y = 0.0
-	if direction.length_squared() < 0.01:
-		return Vector3.ZERO
-	return direction.normalized() * runtime_speed_mps
-
-
 ## 蓄力时锁定方向并显示红色危险范围，允许玩家走位躲避。
 func _begin_attack(offset: Vector3) -> void:
 	state = State.WINDUP

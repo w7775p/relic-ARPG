@@ -7,12 +7,15 @@ const SLOTS: PackedScene = preload("res://ui/saves/save_slots.tscn")
 var game_session: GameSession
 var inventory: InventoryState
 var generator: ItemGenerator
+var salvage_service: SalvageService
 var minimum_quality: int:
 	get: return game_session.modules.character.minimum_quality
 	set(value):
 		game_session.modules.character.minimum_quality = value
 		game_session.modules.character.touch()
 var panel: InventoryPanel
+var salvage_button: Button
+var salvage_info: Label
 var slots: Control
 var _timer: Timer
 var _transitioning: bool = false
@@ -26,6 +29,7 @@ func _ready() -> void:
 		game_session = GameSession.new_character()
 	inventory = game_session.inventory
 	generator = game_session.generator
+	salvage_service = SalvageService.new(inventory, true)
 	inventory.changed.connect(_on_inventory_changed)
 	_timer = Timer.new()
 	_timer.wait_time = 1.0
@@ -40,6 +44,7 @@ func _ready() -> void:
 	panel.offset_bottom = -90
 	panel.show()
 	panel.refresh()
+	_setup_salvage_ui()
 	slots = SLOTS.instantiate()
 	add_child(slots)
 	slots.closed.connect(_on_slots_closed)
@@ -163,6 +168,73 @@ func toggle_inventory() -> void:
 	panel.visible = not panel.visible
 	if panel.visible:
 		panel.refresh()
+		_refresh_salvage_ui()
+
+
+## 在现有出售操作旁追加拆解按钮和同物品收益预览。
+func _setup_salvage_ui() -> void:
+	salvage_button = Button.new()
+	salvage_button.text = "拆解"
+	salvage_button.pressed.connect(_on_salvage_pressed)
+	panel.inventory_actions.add_child(salvage_button)
+	salvage_info = Label.new()
+	salvage_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var rows: Node = panel.hint.get_parent()
+	rows.add_child(salvage_info)
+	rows.move_child(salvage_info, panel.hint.get_index())
+	panel.items.item_selected.connect(_on_salvage_selection_changed)
+	panel.tabs.item_selected.connect(_on_salvage_tab_changed)
+	_refresh_salvage_ui()
+
+
+## 背包选中项变化后刷新出售与拆解的并列收益。
+func _on_salvage_selection_changed(_index: int) -> void:
+	_refresh_salvage_ui()
+
+
+## 切换容器后同步拆解按钮的地点与归属限制。
+func _on_salvage_tab_changed(_index: int) -> void:
+	_refresh_salvage_ui.call_deferred()
+
+
+## 使用同一拆解规则显示当前选中物品的两种据点处置收益。
+func _refresh_salvage_ui() -> void:
+	if salvage_button == null or salvage_info == null or panel == null:
+		return
+	var values: Array = panel.entries()
+	var valid: bool = panel.source == 0 and panel.selected >= 0 and panel.selected < values.size()
+	salvage_button.disabled = not valid
+	if not valid:
+		salvage_info.text = "据点处置：在背包选择装备后，可比较出售金币与拆解材料收益。"
+		return
+	var item: ItemInstanceResource = values[panel.selected]
+	var materials: int = SalvageService.RULES.materials_for(item)
+	var restriction: String = "｜当前锁定，需先解锁" if item.locked else ""
+	salvage_info.text = "据点处置收益：出售 %d 金｜拆解 %d 材料%s" % [ItemGenerator.price(item), materials, restriction]
+
+
+## 点击时捕获稳定实例 ID；服务会再次查询当前位置，列表重排不会改变目标。
+func _on_salvage_pressed() -> void:
+	var values: Array = panel.entries()
+	if panel.source != 0 or panel.selected < 0 or panel.selected >= values.size():
+		panel.hint.text = "拆解失败：请先在背包选择装备"
+		_refresh_salvage_ui()
+		return
+	var item_id: String = values[panel.selected].id
+	var result: Dictionary = salvage_service.salvage(item_id)
+	panel.refresh()
+	_refresh_salvage_ui()
+	panel.hint.text = str(result.message) + "\n" + panel.hint.text
+
+
+## 提供给测试和后续据点 UI 的稳定 ID 拆解预览。
+func salvage_preview(item_id: String) -> Dictionary:
+	return salvage_service.preview(item_id)
+
+
+## 提供给测试和后续入口的稳定 ID 拆解提交。
+func salvage_item(item_id: String) -> Dictionary:
+	return salvage_service.salvage(item_id)
 
 
 ## 据点物品服务只处理长期角色状态；丢弃与撤离由探险场景负责。
@@ -205,10 +277,11 @@ func loadout_action(action: String, id: String = "", slot: String = "") -> Strin
 	return "装配已更新"
 
 
-## 长期状态变化只刷新据点 UI；战斗属性由进入探险后重新构建。
+## 长期状态变化刷新据点 UI 与拆解收益；战斗属性由进入探险后重新构建。
 func _on_inventory_changed() -> void:
 	if panel != null:
 		panel.refresh()
+		_refresh_salvage_ui()
 
 
 ## 据点场景只处理整备开关与返回主菜单。

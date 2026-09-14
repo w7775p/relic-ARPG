@@ -110,4 +110,8 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 
 独立提交：`82901c5` 装备内容，`5722c9d` 清理备用词条，`592c1c1` 有限流血传播，`07747f3` 精英修饰，`de4f176` 场地变体，`377b508` 成品包 D1 内容门禁。没有新增持久字段，五模块 Resource 版本保持原样；变体、精英修饰和本趟种子均为探险运行态。
 
-代码 head `377b508f6978209a5747269914fbe3dd4d98c0bd` 的 [Windows run 34803499160](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160) 使用官方 Godot 4.7.2、PowerShell/Python CLI：全量源码场景/故障/PCK 回归通过，Windows exe 导出通过，实际成品拾取、14/18/4 内容、存档读回和下一件掉落验证通过。构建 [artifact 10333060066](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160/artifacts/10333060066)，SHA256 `5509c6b7530baddda5912a31a3ddba9f1c6b6ee5b7b4a0686f77b0746edf1afa`；启动日志 [artifact 10332082295](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160/artifacts/10332082295)。交付 [PR #10](https://github.com/w7775p/relic-ARPG/pull/10)。自动门禁完成；画面、声音、中文排版和手感仍待 Windows 人工试玩，任务保持待验收。P1_Task3 合入并验收后进入 P1_Task4。
+首次完整代码 head `377b508f6978209a5747269914fbe3dd4d98c0bd` 的 [Windows run 34803499160](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160) 使用官方 Godot 4.7.2、PowerShell/Python CLI：全量源码场景/故障/PCK 回归通过，Windows exe 导出通过，实际成品拾取、14/18/4 内容、存档读回和下一件掉落验证通过。
+
+人工试玩确认地图变体、坚韧/迅捷功能、装备掉落拾取和保存重开正常；坚韧/迅捷数值体感留待后期平衡。Blood Echo 首次试玩出现传播持续表现疑似继承源目标剩余时间的反馈，随后增加末段击杀完整 4 秒回归、`apply_fresh_bleed` 双重重置和持续流血暗红状态色。最终交付 head `de0f22e2a3664ab4ef5ce48e17892b19368cfad8` 的 [Windows run 34808913642](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642) 全量源码/PCK 回归、Windows exe 导出及实际成品包验证通过；最终构建 [artifact 10334056782](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642/artifacts/10334056782)，SHA256 `e2a0a23545f4806bbece9a5734d000f361c8f0c781b88a7af8a1c5a938443318`。
+
+用户于 2026-09-14 完成最终修补包复测并明确确认验收通过。[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 已合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task3 状态更新为已完成，下一张玩法任务为 P1_Task4。

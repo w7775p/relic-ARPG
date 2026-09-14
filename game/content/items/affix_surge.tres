@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "surge"
+display_name = "涌能"
+stat = "hit_energy"
+group = "energy_hit"
+slots = PackedStringArray("weapon", "hands", "ring")
+min_level = 2
+weight = 0.9
+minimum = 1.5
+maximum = 3.5

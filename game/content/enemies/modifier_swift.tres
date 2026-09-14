@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EliteModifierDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://actors/enemies/elite_modifier_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "swift"
+display_name = "迅捷"
+compatible_kinds = PackedInt32Array(0, 1, 2)
+health_multiplier = 1.0
+armor_bonus = 0.0
+speed_multiplier = 1.35
+damage_multiplier = 1.05
+attack_cooldown_multiplier = 0.78
+windup_multiplier = 0.75
+presentation_tint = Color(0.82, 0.28, 0.72, 1)

@@ -171,8 +171,10 @@ func _run() -> void:
 	await frames()
 	_finish()
 
-## 导出后仍须保留适用部位，并能生成所有品质的合法实例。
+## 导出后核对 D1 内容额度、词条适用部位与多品质实例生成。
 func _check_loot_content() -> bool:
+	check(ItemCatalog.BASES.size() == 14 and ItemCatalog.AFFIXES.size() == 18 and ItemCatalog.UNIQUES.size() == 4, "打包后 D1 装备额度保持 14 底材 / 18 普通词条 / 4 独特")
+	check(ItemCatalog.unique("thunder_ring") != null and ItemCatalog.unique("ember_mail") != null and ItemCatalog.unique("energy_grips") != null and ItemCatalog.unique("blood_echo") != null, "打包后四个稳定独特 ID 均可解析")
 	var definitions_ok: bool = true
 	for affix: AffixDefinition in ItemCatalog.AFFIXES:
 		definitions_ok = definitions_ok and not affix.slots.is_empty()
@@ -183,11 +185,14 @@ func _check_loot_content() -> bool:
 	generator.rng.seed = 8912
 	var generation_ok: bool = true
 	var quality_counts: Array[int] = [0, 0, 0, 0]
+	var blood_echo_seen: bool = false
 	for index: int in range(1000):
 		var item: ItemInstanceResource = generator.generate(1 + index % 6, index % 5 == 0)
 		generation_ok = item.validate().ok and generation_ok
 		quality_counts[item.quality] += 1
+		blood_echo_seen = blood_echo_seen or item.unique_id == "blood_echo"
 	check(generation_ok and not quality_counts.has(0), "打包后跨等级生成一千件装备，覆盖四种品质且全部通过实例校验")
+	check(blood_echo_seen, "打包后当前精英随机池可掉落第四件独特 blood_echo")
 	return failures == 0
 
 ## 输出成品包与源码验证共用的完成标记，失败以非零退出码返回。

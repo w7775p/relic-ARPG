@@ -1,11 +1,17 @@
 extends "res://world/maps/combat_arena.gd"
-## 正式探险运行场景；长期收益写入会话模块，本趟世界随真实离场回收。
+## 正式探险运行场景；长期收益写入会话模块，本趟布局与精英修饰随离场回收。
 const PANEL: Script = preload("res://ui/inventory/inventory_panel.gd")
 const FIRST_CLEAR_REWARDS: Array[String] = ["thunder_ring", "ember_mail", "energy_grips"]
 const PICKUP_RADIUS_M: float = 2.5
+@export var forced_variant_id: String = ""
+@export var forced_modifier_id: String = ""
 var game_session: GameSession
 var inventory: InventoryState
 var generator: ItemGenerator
+var encounter_variant_id: String = ""
+var elite_modifier_id: String = ""
+var run_seed: int = 0
+var _run_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var minimum_quality: int:
 	get: return game_session.modules.character.minimum_quality
 	set(value):
@@ -23,7 +29,7 @@ var _settled: bool = false
 var _notice: String = ""
 var _notice_remaining: float = 0.0
 
-## 领取唯一会话，重建属性并创建新遭遇，不生成临时兼容角色。
+## 领取唯一会话，选择本趟固定场地变体与单个精英修饰后创建遭遇。
 func _ready() -> void:
 	game_session = SceneRouter.take_session()
 	if game_session == null:
@@ -42,16 +48,34 @@ func _ready() -> void:
 	_on_inventory_changed()
 	player.reset_health()
 	skills.reset()
-	for index: int in range(48):
-		var original: EnemyDefinition = EncounterDirector.ELITE if index == 47 else EncounterDirector.DEFINITIONS[index % 3]
-		var definition: EnemyDefinition = original.duplicate()
-		definition.health *= 1.0 + (inventory.difficulty - 1) * 0.25
-		definition.damage *= 1.0 + (inventory.difficulty - 1) * 0.15
-		encounters.spawn_enemy(definition, encounters._spawn_position(index))
+	_select_run_configuration()
+	_spawn_run_encounter()
 	_initializing = false
 	_set_paused(false)
 	if OS.get_cmdline_user_args().has("--smoke-combat"):
 		print("M2_EXPEDITION_BOOT_READY")
+
+## 本趟随机序列独立于掉落 RNG；测试可通过导出字段固定变体与修饰。
+func _select_run_configuration() -> void:
+	run_seed = int(Time.get_ticks_usec()) ^ int(inventory.completed * 104729 + inventory.difficulty * 8191)
+	_run_rng.seed = run_seed
+	encounter_variant_id = forced_variant_id if EncounterDirector.VARIANT_IDS.has(forced_variant_id) else EncounterDirector.VARIANT_IDS[_run_rng.randi_range(0, EncounterDirector.VARIANT_IDS.size() - 1)]
+	var modifier: EliteModifierDefinition = EncounterDirector.elite_modifier(forced_modifier_id)
+	if modifier == null:
+		modifier = EncounterDirector.roll_elite_modifier(_run_rng)
+	elite_modifier_id = modifier.id if modifier != null else ""
+
+## 按本趟变体生成 47 只三类普通敌人与一只带单修饰的固定精英原型。
+func _spawn_run_encounter() -> void:
+	var elite_modifier: EliteModifierDefinition = EncounterDirector.elite_modifier(elite_modifier_id)
+	for index: int in range(48):
+		var ordinary_index: int = EncounterDirector.definition_index_for_variant(index, encounter_variant_id)
+		var original: EnemyDefinition = EncounterDirector.ELITE if index == 47 else EncounterDirector.DEFINITIONS[ordinary_index]
+		var definition: EnemyDefinition = original.duplicate()
+		definition.health *= 1.0 + (inventory.difficulty - 1) * 0.25
+		definition.damage *= 1.0 + (inventory.difficulty - 1) * 0.15
+		var modifier: EliteModifierDefinition = elite_modifier if index == 47 else null
+		encounters.spawn_enemy(definition, EncounterDirector.spawn_position(index, encounter_variant_id), modifier)
 
 ## 正式探险不提供据点服务。
 func is_hub() -> bool:
@@ -77,7 +101,9 @@ func _process(delta: float) -> void:
 			_remove_drop(drop)
 	var nearby: Array = nearby_items()
 	pickup_index = posmod(pickup_index, maxi(nearby.size(), 1))
-	var text: String = "难度 %d · 等级 %d · 金币 %d · 材料 %d · 背包 %d/40" % [inventory.difficulty, inventory.level, inventory.gold, inventory.materials, inventory.bag.size()]
+	var modifier: EliteModifierDefinition = EncounterDirector.elite_modifier(elite_modifier_id)
+	var modifier_name: String = modifier.display_name if modifier != null else "无"
+	var text: String = "难度 %d · 等级 %d · 金币 %d · 材料 %d · 背包 %d/40\n布局 %s · 精英修饰 %s" % [inventory.difficulty, inventory.level, inventory.gold, inventory.materials, inventory.bag.size(), EncounterDirector.variant_name(encounter_variant_id), modifier_name]
 	if not nearby.is_empty():
 		text += "\nE 拾取：" + ItemGenerator.title(nearby[pickup_index].item) + "（Tab 切换）"
 	elif wave_completed:

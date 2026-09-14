@@ -61,6 +61,21 @@ func apply_bleed(entry: Dictionary, max_stacks: int) -> void:
 	bleeds[replace_index] = snapshot
 
 
+## 施加需要重新起算的流血；传播层始终从原始持续时间和完整首跳间隔开始。
+func apply_fresh_bleed(entry: Dictionary, max_stacks: int) -> void:
+	if is_dead or max_stacks <= 0:
+		return
+	var snapshot: Dictionary = entry.duplicate(true)
+	var duration: float = maxf(0.01, float(snapshot.get("bleed_duration_sec", snapshot.get("remaining_sec", 0.0))))
+	var interval: float = maxf(0.01, float(snapshot.get("bleed_tick_sec", snapshot.get("tick_interval_sec", 0.0))))
+	snapshot.remaining_sec = duration
+	snapshot.next_tick_sec = interval
+	snapshot.tick_interval_sec = interval
+	snapshot.bleed_duration_sec = duration
+	snapshot.bleed_tick_sec = interval
+	apply_bleed(snapshot, max_stacks)
+
+
 ## 推进每层流血计时并返回本帧到期的跳伤快照；大步长也不会漏掉合法跳数。
 func advance_bleeds(delta: float) -> Array:
 	var due: Array = []

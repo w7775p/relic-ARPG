@@ -1,6 +1,6 @@
 # D1～D3 任务总表
 
-共 **21 张独立任务卡**：P1 对应 D1，共 6 张；P2 对应 D2，共 9 张；P3 对应 D3，共 6 张。D1、D2、D3 是开发阶段，编号不代表天数。P1_Task1 与 P1_Task2 已完成并通过用户可见验收；P1_Task3 以后待执行。
+共 **21 张独立任务卡**：P1 对应 D1，共 6 张；P2 对应 D2，共 9 张；P3 对应 D3，共 6 张。D1、D2、D3 是开发阶段，编号不代表天数。P1_Task1 与 P1_Task2 已完成并通过用户可见验收；P1_Task3 已实现且自动验收通过，当前等待 PR 合入与人工画面/声音/手感验收。
 
 ## 当前存档边界
 
@@ -9,6 +9,8 @@ Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通
 2026-09-13 试玩跟进：用户日志确认拾取因词条数量不合法被拒绝。代码 `992532a` 修复 4.7.2 导出自动转换丢失词条适用部位数组；Linux/Windows 全量、PCK 和 Windows exe 内 27 项全部通过，覆盖生成、真实 E 拾取、保存读回及下一件掉落。新包见 [验证记录](../validation.md)。此前 `708160e` 的修改只解决反馈可见性，旧包仍受该导出问题影响。
 
 2026-09-13 TASK 同步：19 张待执行卡统一使用已合入的 Resource 基线、成品验收入口与子任务 commit 要求；装备扩容、随机区域、输入和阶段交付卡补充对应回归，据点服务路径改为真实 Hub。P1_Task1/2 原交付记录保留为历史；后续卡状态仍为待执行。重构的可见画面与手感范围仍待人工验收，合并状态与试玩结果分别记录。
+
+2026-09-14 P1_Task3：从最新 main `55529f7` 实现 14 底材、18 普通词条、4 独特，第四独特 `blood_echo` 的有限流血传播、坚韧/迅捷精英修饰，以及 `corner_grid` / `cross_lanes` 两套固定场地变体。代码 head `377b508` 的 [Windows run 34803499160](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160) 完成全量源码/PCK 回归、Windows exe 导出和实际成品拾取/存档验证；[构建 artifact 10333060066](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160/artifacts/10333060066)。PR #10 等待合入，人工可见验收仍待执行。
 
 ## 基线与模板调整
 
@@ -20,13 +22,13 @@ Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通
 
 ## 使用方法
 
-默认按 P1_Task 1→6、P2_Task 1→9、P3_Task 1→6 执行，一次交给新窗口一张卡；当前下一张为 P1_Task3。阶段最后一张负责集成验收；它通过后进入下一阶段。共用热点包括 `hub.gd`、`expedition_runtime.gd`、`inventory_state.gd`、`skill_runner.gd`、Resource 持久模块及源码/成品验证入口，按顺序接续可减少冲突。
+默认按 P1_Task 1→6、P2_Task 1→9、P3_Task 1→6 执行，一次交给新窗口一张卡；P1_Task3 当前处于待验收，合入后下一张为 P1_Task4。阶段最后一张负责集成验收；它通过后进入下一阶段。共用热点包括 `hub.gd`、`expedition_runtime.gd`、`inventory_state.gd`、`skill_runner.gd`、Resource 持久模块及源码/成品验证入口，按顺序接续可减少冲突。
 
-原任务包与 Resource 重构均已合入 main，开工从最新 main 读取本卡及配套规范；本次 TASK 同步分支为 `docs/task-save-sync`，是否已合入以远端为准。同步尚未合入时可从该分支读取更新要求，代码仍基于包含前置功能的最新 main 建分支。若后续前置未合入，报告具体依赖缺口，用户已有接续分支授权时按该授权衔接。
+原任务包与 Resource 重构均已合入 main，开工从最新 main 读取本卡及配套规范；若前置 PR 尚未合入，用户明确授权堆叠开发时才基于对应 head 接续，否则等待 main 更新。
 
-新窗口可直接发送：
+P1_Task3 合入后，新窗口可直接发送：
 
-> 在 w7775p/relic-ARPG 执行 docs/demo_tasks/P1_Task3.md。先读取最新 main 和任务卡，核对 Resource 重构、前置功能与任务总表的最新交接；按卡内范围实现和验证，每完成一个子任务立即 commit，提交 PR。无需使用 global-work-rules。
+> 在 w7775p/relic-ARPG 执行 docs/demo_tasks/P1_Task4.md。先读取最新 main 和任务卡；按卡内范围实现和验证，每完成一个子任务立即 commit，提交 PR。
 
 之后替换任务文件名。完整单卡可以直接复制到新窗口；标题保留 `P1_Task 1` 形式，文件名使用 `P1_Task1.md`，方便链接和命令行读取。
 
@@ -36,7 +38,7 @@ Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通
 | --- | --- | --- | --- |
 | [P1_Task 1](P1_Task1.md) | 技能装配与被动选择 | main 的 M2 | 已完成 |
 | [P1_Task 2](P1_Task2.md) | 流血横扫、战吼与恢复药剂 | P1_Task 1 | 已完成 |
-| [P1_Task 3](P1_Task3.md) | D1 装备池、精英修饰与地图变体 | P1_Task 2、已合入的 Resource 重构与词条导出修复 | 待执行 |
+| [P1_Task 3](P1_Task3.md) | D1 装备池、精英修饰与地图变体 | P1_Task 2、已合入的 Resource 重构与词条导出修复 | 待验收 |
 | [P1_Task 4](P1_Task4.md) | 据点拆解与材料循环 | P1_Task 3 | 待执行 |
 | [P1_Task 5](P1_Task5.md) | 单词条位置重铸 | P1_Task 4 | 待执行 |
 | [P1_Task 6](P1_Task6.md) | D1 过滤、属性解释与阶段验收 | P1_Task 1、P1_Task 2、P1_Task 3、P1_Task 4、P1_Task 5 | 待执行 |
@@ -119,7 +121,7 @@ Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通
 python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log
 ```
 
-脚本使用隔离用户目录；包内 --smoke-loot 经正式 Hub 装配横扫、进入探险、真实右键击杀和 E 拾取，再撤离保存、读回检查点并核对下一件掉落。当前共用用例为 `game/app/validation/pickup_smoke.gd`，源码入口为 `game/tests/pickup_input.tscn`，当前检查数为 27；后续按功能扩展，记录当次实际数量。
+脚本使用隔离用户目录；包内 --smoke-loot 经正式 Hub 装配横扫、进入探险、真实右键击杀和 E 拾取，再撤离保存、读回检查点并核对下一件掉落。当前共用用例为 `game/app/validation/pickup_smoke.gd`，源码入口为 `game/tests/pickup_input.tscn`；P1_Task3 已补 14/18/4、四个稳定独特 ID 和 `blood_echo` 精英池可达检查。后续按功能扩展，记录当次实际数量。
 
 完成需退出码为零、无脚本/引擎错误，并出现 `PACKAGE_LOOT_BOOT_READY`、`PICKUP_INPUT_RESULT: 0 failures` 及脚本汇总 `PACKAGE_LOOT_RESULT: 0 failures`。记录代码提交、构建链接与成品日志；画面、声音和手感单列人工验收范围。
 

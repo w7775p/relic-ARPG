@@ -1,17 +1,23 @@
 class_name EnemyController
 extends CombatActor
-## 原生导航追击与三种攻击状态；静态定义由遭遇管理器注入。
+## 原生导航追击与三种攻击状态；静态原型和可选精英修饰由遭遇管理器注入。
 
 const PROJECTILE: PackedScene = preload("res://actors/enemies/projectile.tscn")
 
 enum State { CHASE, WINDUP, CHARGE, RECOVER }
 
 var definition: EnemyDefinition
+var modifier: EliteModifierDefinition
 var combat: CombatSystem
 var feedback: CombatFeedback
 var projectile_root: Node3D
 var state: State = State.CHASE
 var state_remaining: float = 0.0
+var runtime_speed_mps: float = 0.0
+var runtime_damage: float = 0.0
+var runtime_attack_cooldown_sec: float = 0.0
+var runtime_windup_sec: float = 0.0
+var runtime_tint: Color = Color.WHITE
 var _cooldown: float = 0.0
 var _path_remaining: float = 0.0
 var _locked_direction: Vector3 = Vector3.FORWARD
@@ -22,14 +28,27 @@ var attacks_performed: int = 0
 @onready var navigation: NavigationAgent3D = $NavigationAgent
 
 
-## 注入属性与独立材质，错开重新寻路和首次攻击时间。
+## 从静态原型复制运行属性，再把单个精英修饰应用到当前实例。
 func _ready() -> void:
 	max_health = definition.health
 	armor = definition.armor
+	runtime_speed_mps = definition.speed_mps
+	runtime_damage = definition.damage
+	runtime_attack_cooldown_sec = definition.attack_cooldown_sec
+	runtime_windup_sec = definition.windup_sec
+	runtime_tint = definition.tint
+	if modifier != null and modifier.supports(definition):
+		max_health *= modifier.health_multiplier
+		armor += modifier.armor_bonus
+		runtime_speed_mps *= modifier.speed_multiplier
+		runtime_damage *= modifier.damage_multiplier
+		runtime_attack_cooldown_sec *= modifier.attack_cooldown_multiplier
+		runtime_windup_sec *= modifier.windup_multiplier
+		runtime_tint = definition.tint.lerp(modifier.presentation_tint, 0.65)
 	super._ready()
 	_material = $Visual/Body.mesh.material.duplicate()
 	$Visual/Body.material_override = _material
-	_material.albedo_color = definition.tint
+	_material.albedo_color = runtime_tint
 	if definition.is_elite:
 		$Visual.scale = Vector3.ONE * 1.35
 	_path_remaining = float(get_instance_id() % 17) * 0.025
@@ -47,7 +66,7 @@ func _physics_process(delta: float) -> void:
 	_cooldown = maxf(0.0, _cooldown - delta)
 	_path_remaining -= delta
 	_flash_remaining = maxf(0.0, _flash_remaining - delta)
-	_material.albedo_color = Color.WHITE if _flash_remaining > 0.0 else (Color(0.25, 0.8, 1.0) if shock_remaining_sec > 0.0 else definition.tint)
+	_material.albedo_color = Color.WHITE if _flash_remaining > 0.0 else (Color(0.25, 0.8, 1.0) if shock_remaining_sec > 0.0 else runtime_tint)
 	var offset: Vector3 = combat.player.global_position - global_position
 	offset.y = 0.0
 	var distance: float = offset.length()
@@ -62,7 +81,7 @@ func _physics_process(delta: float) -> void:
 			movement = _locked_direction * 13.0
 			state_remaining -= delta
 			if distance < 1.4 and combat.has_line_of_sight(global_position, combat.player.global_position):
-				combat.hit_player(definition.damage)
+				combat.hit_player(runtime_damage)
 				state_remaining = 0.0
 			if state_remaining <= 0.0:
 				state = State.RECOVER
@@ -113,35 +132,35 @@ func _chase_velocity() -> Vector3:
 	direction.y = 0.0
 	if direction.length_squared() < 0.01:
 		return Vector3.ZERO
-	return direction.normalized() * definition.speed_mps
+	return direction.normalized() * runtime_speed_mps
 
 
 ## 蓄力时锁定方向并显示红色危险范围，允许玩家走位躲避。
 func _begin_attack(offset: Vector3) -> void:
 	state = State.WINDUP
-	state_remaining = definition.windup_sec
+	state_remaining = runtime_windup_sec
 	_locked_direction = offset.normalized() if offset.length_squared() > 0.001 else Vector3.FORWARD
-	feedback.ring(global_position, 1.8, Color(1.0, 0.18, 0.14), definition.windup_sec)
+	feedback.ring(global_position, 1.8, Color(1.0, 0.18, 0.14), runtime_windup_sec)
 	if definition.kind == EnemyDefinition.Kind.CHARGER:
-		feedback.beam(global_position, global_position + _locked_direction * 8.0, Color(1.0, 0.2, 0.1), definition.windup_sec, 0.12)
+		feedback.beam(global_position, global_position + _locked_direction * 8.0, Color(1.0, 0.2, 0.1), runtime_windup_sec, 0.12)
 
 
-## 蓄力结束执行攻击；近战重新检查距离，远程发射具有扫掠碰撞的弹体。
+## 蓄力结束执行攻击；伤害与节奏读取当前实例的修饰后参数。
 func _execute_attack() -> void:
 	attacks_performed += 1
-	_cooldown = definition.attack_cooldown_sec
+	_cooldown = runtime_attack_cooldown_sec
 	state = State.RECOVER
 	state_remaining = 0.25
 	match definition.kind:
 		EnemyDefinition.Kind.MELEE:
 			if global_position.distance_to(combat.player.global_position) <= 2.0 and combat.has_line_of_sight(global_position, combat.player.global_position):
-				combat.hit_player(definition.damage)
+				combat.hit_player(runtime_damage)
 			feedback.slash(global_position, _locked_direction, Color(1.0, 0.3, 0.2))
 		EnemyDefinition.Kind.RANGED:
 			var projectile: EnemyProjectile = PROJECTILE.instantiate()
 			projectile.combat = combat
 			projectile.direction = _locked_direction
-			projectile.damage = definition.damage
+			projectile.damage = runtime_damage
 			projectile_root.add_child(projectile)
 			projectile.global_position = global_position + Vector3.UP * 0.8 + _locked_direction * 0.6
 		EnemyDefinition.Kind.CHARGER:

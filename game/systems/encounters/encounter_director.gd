@@ -9,6 +9,10 @@ const DEFINITIONS: Array[EnemyDefinition] = [
 	preload("res://content/enemies/charger.tres"),
 ]
 const ELITE: EnemyDefinition = preload("res://content/enemies/elite.tres")
+const ELITE_MODIFIERS: Array[EliteModifierDefinition] = [
+	preload("res://content/enemies/modifier_tough.tres"),
+	preload("res://content/enemies/modifier_swift.tres"),
+]
 
 var combat: CombatSystem
 var feedback: CombatFeedback
@@ -28,7 +32,7 @@ func _physics_process(_delta: float) -> void:
 			spawn_enemy(DEFINITIONS[_spawn_index % DEFINITIONS.size()], _spawn_position(_spawn_index))
 
 
-## 建立新怪群，最后一名固定为精英，确保单次试玩包含精英目标。
+## 建立新怪群，最后一名固定为精英原型，调试场景保持原有无修饰基线。
 func start_wave(count: int = 24) -> void:
 	clear()
 	wave += 1
@@ -46,10 +50,30 @@ func _spawn_position(index: int) -> Vector3:
 	return centers[index % 4] + Vector3(float(cell % 5 - 2) * 1.1, 0.05, float(cell / 5 - 2) * 1.1)
 
 
-## 注入会话依赖后实例化敌人，便于测试指定属性与位置。
-func spawn_enemy(definition: EnemyDefinition, at: Vector3) -> EnemyController:
+## 按稳定 ID 查找精英修饰，未知 ID 返回空。
+static func elite_modifier(id: String) -> EliteModifierDefinition:
+	for entry: EliteModifierDefinition in ELITE_MODIFIERS:
+		if entry.id == id:
+			return entry
+	return null
+
+
+## 使用调用方提供的随机序列选择单个兼容修饰，D1 每只精英最多持有这一份引用。
+static func roll_elite_modifier(rng: RandomNumberGenerator, definition: EnemyDefinition = ELITE) -> EliteModifierDefinition:
+	var compatible: Array[EliteModifierDefinition] = []
+	for entry: EliteModifierDefinition in ELITE_MODIFIERS:
+		if entry.supports(definition):
+			compatible.append(entry)
+	if compatible.is_empty():
+		return null
+	return compatible[rng.randi_range(0, compatible.size() - 1)]
+
+
+## 注入静态原型、可选单个修饰与场景依赖；修饰参数在敌人实例内复制结算。
+func spawn_enemy(definition: EnemyDefinition, at: Vector3, modifier: EliteModifierDefinition = null) -> EnemyController:
 	var enemy: EnemyController = ENEMY.instantiate()
 	enemy.definition = definition
+	enemy.modifier = modifier if modifier != null and modifier.supports(definition) else null
 	enemy.combat = combat
 	enemy.feedback = feedback
 	enemy.projectile_root = projectile_root

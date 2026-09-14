@@ -209,11 +209,11 @@ func _run() -> void:
 	check(result.ok and result.value.inventory.data.instances.has(overflow.id) and result.value.inventory.loadout.slots.main == "sweep", "横扫掉落拾取后撤离，装备身份和技能装配一起进入 Hub 检查点")
 	if result.ok:
 		check(ResourceFingerprint.digest(result.value.modules.items) == ResourceFingerprint.digest(hub.game_session.modules.items), "成品包检查点完整保留装备、词条实值、归属与随机状态")
-		check(ResourceFingerprint.digest(result.value.generator.generate(4, true)) == ResourceFingerprint.digest(hub.game_session.generator.generate(4, true)), "成品包读档后下一件装备编号和词条序列一致")
 		if reforge_target != null:
 			var restored_reforge: ItemInstanceResource = result.value.inventory.data.instances.get(reforge_target.id)
 			check(restored_reforge != null and restored_reforge.reforge_index == 0 and ResourceFingerprint.digest(restored_reforge) == reforge_digest and result.value.inventory.materials == reforge_materials, "成品包检查点保留重铸固定位置、词条结果与材料余额")
-			check(result.value.inventory.data.reforge_rng_state == reforge_rng_state and result.value.inventory.data.rng_state == drop_rng_state, "成品包检查点分别保留重铸 RNG 与掉落 RNG")
+			check(result.value.inventory.data.reforge_rng_state == reforge_rng_state and result.value.inventory.data.rng_state == drop_rng_state, "成品包检查点分别保留重铸 RNG 与保存时的掉落 RNG")
+		check(ResourceFingerprint.digest(result.value.generator.generate(4, true)) == ResourceFingerprint.digest(hub.game_session.generator.generate(4, true)), "成品包读档后下一件装备编号和词条序列一致")
 	hub.queue_free()
 	await frames()
 	_finish()

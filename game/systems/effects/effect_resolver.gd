@@ -75,7 +75,7 @@ func drain(budget: int = 256) -> void:
 			_chain_lightning(event)
 
 
-## 流血击杀按距离选择有限目标并施加一层衰减流血；传播代数递增后不会无限放大。
+## 流血击杀按距离选择有限目标；传播层强制重新起算完整持续时间和首跳间隔。
 func _spread_bleed(event: DamageEvent) -> void:
 	if event.build.bleed_spread_max_targets <= 0 or event.build.bleed_spread_radius_m <= 0.0 or event.build.bleed_spread_damage_ratio <= 0.0:
 		return
@@ -86,15 +86,17 @@ func _spread_bleed(event: DamageEvent) -> void:
 		if target == null:
 			break
 		candidates.erase(target)
+		var duration: float = maxf(0.01, event.build.bleed_snapshot_duration_sec)
+		var interval: float = maxf(0.01, event.build.bleed_snapshot_tick_sec)
 		var spread: Dictionary = {
 			"source":"unique:blood_echo",
 			"root_attack_id":event.root_attack_id,
 			"damage":event.build.bleed_snapshot_damage * event.build.bleed_spread_damage_ratio,
-			"remaining_sec":event.build.bleed_snapshot_duration_sec,
-			"next_tick_sec":event.build.bleed_snapshot_tick_sec,
-			"tick_interval_sec":event.build.bleed_snapshot_tick_sec,
-			"bleed_duration_sec":event.build.bleed_snapshot_duration_sec,
-			"bleed_tick_sec":event.build.bleed_snapshot_tick_sec,
+			"remaining_sec":duration,
+			"next_tick_sec":interval,
+			"tick_interval_sec":interval,
+			"bleed_duration_sec":duration,
+			"bleed_tick_sec":interval,
 			"bleed_spread_radius_m":event.build.bleed_spread_radius_m,
 			"bleed_spread_max_targets":event.build.bleed_spread_max_targets,
 			"bleed_spread_damage_ratio":event.build.bleed_spread_damage_ratio,
@@ -105,7 +107,7 @@ func _spread_bleed(event: DamageEvent) -> void:
 			"explosion_radius_m":event.build.explosion_radius_m,
 			"explosion_damage":event.build.explosion_damage,
 		}
-		target.apply_bleed(spread, 1)
+		target.apply_fresh_bleed(spread, 1)
 		bleed_spread_count += 1
 		feedback.ring(target.global_position, 0.65, Color(0.72, 0.04, 0.16), 0.32)
 

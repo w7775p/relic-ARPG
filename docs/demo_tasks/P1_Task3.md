@@ -92,3 +92,11 @@ M2 已有 10 底材、12 随机词条、3 独特装备、三类普通敌人和�
 Windows CLI 最终验证对应代码 head `ee4a636d7fd77106519aeb836a493472f5fb836e`：[run 34803911579](https://github.com/w7775p/relic-ARPG/actions/runs/34803911579) 使用 `windows-latest`、PowerShell、Python 与官方 Godot 4.7.2，同版导入与 `python tools/verify.py --godot <Godot.exe>` 全量场景/故障/PCK 回归通过；Windows `.exe` 导出通过；`python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log` 对实际成品的拾取、14/18/4 内容、存档读回和下一件掉落验证通过。构建：[artifact 10333135206](https://github.com/w7775p/relic-ARPG/actions/runs/34803911579/artifacts/10333135206)，SHA256 `9ea1a05e022e8ea511525377b061a373204bdd6cc17ae2fc4cffca573b02a967`；启动日志：[artifact 10332352054](https://github.com/w7775p/relic-ARPG/actions/runs/34803911579/artifacts/10332352054)。
 
 交付 PR：[PR #10](https://github.com/w7775p/relic-ARPG/pull/10)。自动验收已经覆盖内容额度、随机生成合法性、有限传播、卸装、两种精英修饰、实例隔离、两种变体清场/撤离/再出发、Hub 长期进度、雷霆与流血构筑真实击杀固定精英，以及实际 Windows 成品。可见画面、声音、中文排版和操作手感仍待人工试玩，因此状态保持“待验收”。本轮没有发现需要新增到 `known_trap.md` 的项目级陷阱。P1_Task3 合入并完成人工验收后，下一张为 P1_Task4。
+
+## 人工验收与 Blood Echo 传播反馈修补（2026-09-14）
+
+用户首次 Windows 试玩确认：地图变体正常；坚韧精英功能正常但当前血量偏厚，留待后期数值平衡；迅捷精英功能正常，留待后期数值平衡；装备掉落与拾取正常；保存重开正常；无其他异常。Blood Echo 能在流血击杀后传播，但用户观察到传播目标的流血表现疑似继承源目标剩余时间，因此本卡继续保持“待验收”。
+
+针对该反馈先补 `25d28f6` 回归：让源流血推进到最后 1 秒再造成击杀，真实 Godot 4.7.2 断言显示传播目标内部 `remaining_sec` 会重新获得横扫完整 4 秒，`next_tick_sec` 也重新从 1 秒开始，说明原底层计时快照没有直接继承剩余 1 秒。为避免后续路径或已有状态带入旧计时，`b1f6093` 新增显式 `apply_fresh_bleed` 接收入口，`674e246` 令 Blood Echo 传播在发送端和接收端双重强制按原始持续时间与首跳间隔重新起算；`0cfb992` 增加持续流血期间的暗红状态色，`87b73ba` 清理该表现修改中的重复函数定义。传播上限、65% 伤害和最多 1 代规则保持。
+
+修补代码 head `87b73ba4f7e50d25a9aa921ee02217031ded326a` 的 Windows [run 34808769641](https://github.com/w7775p/relic-ARPG/actions/runs/34808769641) 已通过官方 Godot 4.7.2 的全量场景回归、Windows 导出、实际成品包拾取与存档验证。修补构建：[artifact 10333832212](https://github.com/w7775p/relic-ARPG/actions/runs/34808769641/artifacts/10333832212)，SHA256 `9caa32eed9fcdfb2d3d49fbc09bf1fb55375cdf0962d5f4951a6309483f54a07`；启动日志：[artifact 10334171626](https://github.com/w7775p/relic-ARPG/actions/runs/34808769641/artifacts/10334171626)。下一次人工复测只需确认 Blood Echo 传播后目标暗红流血状态持续完整 4 秒、首跳从新传播开始重新计时；通过后即可完成本卡验收。

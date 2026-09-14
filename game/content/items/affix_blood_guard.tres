@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "blood_guard"
+display_name = "血铠"
+stat = "armor"
+group = "blood_guard"
+slots = PackedStringArray("body", "hands", "feet")
+min_level = 2
+weight = 0.85
+minimum = 10.0
+maximum = 20.0

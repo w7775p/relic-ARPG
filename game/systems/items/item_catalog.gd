@@ -14,6 +14,10 @@ const BASES: Array[ItemBase] = [
 	preload("res://content/items/boots.tres"),
 	preload("res://content/items/copper_ring.tres"),
 	preload("res://content/items/bone_ring.tres"),
+	preload("res://content/items/serrated_blade.tres"),
+	preload("res://content/items/bastion_helm.tres"),
+	preload("res://content/items/warded_boots.tres"),
+	preload("res://content/items/focus_ring.tres"),
 ]
 const AFFIXES: Array[AffixDefinition] = [
 	preload("res://content/items/affix_power.tres"),
@@ -28,13 +32,20 @@ const AFFIXES: Array[AffixDefinition] = [
 	preload("res://content/items/affix_harvest.tres"),
 	preload("res://content/items/affix_haste.tres"),
 	preload("res://content/items/affix_storm.tres"),
+	preload("res://content/items/affix_bleeding.tres"),
+	preload("res://content/items/affix_bulwark.tres"),
+	preload("res://content/items/affix_fortitude.tres"),
+	preload("res://content/items/affix_focus.tres"),
+	preload("res://content/items/affix_surge.tres"),
+	preload("res://content/items/affix_execution.tres"),
 ]
 const UNIQUES: Array[UniqueDefinition] = [
 	preload("res://content/items/unique_thunder_ring.tres"),
 	preload("res://content/items/unique_ember_mail.tres"),
 	preload("res://content/items/unique_energy_grips.tres"),
+	preload("res://content/items/unique_blood_echo.tres"),
 ]
-const STAT_NAMES: Dictionary = {"damage":"攻击", "armor":"护甲", "max_health":"最大生命", "critical_chance":"暴击率", "whirlwind_radius_m":"旋风范围（米）", "move_speed_mps":"移速（米/秒）", "idle_energy_regen":"闲置回能/秒", "hit_energy":"直接命中回能", "kill_energy":"击杀回能", "haste":"攻击间隔缩短（秒）", "lightning_damage":"闪电伤害"}
+const STAT_NAMES: Dictionary = {"damage":"攻击", "armor":"护甲", "max_health":"最大生命", "critical_chance":"暴击率", "whirlwind_radius_m":"旋风范围（米）", "move_speed_mps":"移速（米/秒）", "idle_energy_regen":"闲置回能/秒", "hit_energy":"直接命中回能", "kill_energy":"击杀回能", "haste":"攻击间隔缩短（秒）", "lightning_damage":"闪电伤害", "bleed_damage_multiplier":"流血伤害"}
 
 ## 按稳定编号查找底材，未知编号返回空。
 static func base(id: String) -> ItemBase:
@@ -57,7 +68,7 @@ static func unique(id: String) -> UniqueDefinition:
 			return entry
 	return null
 
-## 三件核心独特装备分别提供连锁、爆炸和循环续航。
+## 四件核心独特装备提供雷霆连锁、爆炸、续航与有限流血传播。
 static func unique_stats(id: String) -> Dictionary:
 	var definition: UniqueDefinition = unique(id)
 	return definition.stats if definition != null else {}
@@ -66,4 +77,6 @@ static func unique_stats(id: String) -> Dictionary:
 static func stat_text(stat: String, value: float) -> String:
 	if stat == "critical_chance":
 		return "暴击率 +%.1f%%" % (value * 100.0)
+	if stat == "bleed_damage_multiplier":
+		return "流血伤害 +%.0f%%" % (value * 100.0)
 	return "%s +%.2f" % [STAT_NAMES.get(stat, stat), value]

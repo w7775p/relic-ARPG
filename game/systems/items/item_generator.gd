@@ -84,6 +84,8 @@ static func describe(item: ItemInstanceResource) -> String:
 	var stats: Dictionary = ItemCatalog.unique_stats(item.unique_id)
 	var defaults: BuildDefinition = BuildDefinition.new()
 	for stat: String in stats:
+		if stat.begins_with("bleed_spread_"):
+			continue
 		if stat == "chain_count":
 			result += "\n直接暴击释放最多 %d 目标连锁闪电" % int(stats[stat])
 			result += "\n闪电基础伤害 %.0f，间隔 %.2f 秒，跳跃 %.1f 米；存活目标感电 %.1f 秒" % [defaults.lightning_damage, defaults.lightning_cooldown_sec, defaults.chain_range_m, defaults.shock_duration_sec]
@@ -91,7 +93,8 @@ static func describe(item: ItemInstanceResource) -> String:
 			result += "\n感电目标死亡时爆炸：基础伤害 %.0f，半径 %.1f 米" % [defaults.explosion_damage, defaults.explosion_radius_m]
 		else:
 			result += "\n" + ItemCatalog.stat_text(stat, float(stats[stat]))
-
+	if int(stats.get("bleed_spread_max_targets", 0)) > 0:
+		result += "\n流血击杀传播：%.1f 米内最多 %d 个目标，继承 %.0f%% 流血伤害，最多传播 %d 代" % [float(stats.get("bleed_spread_radius_m", 0.0)), int(stats.get("bleed_spread_max_targets", 0)), float(stats.get("bleed_spread_damage_ratio", 0.0)) * 100.0, int(stats.get("bleed_spread_max_generation", 0))]
 	return result
 
 ## 出售价值由品质和物品等级计算。

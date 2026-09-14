@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "second_wind"
+display_name = "回息"
+stat = "idle_energy_regen"
+group = "second_wind"
+slots = PackedStringArray("head", "body", "feet")
+min_level = 3
+weight = 0.85
+minimum = 3.0
+maximum = 6.0

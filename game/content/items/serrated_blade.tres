@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/item_base.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "serrated_blade"
+display_name = "锯齿长刀"
+slot = "weapon"
+stat = "bleed_damage_multiplier"
+value = 0.12

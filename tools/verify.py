@@ -19,6 +19,7 @@ TEST_MARKERS = {
     "res://tests/pickup_input.tscn": "PICKUP_INPUT_RESULT: 0 failures",
     "res://tests/p1_loadout.tscn": "P1_LOADOUT_RESULT: 0 failures",
     "res://tests/p1_bleed_skills.tscn": "P1_BLEED_SKILLS_RESULT: 0 failures",
+    "res://tests/p1_content.tscn": "P1_CONTENT_RESULT: 0 failures",
     "res://tests/hub_flow.tscn": "HUB_FLOW_RESULT: 0 failures",
     "res://tests/debug_console.tscn": "DEBUG_CONSOLE_RESULT: 0 failures",
 }

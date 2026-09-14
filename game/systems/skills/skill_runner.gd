@@ -143,7 +143,7 @@ func _bleed_snapshot(root_id: int) -> Dictionary:
 	return {
 		"source":"player:sweep",
 		"root_attack_id":root_id,
-		"damage":build.damage * SWEEP.bleed_damage_multiplier,
+		"damage":build.damage * SWEEP.bleed_damage_multiplier * build.bleed_damage_multiplier,
 		"remaining_sec":SWEEP.bleed_duration_sec,
 		"next_tick_sec":SWEEP.bleed_tick_sec,
 		"tick_interval_sec":SWEEP.bleed_tick_sec,

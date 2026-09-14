@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/items/affix_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "execution"
+display_name = "处决回响"
+stat = "kill_energy"
+group = "energy_kill"
+slots = PackedStringArray("weapon", "hands", "ring")
+min_level = 3
+weight = 0.8
+minimum = 3.0
+maximum = 7.0

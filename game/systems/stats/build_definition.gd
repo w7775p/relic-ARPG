@@ -14,6 +14,11 @@ extends Resource
 @export var idle_energy_regen: float = 18.0
 @export var hit_energy: float = 0.0
 @export var kill_energy: float = 0.0
+@export var bleed_damage_multiplier: float = 1.0
+@export var bleed_spread_radius_m: float = 0.0
+@export var bleed_spread_max_targets: int = 0
+@export var bleed_spread_damage_ratio: float = 0.0
+@export var bleed_spread_max_generation: int = 0
 @export var chain_count: int = 0
 @export var chain_range_m: float = 4.5
 @export var lightning_damage: float = 30.0
@@ -27,6 +32,10 @@ extends Resource
 ## 从真实参数生成预设说明，避免文本与计算分离。
 func describe() -> String:
 	var text: String = "%s｜伤害 %.0f｜暴击 %.0f%%｜旋风范围 %.1f 米" % [display_name, damage, critical_chance * 100.0, whirlwind_radius_m]
+	if bleed_damage_multiplier > 1.0:
+		text += "\n流血伤害 +%.0f%%" % ((bleed_damage_multiplier - 1.0) * 100.0)
+	if bleed_spread_max_targets > 0:
+		text += "\n流血击杀传播至 %.1f 米内最多 %d 个目标" % [bleed_spread_radius_m, bleed_spread_max_targets]
 	if chain_count > 0:
 		text += "\n直接暴击触发 %d 目标闪电（间隔 %.2f 秒）；闪电使存活目标感电 %.1f 秒" % [chain_count, lightning_cooldown_sec, shock_duration_sec]
 	if death_explosion:

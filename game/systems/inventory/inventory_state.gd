@@ -212,7 +212,7 @@ func _apply_stat(result: BuildDefinition, stat: String, value: float) -> void:
 	if stat == "haste":
 		result.attack_interval_sec -= value
 		result.whirlwind_interval_sec -= value
-	elif stat == "chain_count":
-		result.chain_count += int(value)
+	elif stat == "chain_count" or stat == "bleed_spread_max_targets" or stat == "bleed_spread_max_generation":
+		result.set(stat, int(result.get(stat)) + int(value))
 	else:
 		result.set(stat, float(result.get(stat)) + value)

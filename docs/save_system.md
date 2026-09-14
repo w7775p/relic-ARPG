@@ -1,6 +1,6 @@
 # Resource 存档系统
 
-当前实现对应 `feat/resource-save`，基于 main `30b85f0`。执行与验证记录见 [resource_save_task.md](resource_save_task.md) 和 [validation.md](validation.md)。正式存档是 Godot Resource；当前用 `.tres`，设置独立使用 ConfigFile。
+当前正式实现基于已合入 main 的 Resource 检查点体系。执行与验证记录见 [resource_save_task.md](resource_save_task.md) 和 [validation.md](validation.md)。正式存档是 Godot Resource；当前用 `.tres`，设置继续使用 ConfigFile。
 
 ## 玩家规则
 
@@ -15,20 +15,20 @@
 | 模块 ID / 类型 | 正式保存数据 | 所属业务 |
 | --- | --- | --- |
 | `character` / CharacterResource | 等级、经验、最低显示品质；嵌套 LoadoutResource 的主动槽与被动 ID | 成长、装配、过滤偏好 |
-| `items` / ItemsResource | 唯一实例表；背包/仓库/装备槽中的实例 ID；容量；下一个实例编号；掉落 RNG 种子与状态 | 持有归属、实例、生成器 |
-| `economy` / EconomyResource | 金币、材料余额 | 获得、出售和后续消耗服务 |
+| `items` / ItemsResource | 唯一实例表；背包/仓库/装备槽中的实例 ID；容量；下一个实例编号；掉落 RNG seed/state；独立重铸 RNG seed/state | 持有归属、实例、掉落生成、重铸随机序列 |
+| `economy` / EconomyResource | 金币、材料余额 | 获得、出售、拆解和重铸消耗 |
 | `hub` / HubResource | 当前据点 ID、所选区域 ID | 据点入口；当前为 camp / arena |
 | `progression` / ProgressionResource | 当前难度、累计清场进度 | 难度推进、前三次奖励进度 |
 
 SaveGameResource 只聚合封装版本、内容版本、角色组 ID、检查点 ID、保存时间、成功顺序号、原因与模块数组。所有槽位都保存完整模块集合，回退整体执行，禁止从不同检查点拼接物品、经济或进度。
 
-ItemInstanceResource 保存 `id/base/level/quality/unique_id/affixes/locked`。每个 AffixRollResource 保存词条 ID 和已抽取数值。实例表是唯一持有数据源，背包、装备、仓库只引用 ID；InventoryState 提供受规则约束的操作和显示视图。地面装备只存在本趟，拾取成功后才进入持有实例表。
+ItemInstanceResource 当前保存 `id/base/level/quality/unique_id/affixes/locked/reforge_index`。`reforge_index=-1` 表示该装备尚未成功选择重铸位置；魔法/稀有装备第一次成功重铸后保存固定位置，后续只能继续修改同一位置。每个 AffixRollResource 保存词条 ID 和已抽取数值。实例表是唯一持有数据源，背包、装备、仓库只引用 ID；InventoryState 提供受规则约束的操作和显示视图。地面装备只存在本趟，拾取成功后才进入持有实例表。
 
-静态技能、被动、底材、词条、独特配置继续使用内容 `.tres`。独特使用 `thunder_ring`、`ember_mail`、`energy_grips` 等稳定字符串 ID，目录数组顺序仅用于随机选择。读档保留历史词条实值，最终属性根据当前静态配置重算；新掉落的范围检查和历史实例合法性分开。删除内容 ID 或改语义必须明确升级，缺失内容会拒绝候选并允许选其他存档。
+静态技能、被动、底材、词条、独特配置继续使用内容 `.tres`。独特使用稳定字符串 ID，目录数组顺序仅用于随机选择。读档保留历史词条实值，最终属性根据当前静态配置重算；新掉落的范围检查和历史实例合法性分开。删除内容 ID 或改语义必须明确升级，缺失内容会拒绝候选并允许选其他存档。
 
-当前导出配置保留内容 `.tres`，关闭 `editor/export/convert_text_resources_to_binary`。4.7.2 的导出自动转换会丢失词条适用部位数组，生成零词条装备后在拾取校验处被拒绝；此问题通过成品资源对照复现。修正导出配置后仍使用原有实例校验与存档版本，已有有效 Resource 检查点可直接读取。`tools/verify_package.py` 在实际 PCK/exe 内验证生成、E 拾取、检查点词条实值和下一次掉落序列。
+当前导出配置保留内容 `.tres`，关闭 `editor/export/convert_text_resources_to_binary`。4.7.2 的导出自动转换会丢失词条适用部位数组，生成零词条装备后在拾取校验处被拒绝；此问题通过成品资源对照复现。修正导出配置后仍使用实例校验与 Resource 存档版本。`tools/verify_package.py` 在实际 PCK/exe 内验证生成、E 拾取、Hub 重铸、检查点词条实值、固定重铸位置、两套物品 RNG 状态及下一次掉落序列。
 
-地图 seed、实际布局与连接、房间进度、敌人/宝箱状态、地面掉落、战斗 RNG、生命能量、技能冷却、流血、战吼、药剂与投射物只属于当前探险。它们不写入当前正式检查点，新探险重新建立。后续随机地图仍需种子复现和本趟稳定 ID，用于布局、房间激活和奖励去重，不因此重新引入中途恢复。
+地图 seed、实际布局与连接、房间进度、敌人/宝箱状态、地面掉落、战斗 RNG、生命能量、技能冷却、流血、战吼、药剂与投射物只属于当前探险。它们不写入当前正式检查点，新探险重新建立。当前固定场地变体使用探险自己的 `_run_rng`，重铸只推进 `items.reforge_rng_*`，不会推进掉落 RNG 或本趟布局随机序列。后续随机地图仍需种子复现和本趟稳定 ID，用于布局、房间激活和奖励去重。
 
 ## 模块协作
 
@@ -41,8 +41,10 @@ ItemInstanceResource 保存 `id/base/level/quality/unique_id/affixes/locked`。�
 | SaveStore | 槽位路径、文件事务、实际读回、候选会话与可重建目录；不处理战斗或发放收益 |
 | SceneRouter | 一次性交接 GameSession，目标场景领取后清空；候选成功后切换 Hub |
 | Hub / SaveSlots | 自动保存时机、离场等待、手动槽覆盖确认、多角色加载与恢复反馈 |
+| InventoryState | 物品唯一归属及出售、拆解、重铸的最终事务入口；重铸成功时一次更新词条、固定位置、材料与独立 RNG 状态 |
+| ReforgeService | Hub 地点/品质/锁定/候选/费用校验；复用掉落候选规则并使用独立重铸 RNG，不修改共享静态 Resource |
 
-持久 Resource 是运行期权威数据，写盘对象通过深拷贝与运行期隔离。事务成功后模块 `touch()` 发出 changed，GameSession 增加修订，Hub 合并保存。嵌套数组/字典的直接改写不会由 Godot 自动递归通知；新增业务必须经所属业务入口完成修改和通知。生成器在捕获前同步 seed/state，恢复先设置 seed 再设置 state，保证下一次掉落一致。
+持久 Resource 是运行期权威数据，写盘对象通过深拷贝与运行期隔离。事务成功后模块 `touch()` 发出 changed，GameSession 增加修订，Hub 合并保存。嵌套数组/字典的直接改写不会由 Godot 自动递归通知；新增业务必须经所属业务入口完成修改和通知。掉落生成器在捕获前同步 `rng_seed/rng_state`；重铸事务在成功提交时同步 `reforge_rng_seed/reforge_rng_state`。两套序列独立恢复，保证重铸次数不改变下一件掉落。
 
 恢复先读取独立候选，检查封装/内容版本、身份与模块集合；模块逐一升级、校验，再按依赖完成准备。全部成功后建立新的 GameSession 并切换 Hub，失败不改变当前会话。恢复准备不创建世界节点、不消耗物品、不发奖；展示 UI 同样不承担收益结算。
 
@@ -70,11 +72,13 @@ SaveResult 携带 `ok/code/stage/module_id/field_path/message/warning/value`；�
 
 ② 新模块进入正式存档时增加封装版本，登记 `introduced_version`。只给早于引入版本的旧 Resource 检查点补默认模块；本应已有却丢失的模块判为损坏。已知模块的字段变更增加其版本，在 `upgrade()` 实现连续升级。未知模块、未来版本、重复模块、依赖缺失或依赖环均拒绝候选。
 
-③ 持久版本导出字段的脚本默认值固定为零；新建时显式写当前版本。ResourceSaver 会省略等于默认值的字段，因此已发布字段默认值不能随新角色平衡调整而随意变化；新角色默认通过工厂设置，旧数据变化通过明确升级处理。新升级至少保留真实旧 Resource 文件往返回归，确认原文件不被读取过程改写。
+③ items 模块在 P1_Task5 升为 **v2**。v1→v2 升级为旧装备写入 `reforge_index=-1`，并从旧档原有 `rng_seed` 稳定派生独立 `reforge_rng_seed/state`；迁移不消耗、不改写原掉落 `rng_seed/state`。同一 v1 文件重复加载必须得到相同的重铸初始序列，读取升级只作用于候选，原文件保持 v1，直到玩家后续通过正常保存写出 v2 检查点。
 
-④ 物品实例编号、64 位 RNG 用 Resource 原生整数，禁止回到 JSON 字符串转换。文本浮点读回存在末位舍入，当前使用十二位小数摘要，并在摘要不同时逐字段容忍 `1e-12` 相对误差；整数、ID、归属必须精确一致。精度要求改变时同步修改协议与往返测试。
+④ 持久版本导出字段的脚本默认值固定为零；新建时显式写当前版本。ResourceSaver 会省略等于默认值的字段，因此已发布字段默认值不能随新角色平衡调整而随意变化；新角色默认通过工厂设置，旧数据变化通过明确升级处理。新升级至少保留真实旧 Resource 文件往返回归，确认原文件不被读取过程改写。
 
-⑤ 重铸位置、独立服务 RNG、难度解锁、区域选择、引导等长期数据随所属任务接入模块。新增资源不需要将整个存档框架塞入某个场景；也无需为当前尚无业务的大系统预建空模块。旧 JSON、SaveValidator、SessionSnapshot、旧 expedition 与 `in_town` 已退休，不建立旧存档迁移链。
+⑤ 物品实例编号、64 位 RNG 用 Resource 原生整数，禁止回到 JSON 字符串转换。文本浮点读回存在末位舍入，当前使用十二位小数摘要，并在摘要不同时逐字段容忍 `1e-12` 相对误差；整数、ID、归属必须精确一致。精度要求改变时同步修改协议与往返测试。
+
+⑥ 后续难度解锁、区域选择、引导等长期数据随所属任务接入模块。新增资源无需将整个存档框架塞入某个场景；也无需为当前尚无业务的大系统预建空模块。旧 JSON、SaveValidator、SessionSnapshot、旧 expedition 与 `in_town` 已退休，不建立旧存档迁移链。
 
 ## 当前规模与后续性能边界
 

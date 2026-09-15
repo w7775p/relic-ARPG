@@ -112,7 +112,7 @@ InventoryState 和 LoadoutState 改为所属 Resource 的事务入口；实例�
 
 首次完整代码 head `377b508f6978209a5747269914fbe3dd4d98c0bd` 的 [Windows run 34803499160](https://github.com/w7775p/relic-ARPG/actions/runs/34803499160) 使用官方 Godot 4.7.2、PowerShell/Python CLI：全量源码场景/故障/PCK 回归通过，Windows exe 导出通过，实际成品拾取、14/18/4 内容、存档读回和下一件掉落验证通过。
 
-人工试玩确认地图变体、坚韧/迅捷功能、装备掉落拾取和保存重开正常；坚韧/迅捷数值体感留待后期平衡。Blood Echo 首次试玩出现传播持续表现疑似继承源目标剩余时间的反馈，随后增加末段击杀完整 4 秒回归、`apply_fresh_bleed` 双重重置和持续流血暗红状态色。最终交付 head `de0f22e2a3664ab4ef5ce48e17892b19368cfad8` 的 [Windows run 34808913642](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642) 全量源码/PCK 回归、Windows exe 导出及实际成品包验证通过；最终构建 [artifact 10334056782](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642/artifacts/10334056782)，SHA256 `e2a0a23545f4806bbece9a5734d000f361c8f0c781b88a7af8a1c5a938443318`。
+人工试玩确认地图变体、坚韧/迅捷功能、装备掉落拾取和保存重开正常；坚韧/迅捷数值体感留待后期平衡。Blood Echo 首次试玩出现传播持续表现疑似继承源剩余时间的反馈，随后增加完整时长回归、fresh bleed 接收入口和暗红状态表现。最终交付 head `de0f22e2a3664ab4ef5ce48e17892b19368cfad8` 的 [Windows run 34808913642](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642) 全量源码/PCK 回归、Windows exe 导出及实际成品包验证通过；最终构建 [artifact 10334056782](https://github.com/w7775p/relic-ARPG/actions/runs/34808913642/artifacts/10334056782)，SHA256 `e2a0a23545f4806bbece9a5734d000f361c8f0c781b88a7af8a1c5a938443318`。
 
 用户于 2026-09-14 完成最终修补包复测并明确确认验收通过。[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 已合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task3 状态更新为已完成，下一张玩法任务为 P1_Task4。
 
@@ -135,3 +135,11 @@ Hub 对未锁定的魔法/稀有背包装备显示位置、当前词条、合法
 独立提交：`261e8a0d` 持久状态与 items v2；`3b50f2e0` 共用候选/抽取规则；`b472ee23` 重铸事务；`a92035cd` Hub UI；`527c7d46` 专项回归；`a921da3f` 发布包 Hub 重铸 smoke；`6753e618` 修正 smoke 在生成下一件掉落后才核对保存前 RNG 的测试顺序。专项回归覆盖小候选池、等级/部位/互斥、零候选、重复请求、材料不足、同底材实例隔离、静态定义不变、穿戴属性生效、下一件掉落不受影响、真实检查点和 v1→v2 确定性迁移。
 
 最终代码 head `6753e61811cbb041892408e86b30bddd13f030ea` 的 [Windows run 34826805034](https://github.com/w7775p/relic-ARPG/actions/runs/34826805034) 全量源码场景、专项重铸、存储故障、隔离 PCK、Windows exe 导出和实际成品 Hub 重铸/检查点读回均通过。构建 [artifact 10340134660](https://github.com/w7775p/relic-ARPG/actions/runs/34826805034/artifacts/10340134660)，SHA256 `84fbaa2d5b228482bd094e3ea32a244987c01880a761bb6089c625f193417f8d`。当前状态待人工试玩；通过并合入后进入 P1_Task6。本轮没有新增项目级 `known_trap`。
+
+## P1_Task5：Hub UI 模块化修正（2026-09-15）
+
+人工试玩暴露重铸详情动态注入背包后挤压原页面的问题。本轮保留 `ReforgeService`、`InventoryState` 与 items v2 的已验证业务事务，重构据点展示层：新增 `HubHUD` 母控件，将背包、已装备、仓库、技能与被动、重铸拆为独立 `.tscn + .gd` 页面；背包只保留轻量重铸入口并传递稳定 item ID，`ReforgePage` 独立承载位置、候选、费用与结果。标题及保存/读取/退出工具栏同时归入 `HubHUD`，`hub.gd` 只处理会话、服务、保存和场景切换。
+
+新增 `hub_ui_modularity` 12 项结构回归，覆盖选中可重铸装备时背包尺寸不变、重铸页独占固定 PageHost、返回恢复原稳定实例选择以及四个主页面互斥。`p1_loadout`、`hub_flow`、发布包 smoke 和保存故障探针迁到 HUD 公开接口；探险继续使用原 `InventoryPanel`。旧 Hub/HUD 临时 UI 兼容别名已经删除。
+
+重构期间两次失败均属于测试耦合：旧装配测试直接调用 `InventoryPanel._on_tab()`；保存故障测试迁移 Toolbar 时一度误删正常退出信号探针。均恢复覆盖并迁移到公开接口，没有新增玩法或引擎级 `known_trap`。最终代码 head `8f8fbb56f46cd7ff5d7fc2dcb773f6eaf0094456` 的 [Windows run 34952323992](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992) 全绿，覆盖全量源码、7 类保存故障、隔离 PCK、Windows 导出和实际 EXE。最终构建 [artifact 10389985816](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992/artifacts/10389985816)，SHA256 `bacb887f079bc81e35ca16bf252cb0863e1199915da626ae17f2244b4c85a414`；启动日志 artifact `10390005719`。当前仍待用户试玩新页面结构，通过后再合并 PR 并进入 P1_Task6。

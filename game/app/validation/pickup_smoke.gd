@@ -1,5 +1,5 @@
 extends Node
-## 源码与成品包共用拾取回归：内容配置、真实击杀、E 输入和完整检查点。
+## 源码与成品包共用拾取/重铸回归：内容配置、真实击杀、E 输入和完整检查点。
 var checks: int = 0
 var failures: int = 0
 
@@ -85,7 +85,26 @@ func pick_drops(arena: Node3D, drops: Array) -> void:
 	right_mouse(false)
 	await frames()
 
-## 覆盖玩家切换横扫后的拾取流程以及两种已复现的无反馈情况。
+## 在真实 Hub 为成品 smoke 准备一件至少有一个合法重铸位置的魔法/稀有装备。
+func prepare_reforge_target(hub: Node) -> ItemInstanceResource:
+	hub.inventory.materials = 50
+	for attempt: int in range(64):
+		if hub.inventory.bag.size() >= hub.inventory.data.bag_capacity:
+			hub.inventory.discard(0)
+		var item: ItemInstanceResource = hub.generator.generate(3, false)
+		if item.quality != 1 and item.quality != 2:
+			continue
+		if not hub.inventory.pickup(item):
+			continue
+		var preview: Dictionary = hub.reforge_preview(item.id, 0)
+		if bool(preview.get("ok", false)):
+			return item
+		var index: int = hub.inventory.data.bag_ids.find(item.id)
+		if index >= 0:
+			hub.inventory.discard(index)
+	return null
+
+## 覆盖玩家切换横扫后的拾取流程，以及发布包内真实 Hub 重铸与保存读回。
 func _run() -> void:
 	if not _check_loot_content():
 		_finish()
@@ -158,6 +177,28 @@ func _run() -> void:
 	arena.return_to_town()
 	await frames(8)
 	hub = get_tree().current_scene
+	var reforge_target: ItemInstanceResource = prepare_reforge_target(hub)
+	check(reforge_target != null, "成品包真实 Hub 可准备合法魔法/稀有重铸目标")
+	var reforge_materials: int = -1
+	var reforge_digest: String = ""
+	var reforge_rng_state: int = 0
+	var drop_rng_state: int = 0
+	if reforge_target != null:
+		check(hub.hud.select_backpack_item(reforge_target.id), "成品包 Hub 可按稳定 ID 选择重铸目标")
+		hub.hud.prime_reforge_from_selection()
+		check(hub.hud.reforge_preview_text().contains("候选") and hub.hud.reforge_preview_text().contains("费用") and hub.hud.reforge_available(), "成品包 Hub 显示重铸位置、候选与费用")
+		var preview: Dictionary = hub.reforge_preview(reforge_target.id, 0)
+		var before_materials: int = hub.inventory.materials
+		var before_drop_state: int = hub.inventory.data.rng_state
+		var forged: Dictionary = hub.reforge_item(reforge_target.id, 0, "package-reforge")
+		check(bool(forged.ok) and reforge_target.reforge_index == 0 and hub.inventory.materials == before_materials - int(preview.cost), "成品包 Hub 实际重铸固定位置并扣除一次材料")
+		check(hub.inventory.data.rng_state == before_drop_state, "成品包重铸不改变掉落 RNG 状态")
+		reforge_materials = hub.inventory.materials
+		reforge_digest = ResourceFingerprint.digest(reforge_target)
+		reforge_rng_state = hub.inventory.data.reforge_rng_state
+		drop_rng_state = hub.inventory.data.rng_state
+		check(hub._save_auto("package_reforge").ok, "成品包重铸后通过正式 Hub 保存入口建立检查点")
+
 	var slot_id: String = ""
 	for entry: SaveSlotResource in SaveManager.store.catalog().slots:
 		if entry.group_id == hub.game_session.group_id and entry.checkpoint_id == hub.game_session.saved_checkpoint_id:
@@ -166,6 +207,10 @@ func _run() -> void:
 	check(result.ok and result.value.inventory.data.instances.has(overflow.id) and result.value.inventory.loadout.slots.main == "sweep", "横扫掉落拾取后撤离，装备身份和技能装配一起进入 Hub 检查点")
 	if result.ok:
 		check(ResourceFingerprint.digest(result.value.modules.items) == ResourceFingerprint.digest(hub.game_session.modules.items), "成品包检查点完整保留装备、词条实值、归属与随机状态")
+		if reforge_target != null:
+			var restored_reforge: ItemInstanceResource = result.value.inventory.data.instances.get(reforge_target.id)
+			check(restored_reforge != null and restored_reforge.reforge_index == 0 and ResourceFingerprint.digest(restored_reforge) == reforge_digest and result.value.inventory.materials == reforge_materials, "成品包检查点保留重铸固定位置、词条结果与材料余额")
+			check(result.value.inventory.data.reforge_rng_state == reforge_rng_state and result.value.inventory.data.rng_state == drop_rng_state, "成品包检查点分别保留重铸 RNG 与保存时的掉落 RNG")
 		check(ResourceFingerprint.digest(result.value.generator.generate(4, true)) == ResourceFingerprint.digest(hub.game_session.generator.generate(4, true)), "成品包读档后下一件装备编号和词条序列一致")
 	hub.queue_free()
 	await frames()

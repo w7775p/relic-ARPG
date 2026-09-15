@@ -2,85 +2,129 @@
 
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
-阶段：D1。状态：待执行。任务 ID：`P1_Task5`。建议分支：`feat/p1-task5-reforge`。
+阶段：D1。状态：**待人工试玩验收**。任务 ID：`P1_Task5`。工作分支：`feat/p1-task5-reforge`。
 
-前置任务：[P1_Task 4](P1_Task4.md)。执行时以包含前置功能和 [Resource 重构](../resource_save_task.md) 的最新 `main` 为代码起点；存档重构及词条导出修复已在 `3cdc612` 合入。跨窗口接续先核对 [任务总表](README.md) 与实际代码。`313ac7f` 仅作 M2 历史对照。
+前置任务：[P1_Task 4](P1_Task4.md)。本任务从 main `77948dcd4558c87188c995bf41e086525fe795f1` 开始；P1_Task4 已通过人工验收并由 PR #11 合入。
 
 ## 开始前先阅读以下文档
 
-| 文档（仓库根目录相对路径） | 阅读目的 |
+| 文档 | 阅读目的 |
 | --- | --- |
-| [AGENTS.md](../../AGENTS.md) | 项目约束与「完成任务前必须检查」 |
+| [AGENTS.md](../../AGENTS.md) | 项目约束与完成前检查 |
 | [README.md](../../README.md) | 当前入口、操作和已实现功能 |
-| [docs/engineering.md](../../docs/engineering.md) | 当前模块、数据与存档规则 |
-| [docs/save_system.md](../../docs/save_system.md) | 五模块、Hub 保存、版本升级与整体回退边界 |
-| [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置合入情况 |
-| [known_trap.md](../../known_trap.md) | 实际问题，避免重复踩坑 |
-| [docs/plan.md](../../docs/plan.md) | 第 10、11 节阶段额度与验收目标 |
-| [docs/demo_tasks/README.md](../../docs/demo_tasks/README.md) | 基线、执行顺序、内容归属与交接约定 |
-| [docs/validation.md](../../docs/validation.md) | 现有验证入口与历史结果 |
+| [docs/engineering.md](../../docs/engineering.md) | 模块、数据与解耦规则 |
+| [docs/save_system.md](../../docs/save_system.md) | Resource 检查点与升级边界 |
+| [docs/tasks.md](../../docs/tasks.md) | 任务状态与前置关系 |
+| [known_trap.md](../../known_trap.md) | 已知项目坑 |
+| [docs/plan.md](../../docs/plan.md) | D1 阶段额度与验收目标 |
+| [docs/demo_tasks/README.md](README.md) | 执行顺序与交接约定 |
+| [docs/validation.md](../../docs/validation.md) | 自动化验证入口 |
 
-有前置任务时同时阅读对应任务卡的验收与实际交接记录；上表文档均应存在。运行代码的最新状态优先用于判断已实现内容。
+## 已经实现的基础
 
-## 已经实现的功能
+M2 已完成战斗、随机装备、背包仓库和整备循环。当前持久化基线为独立 Hub 与五模块 Resource 检查点，仅 Hub 保存长期状态。P1_Task3 已完成 D1 装备额度，P1_Task4 已完成据点拆解与材料来源。
 
-历史 M2 已完成战斗、随机装备、背包仓库和整备循环。当前存档基线为独立 Hub 与五模块 Resource 检查点；仅 Hub 保存，旧 JSON 和旧探险恢复已退休。历史阶段结果不替代本卡验证。
+物品实例保存实际词条值，词条定义提供等级、部位、权重和互斥组。本任务在该结构上增加固定重铸位置与独立重铸随机序列，不新增存档模块。
 
-物品实例已保存实际词条数值，词条定义已有等级、部位、权重与互斥组；据点已能出售、拆解并获得材料。当前没有重铸位置记录。
+## 本次实现
 
-上述后续阶段功能须在开工时核实。本卡的“前置完成后”描述属于依赖条件，不能直接当作当前已完成事实。
+① 据点对未锁定的魔法/稀有背包装备开放重铸。第一次成功重铸选择一个已有随机词条位置，并把位置写入装备实例；后续只能继续重铸该位置。实例 ID、底材、品质、等级及未选词条保持。
 
-## 本次要做的任务
+② `ItemGenerator.affix_candidates()` 与 `roll_affix()` 成为掉落和重铸共用规则：按物品等级/部位筛选，排除其他位置已占据的词条与互斥组，沿用权重和数值区间。允许重新抽到相同词条或相同数值；独特装备不开放重铸。
 
-① 据点对未锁定的魔法/稀有背包装备开放重铸。玩家首次选择一个已有随机词条位置，此装备之后只能重铸该位置；其余词条与底材固定。
+③ `ReforgeRules` 集中配置费用：魔法基础 2 材料、稀有基础 4 材料，物品等级从 1 级起每跨 4 级额外 +1。
 
-② 复用掉落候选规则，按物品等级和部位筛选，并排除其余词条占据的互斥组。允许重新抽到同词条或同数值，界面提前说明；独特固定机制本轮保持原状。
+④ `ReforgeService` 使用独立 RNG；`InventoryState.reforge()` 一次提交词条、固定位置、材料和 RNG 状态。相同 `request_id` 返回首次结果，不重复扣费或推进随机序列。材料不足、零候选、锁定、仓库/穿戴、探险地点、独特装备和失效实例均拒绝提交并保持原值。
 
-③ 显示所选位置、当前值、候选范围、材料费用与新结果；点击一次只扣一次材料并生成一次结果。缺材料、空候选、锁定、错误地点或失效实例均保持原值。
+⑤ 人工试玩暴露“重铸详情动态塞进背包后挤压原页面”的 UI 架构问题后，本任务追加 Hub UI 模块化重构。重铸业务规则与存档结构保持原样，只重构展示与协调层。
 
-④ 重铸使用独立随机序列，保存状态，避免操作重铸改变后续地图布局；装备实例独立复制，禁止修改共享 Resource 或同底材其他装备。
+## Hub UI 模块化重构
 
-## 修改范围与 Godot 实现
+当前结构为：
 
-| 主要路径 | 实现落点 |
+```text
+HubController（world/hub/hub.gd）
+└── HubHUD（ui/hub/hub_hud.tscn/.gd）
+    ├── BackpackPage
+    ├── EquipmentPage
+    ├── StashPage
+    ├── LoadoutPage
+    └── ReforgePage
+```
+
+`HubController` 持有会话、服务、保存和场景切换；`HubHUD` 负责页面组合、导航、工具栏和跨页面协调。背包、装备、仓库、装配、重铸均拥有独立 `.tscn + .gd`。探险场景继续使用原 `InventoryPanel`，据点重构不改变战斗 I 键背包。
+
+背包页只保留轻量“重铸”入口并传递稳定 item ID。`ReforgePage` 独立显示装备摘要、词条位置、合法候选、费用、材料及结果；返回后按稳定 item ID 恢复原选择。标题与保存/读取/退出工具栏也已纳入 `HubHUD`，`hub.gd` 只通过 signal 与公开方法协调，不依赖 HUD 内部 NodePath。
+
+已删除 Hub 与 HubHUD 的临时 UI 兼容别名；HubFlow、发布包 smoke、保存故障回归均改走公开接口。业务事务仍由 `ReforgeService` / `InventoryState` 负责，没有把经济、随机和存档规则复制到 UI。
+
+## 主要修改范围
+
+| 路径 | 实现落点 |
 | --- | --- |
-| `game/systems/town/、game/systems/items/item_generator.gd` | 复用合法候选选择，重铸服务完成校验、抽取、扣费与实例更新。 |
-| `game/ui/inventory/、game/world/hub/hub.gd` | 在 Hub 按实例 ID 和词条位置发起请求，选项变化及时清除旧选择。 |
-| `game/systems/persistence/、game/content/（费用配置）` | 记录重铸位置与随机状态，保存校验允许新字段。 |
-
-涉及路径以当前仓库检查为准；标注新增的目录由本任务按实际功能建立。共用存档入口为 `game/app/services/save_manager.gd`、`game/systems/persistence/` 与 `game/world/hub/hub.gd`，仅在本卡确有影响时修改；相关回归放 `game/tests/` 并接入 `tools/verify.py`。节点和 API 先查项目现有用法，新增用法核对同版官方文档。新增类、函数、回调与功能写简明中文注释。
+| `game/systems/town/reforge_rules.gd`、`reforge_service.gd` | 费用、地点/品质/锁定校验、候选预览、独立 RNG 与重复请求保护 |
+| `game/systems/items/item_generator.gd` | 掉落/重铸共用候选与加权抽取 |
+| `game/systems/items/item_instance_resource.gd` | `reforge_index`，默认 `-1` |
+| `game/systems/inventory/items_resource.gd`、`inventory_state.gd` | items v2、独立重铸 RNG、v1→v2 升级及原子事务 |
+| `game/world/hub/hub.gd` | 据点业务控制器，只协调会话、服务、保存与 HUD |
+| `game/ui/hub/hub_hud.*` | 据点 UI 母控件、页面切换、工具栏和跨模块协调 |
+| `game/ui/hub/backpack/` | 独立背包页与处置入口 |
+| `game/ui/hub/equipment/` | 独立装备页 |
+| `game/ui/hub/stash/` | 独立仓库页 |
+| `game/ui/hub/loadout/` | 独立技能与被动页 |
+| `game/ui/hub/reforge/` | 独立重铸页 |
+| `game/tests/p1_reforge.*` | 重铸规则、事务、迁移专项回归 |
+| `game/tests/hub_ui_modularity.*` | 据点页面边界、尺寸稳定、独立重铸页和返回选择专项回归 |
+| `game/tests/hub_flow.gd` | 真实 Hub、保存与场景流公开接口回归 |
+| `game/app/validation/pickup_smoke.gd` | 实际发布包 Hub 重铸与保存读回 |
+| `game/tests/save_faults.gd` | 保存失败/恢复/退出完整故障探针 |
 
 ## 存档与兼容
 
-items 模块新增重铸位置（未选择默认 -1）和独立重铸 RNG 的原生整数 seed/state，增加模块版本并升级此前 Resource 存档。首次位置、词条结果与 economy 材料一起进入完整检查点，恢复不会重新抽值。
+items 模块由 v1 升到 **v2**。装备实例新增 `reforge_index`；`ItemsResource` 新增独立 `reforge_rng_seed/state`。v1→v2 升级把旧装备初始化为 `reforge_index=-1`，并从原掉落 `rng_seed` 稳定派生重铸 RNG；迁移不消耗、不改写原掉落 `rng_seed/state`。
 
-## 验收标准
+首次重铸位置、新词条结果、材料余额和两套 RNG 均进入完整检查点。恢复后不会重新抽值；下一次重铸结果可复现，下一件掉落仍与未执行重铸的同掉落 RNG 快照一致。
 
-① 重铸一次后，实例 ID、底材、品质、等级、未选词条全部保持；第二次只能选择原位置。
+本次 UI 重构**没有再次修改存档版本、字段和重铸事务语义**。
 
-② 用小候选池覆盖等级、部位、互斥、零候选与重复值；费用不足及重复请求不会多扣材料。
+## 自动验收结果
 
-③ 同底材两件装备与静态定义保持独立；重铸后穿戴显示与伤害数值一致。
+① 单词条固定位置、候选筛选、零候选、重复请求、材料不足、锁定/归属/地点限制、同底材实例独立和属性即时生效全部通过。
 
-④ 保存重启后位置、材料、新词条及下一次重铸随机结果一致；掉落随机序列保持，下一趟地图按新探险规则建立。
+② Resource 保存重开保留固定位置、材料、新词条及下一次重铸 RNG；掉落 RNG 不受重铸推进；items v1→v2 确定性迁移通过。
 
-功能验证通过 `python tools/verify.py --godot <引擎路径>` 执行，包含源码场景、存储故障及隔离 PCK 的拾取/存档回归；新增用例需要实际运行到完成标记。交付 Windows 包时按 [成品验收约定](README.md#成品验收约定) 验证实际 exe。显示、声音和手感按本次可见试玩记录验收。
+③ `HUB_UI_MODULARITY_RESULT` 覆盖 12 项：Hub 默认页互斥、选中可重铸装备不改变背包尺寸、背包只提供重铸入口、ReforgePage 独占固定 PageHost、返回恢复原稳定实例选择，以及装备/仓库/装配页面独立切换。
+
+④ 保存故障探针恢复完整覆盖：写入、替换、损坏内容、缺失内容、索引、中断写入、正常退出。重构后的失败重试状态通过 `HubHUD` 公开接口验证。
+
+⑤ 最终代码 head `8f8fbb56f46cd7ff5d7fc2dcb773f6eaf0094456` 的 Windows [run 34952323992](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992) 全绿：官方 Godot 4.7.2、全量源码场景、故障进程、隔离 PCK、Windows `.exe` 导出及实际成品包拾取/重铸/保存验证全部成功。
+
+最终 Windows 构建：[artifact 10389985816](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992/artifacts/10389985816)，SHA256 `bacb887f079bc81e35ca16bf252cb0863e1199915da626ae17f2244b4c85a414`。启动日志：[artifact 10390005719](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992/artifacts/10390005719)，SHA256 `1e38feaca68d2cd3e174a7d4376a242cb4fa78e1d0f23a70ac298c84bca5e772`。
+
+## 当前待验收内容
+
+自动化已完成。还需要用户在 Windows 构建中实际确认：
+
+1. 据点顶部“背包 / 已装备 / 仓库 / 技能与被动”切换是否直观。
+2. 选中魔法/稀有装备后背包布局是否保持稳定。
+3. 点击“重铸”进入独立页面、选择词条并执行重铸是否顺手。
+4. 返回背包后是否仍选中刚才的装备。
+5. 保存/读取/退出工具栏和整体排版是否正常。
+
+人工验收通过后再合并 PR，并将 P1_Task5 标记为已完成，随后解锁 P1_Task6。
 
 ## 要求
 
-1. 先检查当前项目状态：分支、工作区、最新 main、前置合入、实际代码与验证入口；保护现有未提交修改。先完成可以核实的工作，具体依赖缺失时说明缺失文件或功能。
-2. 不要实现与本任务无关的系统。只参考本仓库与所需官方资料，沿用本项目约定，无需使用 `global-work-rules`。
-3. 优先最小可用实现，以本卡验收为完成边界；从当前主入口可以观察到功能，必要存档与基础反馈同批完成。具体数值可调整并记录原因。
-4. 完成后按 AGENTS.md「完成任务前必须检查」逐条执行，更新本卡状态、任务总表和工作日志；实际遇到新坑才更新 `known_trap.md`。每完成一个独立且验证通过的子任务立即 commit，再同步任务分支和 PR（合并请求）；合并按用户当前授权执行。
-5. 最后按下表汇报，并附分支/提交、测试命令与实际结果、PR 和可用构建链接。
-
-| 汇报项 | 必须包含 |
-| --- | --- |
-| 改了哪些文件 | 主要文件及用途；文档、资源、存档版本变化。 |
-| 当前能做什么 | 从哪个入口操作，得到什么结果，哪些验收已经实际通过。 |
-| 还不能做什么 | 未完成项、失败项、未验证项及对应影响。 |
-| 下一步建议做什么 | 已解锁的下一张任务卡、待合入依赖或具体阻塞。 |
+1. 先检查当前项目状态、分支、最新 main、前置合入和验证入口。
+2. 不实现与本任务无关的系统；无需使用 `global-work-rules`。
+3. 以本卡验收为完成边界，数值属于原型参数。
+4. 完成后按 AGENTS.md「完成任务前必须检查」执行；每个独立子任务验证后单独 commit。
+5. PR 在自动门禁通过后提交，合并等待用户人工验收授权。
 
 ## 执行记录
 
-尚未执行。完成时填写实际基线、分支/提交、PR、验收结果、存档迁移、构建位置和遗留项；更新顶部状态。推荐步骤：待执行 → 进行中 → 待验收 → 已完成，阻塞时写明原因。
+原重铸实现提交：`261e8a0d` 保存固定位置与独立 RNG、items v2 迁移；`3b50f2e0` 共用候选/抽取规则；`b472ee23` 重铸费用与事务；`a92035cd` 初版 Hub UI；`527c7d46` 专项规则/事务/旧档迁移回归；`a921da3f` 发布包 smoke；`6753e618` 修正 smoke 测试顺序。
+
+2026-09-15 根据人工试玩暴露的布局问题进行 UI 架构重构。主要提交包括：`9d06a84e` 拆出 HubHUD 与 ReforgePage；`dd0a5240` 拆出背包/装备/仓库/装配页；`29b5456c` 迁移装配回归；`b8c52879` 接入 Hub 模块化专项回归；`39c68332` 将工具栏纳入 HUD；`5a468a19`、`4e091a33` 迁移并恢复完整保存故障探针；`6ad05833` 补齐 HUD 黑盒接口；`2cc93def` 迁移 HubFlow；`6984d0dc` 迁移发布包重铸 smoke；`fb659ace` 删除 HubHUD 临时别名；`8f8fbb56` 删除 Hub 控制器兼容 UI 入口。
+
+重构过程中出现的失败均来自旧自动测试直接依赖旧 UI 私有结构，或测试重写时误删原 quit 探针；业务重铸和持久化事务始终通过。上述测试已迁到公开接口并恢复原覆盖，因此没有新增项目级 `known_trap`。

@@ -15,13 +15,6 @@ var controller: Node
 var inventory: InventoryState
 var salvage_service: SalvageService
 var reforge_service: ReforgeService
-var inventory_panel: BackpackPage
-var salvage_button: Button
-var salvage_info: Label
-var reforge_entry_button: Button
-var reforge_button: Button
-var reforge_info: Label
-var reforge_selector: OptionButton
 var _return_item_id: String = ""
 var _current_page: String = "backpack"
 
@@ -59,14 +52,6 @@ func setup(owner: Node, state: InventoryState, salvage: SalvageService, reforge:
 	loadout_page.reset_requested.connect(_on_reset_requested)
 	reforge_page.closed.connect(_on_reforge_closed)
 	reforge_page.reforged.connect(_on_reforged)
-	# 临时兼容别名；旧回归迁移完成后删除。
-	inventory_panel = backpack_page
-	salvage_button = backpack_page.salvage_button
-	salvage_info = backpack_page.salvage_info
-	reforge_entry_button = backpack_page.reforge_button
-	reforge_button = reforge_page.action_button
-	reforge_info = reforge_page.preview_label
-	reforge_selector = reforge_page.position_selector
 	show_page("backpack")
 	refresh()
 
@@ -233,7 +218,7 @@ func open_reforge(item_id: String) -> void:
 	reforge_page.open_item(item_id)
 	reforge_opened.emit(item_id)
 
-## 隐藏页也可准备预览，兼容现有自动回归而不影响实际页面切换。
+## 隐藏重铸页也可按当前选择准备预览，供黑盒发布回归读取。
 func prime_reforge_from_selection() -> void:
 	var item_id: String = selected_item_id()
 	if not item_id.is_empty():
@@ -255,7 +240,7 @@ func _on_reforged(item_id: String) -> void:
 	_refresh_backpack_services()
 	reforged.emit(item_id)
 
-## 兼容现有回归入口：刷新背包服务按钮。
+## 刷新背包服务按钮，结构回归可显式请求稳定状态。
 func refresh_inventory_actions() -> void:
 	backpack_page.refresh()
 	_refresh_backpack_services()

@@ -96,6 +96,10 @@ func set_status(message: String) -> void:
 func set_retry_visible(value: bool) -> void:
 	retry_button.visible = value
 
+## 返回重试入口当前显隐，供黑盒回归验证失败反馈。
+func retry_visible() -> bool:
+	return retry_button.visible
+
 ## 返回当前状态文本，供控制器组合业务反馈。
 func status_text() -> String:
 	return status_label.text
@@ -264,7 +268,7 @@ func _on_stash_nav_pressed() -> void:
 func _on_loadout_nav_pressed() -> void:
 	show_page("loadout")
 
-## Toolbar 只发意图 signal，控制器决定保存和场景行为。
+## 工具栏按钮只发出意图，由 HubController 执行业务。
 func _on_save_pressed() -> void:
 	save_requested.emit()
 

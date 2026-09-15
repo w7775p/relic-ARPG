@@ -14,7 +14,9 @@ Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通
 
 2026-09-14 P1_Task4：从 main `2cc76de` 新增据点单件拆解。`SalvageRules` 集中配置品质/等级收益，`SalvageService` 处理地点与失败反馈，InventoryState 以稳定实例 ID 提交归属和材料事务；Hub 背包并列显示出售金币与拆解材料。四品质、锁定/穿戴/仓库/探险拒绝、重复请求、列表重排、出售/拆解/入仓连续操作与 Resource 文件读回均通过。最终 PR head 的 [Windows run 34813475464](https://github.com/w7775p/relic-ARPG/actions/runs/34813475464) 完成全量源码/PCK、Windows exe 和成品包门禁；用户试玩验收通过，[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 已合入 main `4798f7b`，数值与交互优化后置。
 
-2026-09-14 P1_Task5：从 main `77948dcd` 实现魔法/稀有单词条位置重铸。首次成功后装备固定一个 `reforge_index`；掉落和重铸复用相同等级/部位/互斥候选规则，重铸使用独立 `reforge_rng_seed/state`，不会推进掉落 RNG。items 模块升为 v2，v1 旧档确定性派生独立重铸序列并保留原掉落状态。专项回归覆盖候选、零候选、重复请求、材料不足、装备独立、属性生效、真实文件往返与 v1→v2；最终代码 [Windows run 34826805034](https://github.com/w7775p/relic-ARPG/actions/runs/34826805034) 完成源码/故障/PCK、Windows exe 及实际成品 Hub 重铸与检查点读回。当前等待人工试玩与 PR 合入。
+2026-09-14 P1_Task5：从 main `77948dcd` 实现魔法/稀有单词条位置重铸。首次成功后装备固定一个 `reforge_index`；掉落和重铸复用相同等级/部位/互斥候选规则，重铸使用独立 `reforge_rng_seed/state`，不会推进掉落 RNG。items 模块升为 v2，v1 旧档确定性派生独立重铸序列并保留原掉落状态。专项回归覆盖候选、零候选、重复请求、材料不足、装备独立、属性生效、真实文件往返与 v1→v2；原始实现 [Windows run 34826805034](https://github.com/w7775p/relic-ARPG/actions/runs/34826805034) 完成源码/故障/PCK、Windows exe 及实际成品 Hub 重铸与检查点读回。
+
+2026-09-15 P1_Task5 试玩反馈触发 Hub UI 结构整改：保留重铸业务与 items v2 事务，新增 `HubHUD` 母控件，将背包、已装备、仓库、技能与被动、重铸拆成独立页面；重铸详情不再动态塞入背包，标题及保存/读取/退出工具栏也由 HUD 管理。新增 12 项 `hub_ui_modularity` 回归并将 HubFlow、发布包 smoke、保存故障测试迁到公开接口；探险仍使用原 `InventoryPanel`。最终代码 head `8f8fbb56` 的 [Windows run 34952323992](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992) 全量源码、7 类故障、PCK、Windows exe 和实际成品 Hub 重铸/保存均通过；[最终构建 artifact 10389985816](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992/artifacts/10389985816)，SHA256 `bacb887f079bc81e35ca16bf252cb0863e1199915da626ae17f2244b4c85a414`。当前仍等待用户 Windows 人工试玩与 PR 合入。
 
 ## 基线与模板调整
 

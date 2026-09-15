@@ -7,50 +7,48 @@
 | 实现 | 职责 |
 | --- | --- |
 | `app/boot/` | 启动后延迟进入主菜单；发行 smoke 沿正式 Hub 路由运行 |
-| `app/validation/` | 源码与成品共用拾取回归；仅由测试场景或 Boot 的 `--smoke-loot` 参数启动 |
+| `app/validation/` | 源码与成品共用拾取/重铸回归；仅由测试场景或 Boot 的 `--smoke-loot` 参数启动 |
 | `app/services/scene_router.gd` | MainMenu / Hub / Expedition 场景切换、一次性跨场景角色状态交接、离场解除暂停 |
 | `app/services/settings_manager.gd` | ConfigFile 设置与原生窗口、音频总线应用 |
 | `app/services/audio_manager.gd` | 原生 WAV 短提示及 SFX 总线播放 |
 | `app/services/save_manager.gd` | 地点能力、保存/恢复用例及结构化结果；文件事务委托 SaveStore |
 | `actors/player/` | CharacterBody3D、胶囊碰撞、独立视觉朝向与武器挂点 |
-| `world/hub/` | 独立据点场景；装备、背包、仓库、出售、技能与被动整备 |
+| `world/hub/` | HubController：持有会话、据点服务、保存和场景切换，不直接依赖页面内部节点 |
+| `ui/hub/` | HubHUD 母控件及背包、装备、仓库、装配、重铸独立页面；工具栏也归 HUD 管理 |
 | `world/maps/expedition_runtime.*` | 正式新角色探险场景；接收 Hub 状态、运行战斗、撤离/死亡返回 Hub |
 | `systems/persistence/` | 会话、完整检查点、模块注册/升级/准备恢复、槽位存储与可重建索引 |
 | `ui/saves/` | 多角色手动槽、自动历史、覆盖确认及失败回退选择 |
 | `world/camera/` | 正交镜头，固定朝向，指数平滑跟随 |
 | `ui/menus/` | 主菜单与可复用设置面板 |
-| `ui/inventory/` | Hub 与探险共用物品/装配面板，通过 `session.is_hub()` 查询地点能力 |
+| `ui/inventory/` | 探险场景使用的共用物品/装配面板；据点 UI 已迁到 `ui/hub/` |
 | `ui/theme/` | 原生 Theme、样式盒与中文系统字体候选 |
-| `tests/` | 实际场景回归，发行导出排除；包含 HubFlow 场景边界验证 |
+| `tests/` | 实际场景回归，发行导出排除；包含 HubFlow 与 Hub UI 模块边界验证 |
 
 ## 模块化与解耦原则
 
 后续新增系统统一采用「总 → 分 → 分 → 分……」的层级化结构。父级负责组合、生命周期、页面切换和跨模块协调；子模块负责单一职责。层级可以继续向下拆，但每一级都只暴露完成当前职责所需的公开接口，禁止上级依赖下级内部节点布局。
 
-复杂 UI 功能只要形成独立操作流程、页面或弹窗，就建立独立 `.tscn` 与 `.gd`。例如据点整备可以由母控件集成 `BackpackModule`、`EquipmentModule`、`ReforgeModule`、`SalvageModule`、`SaveModule`；重铸页内部再维护自己的装备摘要、词条位置、候选范围、费用和结果反馈。背包页点击“重铸”只传递稳定 item ID 并打开重铸模块，不把完整重铸控件动态塞进背包页面。
+复杂 UI 功能只要形成独立操作流程、页面或弹窗，就建立独立 `.tscn` 与 `.gd`。据点整备当前已由母控件集成 `BackpackPage`、`EquipmentPage`、`StashPage`、`LoadoutPage` 和 `ReforgePage`。背包页点击“重铸”只传递稳定 item ID 并打开重铸页面，不把完整重铸控件动态塞进背包页面。
 
-推荐职责关系：
+当前职责关系：
 
 ```text
-Hub / HubController
+HubController
 └── HubHUD
-    ├── BackpackModule
-    │   ├── BackpackPanel
-    │   └── ItemDetail
-    ├── EquipmentModule
-    ├── ReforgeModule
-    │   └── ReforgePanel
-    ├── SalvageModule
-    └── SaveModule
+    ├── BackpackPage
+    ├── EquipmentPage
+    ├── StashPage
+    ├── LoadoutPage
+    └── ReforgePage
 ```
 
-父级只调用子模块公开方法，例如 `open(item_id)`、`close()`、`refresh()`，并监听 `item_selected`、`reforged`、`closed` 等 signal。禁止通过 `get_node()`、固定 NodePath、直接访问子模块内部控件或直接改写兄弟模块状态进行跨模块协作；子模块内部节点可以自由重排，只要公开接口保持稳定。
+父级只调用子模块公开方法，例如 `show_page()`、`select_backpack_item()`、`open_reforge()`、`refresh()`，并监听 `reforged`、`closed`、保存/读取等 signal。禁止通过固定 NodePath、直接改写兄弟模块状态进行跨模块协作；子模块内部节点可以自由重排，只要公开接口保持稳定。结构专项回归允许检查页面尺寸和互斥显隐，用于保护布局边界。
 
-UI 表现、业务规则和数据事务继续分层。以重铸为例：`ReforgePanel.gd` 负责页面与交互，`ReforgeService.gd` 负责地点、候选、费用和规则校验，`InventoryState.gd` 负责最终实例和材料事务；父级负责把当前会话和稳定实例 ID 交给模块，不复制这些规则。其他系统沿用同样边界，避免把 UI、随机、经济、存档和状态修改塞进同一个脚本。
+UI 表现、业务规则和数据事务继续分层。以重铸为例：`ReforgePage.gd` 负责页面与交互，`ReforgeService.gd` 负责地点、候选、费用和规则校验，`InventoryState.gd` 负责最终实例和材料事务；父级负责把当前会话和稳定实例 ID 交给模块，不复制这些规则。其他系统沿用同样边界，避免把 UI、随机、经济、存档和状态修改塞进同一个脚本。
 
 只有真正具有独立职责或独立变化原因的功能才拆模块。单纯两行提示、只服务当前页面且没有独立状态的小控件可以保留为模块内部节点，避免为了“模块化”制造大量空壳脚本。判断标准是该部分能否独立理解、修改、测试和替换。
 
-当前 `hub.gd` 与 `InventoryPanel` 仍保留早期集中实现，P1_Task5 试玩已暴露复杂重铸 UI 挤压背包页面的问题。此处作为首个结构整改对象：保留已验收的重铸业务逻辑，只将重铸 UI 拆为独立页面/模块；后续新增功能直接遵循本节规范，旧模块在实际改动触及时逐步拆分，避免无任务边界的大规模重写。
+P1_Task5 人工试玩曾暴露复杂重铸 UI 挤压背包页面的问题，现已完成首个结构整改：`hub.gd` 收敛为业务控制器，Hub 页面与工具栏统一归 `HubHUD`，重铸拥有独立页面，背包只保留入口；旧 Hub/UI 临时兼容别名已删除。`InventoryPanel` 继续服务探险场景，避免据点重构牵连战斗中的 I 键背包。后续新增功能直接沿用该层级结构，旧模块在实际改动触及时再逐步拆分。
 
 移动用 `Input.get_vector`，斜向速度保持一致，`move_and_slide` 处理墙体与地面。鼠标投向脚下水平面，仅转动视觉根。闪避没有无敌效果，当前只验证移动速度、持续时间、冷却和碰撞。
 
@@ -94,17 +92,18 @@ M1 延续兼容渲染器，无动态特效灯。`combat_arena.tscn` 继承 M0 �
 
 | 模块 | 职责 |
 | --- | --- |
-| `systems/items/` | ItemBase、AffixDefinition、UniqueDefinition 资源，目录索引，独立 RNG 抽取与实例描述 |
-| `content/items/` | 10 底材、12 词条、3 独特装备的可编辑 `.tres` |
-| `systems/inventory/` | 单一持有归属、40 格背包、120 格仓库、6 槽穿戴、锁定、出售、属性汇总与基础经验成长 |
-| `ui/inventory/` | 原生容器与列表、双列装备说明、服务按钮；通过场景能力接口判断 Hub 服务权限 |
+| `systems/items/` | ItemBase、AffixDefinition、UniqueDefinition 资源，目录索引，掉落/重铸候选规则与实例描述 |
+| `content/items/` | D1 当前 14 底材、18 普通词条、4 独特装备的可编辑 `.tres` |
+| `systems/inventory/` | 单一持有归属、40 格背包、120 格仓库、6 槽穿戴、锁定、出售、拆解/重铸事务、属性汇总与基础经验成长 |
+| `ui/hub/` | 据点整备独立页面，由 HubHUD 总控；重铸页面只调用服务层与稳定实例 ID |
+| `ui/inventory/` | 探险中的原生背包/装配面板 |
 | `world/hub/hub.gd` | 当前 GameSession、据点服务、保存入口及成功保存后离场 |
 | `world/maps/expedition_runtime.gd` | 正式探险生命周期；领取 Hub 状态、生成 48 怪、战斗、撤离/死亡回 Hub |
 | `systems/persistence/` | SaveGameResource 聚合五个模块；GameSession 建立业务入口，SaveStore 完成读写事务 |
 
-实例为 ItemInstanceResource：`id/base/level/quality/unique_id/affixes/locked`；每条 AffixRollResource 记录 `id/value`。独特使用稳定字符串 ID `thunder_ring`、`ember_mail`、`energy_grips`，随机目录顺序不构成持久身份。词条描述来自实际抽取值，独特机制来自资源参数，技能默认数值来自 BuildDefinition。定义资源不承载每件装备的强化或抽取结果。
+实例为 ItemInstanceResource：`id/base/level/quality/unique_id/affixes/locked/reforge_index`；每条 AffixRollResource 记录 `id/value`。独特使用稳定字符串 ID；随机目录顺序不构成持久身份。词条描述来自实际抽取值，独特机制来自资源参数，技能默认数值来自 BuildDefinition。定义资源不承载每件装备的强化或抽取结果。
 
-生成顺序：选底材→按来源抽品质→精英独特概率→按物品等级和部位过滤词条→加权抽取→排除整个互斥组→抽具体值。普通零条、魔法 1～2 条、稀有 3～4 条，独特固定机制加一条浮动词条。物品等级当前取角色等级。普通怪装备率 28%，精英必掉装备；精英随机独特概率 12%。前三次清场额外定向奖励三件机制装备。出售、掉落和成长数值目前均为原型参数。
+生成顺序：选底材→按来源抽品质→精英独特概率→按物品等级和部位过滤词条→加权抽取→排除整个互斥组→抽具体值。普通零条、魔法 1～2 条、稀有 3～4 条，独特固定机制加一条浮动词条。物品等级当前取角色等级。普通怪装备率 28%，精英必掉装备；精英随机独特概率 12%。前三次清场额外定向奖励三件机制装备。出售、掉落、拆解、重铸和成长数值目前均为原型参数。
 
 普通怪经验 6，精英 35；升级需求为当前等级×60，每级基础伤害 +2、生命上限 +15。升级与换装不会直接回满生命。通关撤离使难度 +1，每档怪物生命 +25%、伤害 +15%，金币乘当前难度；额外掉落数和物品等级暂不随难度直接增加。
 
@@ -112,7 +111,7 @@ M1 延续兼容渲染器，无动态特效灯。`combat_arena.tscn` 继承 M0 �
 
 主菜单新建 GameSession，起始装备只由新角色工厂发放一次。Hub 与 ExpeditionRuntime 各自拥有当前会话；SceneRouter 只暂存一次过渡引用，目标领取后清空。InventoryState、LoadoutState 和 ItemGenerator 直接操作所属持久 Resource，保存时捕获独立深拷贝。
 
-Hub 开放仓库、出售、技能和被动；探险中 `is_hub()` 与 `can_save_checkpoint()` 返回 false。撤离、死亡或正常退出先排空有限触发队列，保留已拾取物品和成长；清场进度和难度只结算一次。地面对象随场景销毁，战斗技能计时清理，再交接 GameSession 回真实 Hub。
+Hub 开放仓库、出售、拆解、重铸、技能和被动；探险中 `is_hub()` 与 `can_save_checkpoint()` 返回 false。撤离、死亡或正常退出先排空有限触发队列，保留已拾取物品和成长；清场进度和难度只结算一次。地面对象随场景销毁，战斗技能计时清理，再交接 GameSession 回真实 Hub。
 
 Hub 在初建、出发前、结算返回、退出及持久事务约 1 秒去抖后保存。正常菜单/退出动作必须等待成功；失败显示阶段与重试入口，当前会话继续保留。读取旧检查点整体替换为候选会话，进入 Hub 后不立即自动保存。不存在 `in_town` 或旧 JSON 分支。
 
@@ -120,7 +119,7 @@ Hub 在初建、出发前、结算返回、退出及持久事务约 1 秒去抖�
 
 总集成负责收集和事务，模块负责业务字段、独立版本、升级、校验及依赖准备。角色、物品、经济、据点、进度分别定义 Resource；五手动槽与自动最近三版都是同一格式的完整检查点。可重建索引只存摘要，实际加载仍重新验证正文；恢复失败不改变当前会话。
 
-保存执行校验、同目录 pending 写入、真实读回、字段核对、旧文件恢复副本、替换及索引更新。正文替换成功是保存成功边界，索引失败显示警告。持久版本字段默认零，由新建工厂显式写当前版本，防止 ResourceSaver 省略版本后跳过升级。具体接口、数据表、故障行为和性能边界以 [save_system.md](save_system.md) 为准。
+保存执行校验、同目录 pending 写入、真实读回、字段核对、旧文件恢复副本、替换及索引更新。正文替换成功是保存成功边界，索引失败显示警告。持久版本字段默认零，由新建工厂显式写当前版本，防止 ResourceSaver 省略版本后跳过升级。items 当前版本为 v2，用于保存固定重铸位置和独立重铸 RNG；具体接口、数据表、故障行为和性能边界以 [save_system.md](save_system.md) 为准。
 
 背包打开暂停探险世界；列表拥有焦点时全局 I/Esc/F5 仍可使用。装备掉落为原生小方块与 Label3D 名称，稀有以上增加环形反馈。当前标签没有屏幕空间防重叠排布，使用附近候选选择与过滤控制拾取；美术与标签视觉打磨仍需后续验收。
 

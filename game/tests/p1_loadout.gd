@@ -1,5 +1,5 @@
 extends Node
-## 装配集成回归：Hub 服务、属性重建、Resource 往返和战斗只读规则。
+## 装配集成回归：Hub 模块页面、属性重建、Resource 往返和战斗只读规则。
 var failures: int = 0
 var checks: int = 0
 
@@ -33,9 +33,9 @@ func _run() -> void:
 	for id: String in ["might", "precision", "reach"]:
 		hub.loadout_action("passive", id)
 	check(is_equal_approx(inventory.build().damage, damage + 6) and is_equal_approx(inventory.build().critical_chance, 0.15) and is_equal_approx(inventory.build().whirlwind_radius_m, 3.1), "被动与装备叠加伤害、暴击与范围")
-	hub.panel._on_tab(3)
-	hub.panel._on_loadout("passive", "vitality")
-	check(inventory.loadout.passives.size() == 3 and hub.panel.hint.text.contains("最多"), "第四项被动拒绝且界面说明原因")
+	hub.hud.show_page("loadout")
+	hub.hud.loadout_page.passive_requested.emit("vitality")
+	check(hub.hud.loadout_page.visible and inventory.loadout.passives.size() == 3 and hub.hud.loadout_page.hint.text.contains("最多"), "第四项被动经独立装配页拒绝并说明原因")
 	hub.loadout_action("reset")
 	check(is_equal_approx(inventory.build().damage, damage) and is_equal_approx(inventory.build().critical_chance, 0.1), "重置被动恢复基础属性")
 	for id: String in ["vitality", "guard", "recovery"]:

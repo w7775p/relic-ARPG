@@ -59,7 +59,7 @@ func setup(owner: Node, state: InventoryState, salvage: SalvageService, reforge:
 	loadout_page.reset_requested.connect(_on_reset_requested)
 	reforge_page.closed.connect(_on_reforge_closed)
 	reforge_page.reforged.connect(_on_reforged)
-	# 保留少量兼容别名供现有回归使用；新功能只依赖公开页面接口。
+	# 临时兼容别名；旧回归迁移完成后删除。
 	inventory_panel = backpack_page
 	salvage_button = backpack_page.salvage_button
 	salvage_info = backpack_page.salvage_info
@@ -87,6 +87,49 @@ func show_page(page_id: String) -> void:
 		"stash": stash_page.refresh()
 		"loadout": loadout_page.refresh()
 	_refresh_backpack_services()
+
+## 返回指定页面当前是否可见，黑盒回归无需读取子节点路径。
+func page_visible(page_id: String) -> bool:
+	match page_id:
+		"backpack": return backpack_page.visible
+		"equipment": return equipment_page.visible
+		"stash": return stash_page.visible
+		"loadout": return loadout_page.visible
+		"reforge": return reforge_page.visible
+	return false
+
+## 按稳定实例 ID 选择背包装备并刷新服务状态。
+func select_backpack_item(target_id: String) -> bool:
+	if inventory == null:
+		return false
+	var index: int = inventory.data.bag_ids.find(target_id)
+	if index < 0:
+		return false
+	backpack_page.selected = index
+	backpack_page.refresh()
+	_refresh_backpack_services()
+	return true
+
+## 返回背包页面底边与工具栏顶边，供布局回归检查模块互不挤压。
+func backpack_bottom_y() -> float:
+	return backpack_page.get_global_rect().end.y
+
+func toolbar_top_y() -> float:
+	return toolbar.get_global_rect().position.y
+
+## 返回背包处置说明和服务按钮状态，隐藏具体控件路径。
+func backpack_disposition_text() -> String:
+	return backpack_page.salvage_info.text
+
+func salvage_available() -> bool:
+	return not backpack_page.salvage_button.disabled
+
+## 返回独立重铸页预览和执行可用状态，供发布包黑盒回归。
+func reforge_preview_text() -> String:
+	return reforge_page.preview_label.text
+
+func reforge_available() -> bool:
+	return not reforge_page.action_button.disabled
 
 ## 由控制器写入底部状态文本，不暴露内部 Label 路径。
 func set_status(message: String) -> void:

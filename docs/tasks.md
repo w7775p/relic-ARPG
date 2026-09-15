@@ -32,7 +32,7 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 | [P1_Task2](demo_tasks/P1_Task2.md) | 流血横扫、战吼、恢复药剂与 v4 持续状态存档 | 已完成 | 最终 166 项自动回归通过；Windows 导出与独立启动通过；2026-09-11 用户可见试玩验收通过 |
 | [P1_Task3](demo_tasks/P1_Task3.md) | 14/18/4 装备池、流血传播、两种精英修饰、固定场地双变体 | 已完成 | 最终 Windows run 34808913642 全量源码/PCK、Windows exe 与成品包验证通过；2026-09-14 用户最终复测验收通过；PR #10 已合入 main `48479ed` |
 | [P1_Task4](demo_tasks/P1_Task4.md) | 据点单件拆解、出售/拆解收益选择与材料循环 | 已完成 | Windows run 34813475464 全量源码/PCK、Windows exe 与成品包验证通过；2026-09-14 用户试玩验收通过；PR #11 已合入 main `4798f7b`；数值与交互优化后置 |
-| [P1_Task5](demo_tasks/P1_Task5.md) | 魔法/稀有单词条位置重铸、独立 RNG 与 items v2 迁移 | 待验收 | Windows run 34826805034 全量源码/专项重铸/故障/PCK、Windows exe 与实际成品 Hub 重铸/保存读回通过；待人工试玩 |
+| [P1_Task5](demo_tasks/P1_Task5.md) | 魔法/稀有单词条位置重铸、独立 RNG、items v2 与 Hub UI 模块化 | 待验收 | 最终重构 head `8f8fbb56`；Windows run 34952323992 全量源码、12 项 Hub 模块化、专项重铸、7 类故障、PCK、Windows exe 与实际成品 Hub 重铸/保存读回全部通过；待人工试玩 |
 
 后续顺序见 [任务总表](demo_tasks/README.md)。P1_Task5 人工验收并合入后进入 P1_Task6。
 
@@ -42,7 +42,8 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 | --- | --- | --- | --- |
 | Hub 拆分 | MainMenu → 独立 Hub → ExpeditionRuntime → Hub | 已合入 main `30b85f0`，PR #7 | 历史证据见 hub_refactor.md |
 | [Resource 存档](resource_save_task.md) | 五模块、多角色多槽、Hub 检查点、整体回退、旧 JSON/旧探险移除 | 已合入 main `3cdc612`，PR #8；可见画面与手感待验收 | 11 个常规场景＋7 个故障进程＋PCK 成品回归；Windows exe 的生成/拾取/存档通过，详见 validation.md |
+| P1_Task5 Hub UI 模块化 | `HubHUD` 总控 + 背包/装备/仓库/装配/重铸独立页面；工具栏归属 HUD；探险继续使用独立 `InventoryPanel` | 已在 `feat/p1-task5-reforge` 实现，待随 Task5 人工验收 | `HUB_UI_MODULARITY_RESULT` 12 项通过；最终 Windows run 34952323992 全绿 |
 
 P1_Task1/2 的 v3/v4 描述属于原阶段交付历史。后续任务以 Resource 存档和真实 Hub 为准，保留新 Resource 已发布版本的升级链；不再要求 JSON 迁移或战斗中恢复。
 
-2026-09-14 P1_Task3 已完成并通过人工验收；[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task4 已完成自动与人工验收；[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 合入 main `4798f7b83dcb01405e1e8b7ab175a4c2b6c63284`。P1_Task5 已完成自动验收：items 模块升至 v2，新增固定重铸位置和独立重铸 RNG，最终代码 run 34826805034 全绿；当前等待人工试玩后再合入并进入 P1_Task6。
+2026-09-14 P1_Task3 已完成并通过人工验收；[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task4 已完成自动与人工验收；[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 合入 main `4798f7b83dcb01405e1e8b7ab175a4c2b6c63284`。P1_Task5 已完成自动验收及试玩反馈触发的 Hub UI 结构整改：items 模块保持 v2，重铸业务规则不变，重铸改为独立页面并完成公开接口迁移；最终 run 34952323992 全绿，当前等待用户试玩新构建后再合入并进入 P1_Task6。

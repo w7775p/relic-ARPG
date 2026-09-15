@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/hub/reforge/reforge_page.gd" id="1"]
+
+[node name="ReforgePage" type="PanelContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Rows" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Margin/Rows"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Margin/Rows/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "词条重铸"
+
+[node name="Back" type="Button" parent="Margin/Rows/Header"]
+layout_mode = 2
+text = "返回背包"
+
+[node name="Rule" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+text = "首次成功重铸后，该装备固定当前词条位置；后续只能继续重铸这一格。"
+autowrap_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+
+[node name="Content" type="VBoxContainer" parent="Margin/Rows/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ItemSummary" type="Label" parent="Margin/Rows/Scroll/Content"]
+layout_mode = 2
+autowrap_mode = 2
+text = "选择装备后显示详情"
+
+[node name="Divider" type="HSeparator" parent="Margin/Rows/Scroll/Content"]
+layout_mode = 2
+
+[node name="PositionTitle" type="Label" parent="Margin/Rows/Scroll/Content"]
+layout_mode = 2
+text = "重铸位置"
+
+[node name="Position" type="OptionButton" parent="Margin/Rows/Scroll/Content"]
+layout_mode = 2
+tooltip_text = "首次成功后锁定当前位置"
+
+[node name="Preview" type="Label" parent="Margin/Rows/Scroll/Content"]
+layout_mode = 2
+autowrap_mode = 2
+text = "候选与费用将在这里显示。"
+
+[node name="Reforge" type="Button" parent="Margin/Rows/Scroll/Content"]
+layout_mode = 2
+text = "重铸"
+
+[node name="Result" type="Label" parent="Margin/Rows/Scroll/Content"]
+layout_mode = 2
+autowrap_mode = 2
+
+[connection signal="pressed" from="Margin/Rows/Header/Back" to="." method="_on_back_pressed"]
+[connection signal="item_selected" from="Margin/Rows/Scroll/Content/Position" to="." method="_on_position_item_selected"]
+[connection signal="pressed" from="Margin/Rows/Scroll/Content/Reforge" to="." method="_on_reforge_pressed"]

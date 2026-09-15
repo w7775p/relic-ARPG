@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://world/hub/hub.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/hub/hub_hud.tscn" id="2"]
 
 [node name="Hub" type="Control"]
 layout_mode = 3
@@ -20,6 +21,9 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.09, 0.11, 1)
 mouse_filter = 2
+
+[node name="HubHUD" parent="." instance=ExtResource("2")]
+layout_mode = 1
 
 [node name="Toolbar" type="MarginContainer" parent="."]
 layout_mode = 0
@@ -63,7 +67,6 @@ text = "保存并回主菜单"
 layout_mode = 2
 text = "保存并退出"
 
-
 [node name="Title" type="Label" parent="."]
 layout_mode = 0
 offset_left = 36.0
@@ -72,6 +75,7 @@ offset_right = 420.0
 offset_bottom = 48.0
 text = "据点整备"
 mouse_filter = 2
+
 [connection signal="pressed" from="Toolbar/Rows/Buttons/Save" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="Toolbar/Rows/Buttons/Load" to="." method="_on_load_pressed"]
 [connection signal="pressed" from="Toolbar/Rows/Buttons/Retry" to="." method="_on_retry_pressed"]

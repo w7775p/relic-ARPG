@@ -59,11 +59,13 @@ func setup(owner: Node, state: InventoryState, salvage: SalvageService, reforge:
 	reforge_button = reforge_page.action_button
 	reforge_info = reforge_page.preview_label
 	reforge_selector = reforge_page.position_selector
-	_show_page("backpack")
+	show_page("backpack")
 	refresh()
 
-## 切换四个据点主页面；同一时刻只展示一个模块。
-func _show_page(page_id: String) -> void:
+## 公开页面切换接口；父级和测试不依赖导航按钮或页面内部节点路径。
+func show_page(page_id: String) -> void:
+	if not ["backpack", "equipment", "stash", "loadout"].has(page_id):
+		return
 	_current_page = page_id
 	navigation.show()
 	backpack_page.visible = page_id == "backpack"
@@ -173,7 +175,7 @@ func prime_reforge_from_selection() -> void:
 ## 重铸页关闭后返回背包，并按稳定 ID 恢复选择。
 func _on_reforge_closed() -> void:
 	backpack_page.selected = inventory.data.bag_ids.find(_return_item_id)
-	_show_page("backpack")
+	show_page("backpack")
 	reforge_closed.emit()
 
 ## 重铸成功后刷新所有可能受属性影响的页面。
@@ -212,7 +214,7 @@ func toggle_inventory() -> void:
 	pages.visible = next_visible
 	navigation.visible = next_visible
 	if next_visible:
-		_show_page(_current_page)
+		show_page(_current_page)
 
 ## Esc 优先关闭子页面，再关闭整备主页面。
 func handle_back() -> bool:
@@ -229,15 +231,15 @@ func handle_back() -> bool:
 func content_visible() -> bool:
 	return pages.visible
 
-## 导航按钮只调用总控页面切换。
+## 导航按钮只调用总控公开页面切换接口。
 func _on_backpack_nav_pressed() -> void:
-	_show_page("backpack")
+	show_page("backpack")
 
 func _on_equipment_nav_pressed() -> void:
-	_show_page("equipment")
+	show_page("equipment")
 
 func _on_stash_nav_pressed() -> void:
-	_show_page("stash")
+	show_page("stash")
 
 func _on_loadout_nav_pressed() -> void:
-	_show_page("loadout")
+	show_page("loadout")

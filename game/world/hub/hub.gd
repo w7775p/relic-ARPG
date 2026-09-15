@@ -15,12 +15,6 @@ var minimum_quality: int:
 		game_session.modules.character.touch()
 
 @onready var hud: HubHUD = $HubHUD
-var panel: BackpackPage
-var salvage_button: Button
-var salvage_info: Label
-var reforge_selector: OptionButton
-var reforge_button: Button
-var reforge_info: Label
 var slots: Control
 var _timer: Timer
 var _transitioning: bool = false
@@ -48,13 +42,6 @@ func _ready() -> void:
 	hud.retry_requested.connect(_on_retry_pressed)
 	hud.menu_requested.connect(_on_menu_pressed)
 	hud.quit_requested.connect(_on_quit_pressed)
-	# 兼容现有自动回归入口；玩法代码不再直接搭建这些控件。
-	panel = hud.inventory_panel
-	salvage_button = hud.salvage_button
-	salvage_info = hud.salvage_info
-	reforge_selector = hud.reforge_selector
-	reforge_button = hud.reforge_button
-	reforge_info = hud.reforge_info
 	slots = SLOTS.instantiate()
 	add_child(slots)
 	slots.closed.connect(_on_slots_closed)
@@ -154,29 +141,13 @@ func _on_menu_pressed() -> void:
 func _on_quit_pressed() -> void:
 	request_transition("quit")
 
-## 据点向共用背包面板声明当前位置能力。
+## 据点向业务服务声明当前位置能力。
 func is_hub() -> bool:
 	return true
 
 ## Hub 没有战斗世界；具体页面显隐交给 HUD 总控。
 func toggle_inventory() -> void:
 	hud.toggle_inventory()
-
-## 兼容现有回归入口，实际拆解 UI 刷新由 HubHUD 负责。
-func _refresh_salvage_ui() -> void:
-	hud.refresh_inventory_actions()
-
-## 兼容现有回归入口；只准备隐藏重铸页预览，不向背包布局注入控件。
-func _refresh_reforge_ui() -> void:
-	hud.prime_reforge_from_selection()
-
-## 兼容旧入口，实际点击行为交给 HubHUD 当前模块。
-func _on_salvage_pressed() -> void:
-	hud._on_salvage_requested(hud.selected_item_id())
-
-## 兼容旧入口，打开当前选中装备的独立重铸页面。
-func _on_reforge_pressed() -> void:
-	hud.open_selected_reforge()
 
 ## 提供给测试和后续据点 UI 的稳定 ID 拆解预览。
 func salvage_preview(item_id: String) -> Dictionary:

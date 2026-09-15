@@ -2,7 +2,7 @@
 
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
-阶段：D1。状态：**待人工试玩验收**。任务 ID：`P1_Task5`。工作分支：`feat/p1-task5-reforge`。
+阶段：D1。状态：**已完成**。任务 ID：`P1_Task5`。工作分支：`feat/p1-task5-reforge`。
 
 前置任务：[P1_Task 4](P1_Task4.md)。本任务从 main `77948dcd4558c87188c995bf41e086525fe795f1` 开始；P1_Task4 已通过人工验收并由 PR #11 合入。
 
@@ -97,21 +97,15 @@ items 模块由 v1 升到 **v2**。装备实例新增 `reforge_index`；`ItemsRe
 
 ④ 保存故障探针恢复完整覆盖：写入、替换、损坏内容、缺失内容、索引、中断写入、正常退出。重构后的失败重试状态通过 `HubHUD` 公开接口验证。
 
-⑤ 最终代码 head `8f8fbb56f46cd7ff5d7fc2dcb773f6eaf0094456` 的 Windows [run 34952323992](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992) 全绿：官方 Godot 4.7.2、全量源码场景、故障进程、隔离 PCK、Windows `.exe` 导出及实际成品包拾取/重铸/保存验证全部成功。
+⑤ 最终 PR head `55aafee06a0e95e74b454251471444626c482868` 的 Windows [run 34953250933](https://github.com/w7775p/relic-ARPG/actions/runs/34953250933) 全绿：官方 Godot 4.7.2、全量源码场景、故障进程、隔离 PCK、Windows `.exe` 导出及实际成品包拾取/重铸/保存验证全部成功。
 
-最终 Windows 构建：[artifact 10389985816](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992/artifacts/10389985816)，SHA256 `bacb887f079bc81e35ca16bf252cb0863e1199915da626ae17f2244b4c85a414`。启动日志：[artifact 10390005719](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992/artifacts/10390005719)，SHA256 `1e38feaca68d2cd3e174a7d4376a242cb4fa78e1d0f23a70ac298c84bca5e772`。
+用户最终验收使用 Windows 构建：[artifact 10389614800](https://github.com/w7775p/relic-ARPG/actions/runs/34953250933/artifacts/10389614800)，SHA256 `8e57b583d62e5899be9dc94864367d8e62f3e91d507319105eec278bd332994a`。启动日志：[artifact 10390451398](https://github.com/w7775p/relic-ARPG/actions/runs/34953250933/artifacts/10390451398)，SHA256 `a8b9c4beb47fb5d9db88932c5278ee3d3f4bb0c3ef416928a4337c874985c287`。
 
-## 当前待验收内容
+## 人工验收与合入
 
-自动化已完成。还需要用户在 Windows 构建中实际确认：
+2026-09-15 用户完成 Windows 人工试玩并确认验收通过，覆盖据点四个主页面切换、背包布局稳定、独立重铸页操作与返回选择恢复，以及保存/读取/退出工具栏排版。
 
-1. 据点顶部“背包 / 已装备 / 仓库 / 技能与被动”切换是否直观。
-2. 选中魔法/稀有装备后背包布局是否保持稳定。
-3. 点击“重铸”进入独立页面、选择词条并执行重铸是否顺手。
-4. 返回背包后是否仍选中刚才的装备。
-5. 保存/读取/退出工具栏和整体排版是否正常。
-
-人工验收通过后再合并 PR，并将 P1_Task5 标记为已完成，随后解锁 P1_Task6。
+[PR #12](https://github.com/w7775p/relic-ARPG/pull/12) 已合入 main，merge commit：`154f4529fad0bcfbdbc6df68cb7eb217dc75d49c`。P1_Task5 完成，P1_Task6 解锁。
 
 ## 要求
 

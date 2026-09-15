@@ -118,10 +118,33 @@ func _run() -> void:
 			var fresh: SaveStore = SaveStore.new()
 			fresh.root = store.root
 			check(fresh.catalog().slots.size() == 2 and fresh.load_session(group, "manual_01").value.inventory.gold == 0, "中断写入的 pending 不会成为成功存档，重启仍使用上次提交")
+			DirAccess.remove_absolute(target)
+			DirAccess.remove_absolute(store.slot_path(group, "auto_01"))
+			session.inventory.gold = 0
+			session.saved_revision = session.revision
+			check(SaveManager.save_game(session, hub).ok and FileAccess.file_exists(store.slot_path(group, "auto_01")), "已保存文件缺失时，未变化会话也会重新建立检查点")
 		"quit":
-			hub.inventory.gold = 404
-			hub.request_transition("quit")
-			await frames(8)
-			check(store.load_session(group, store.auto_slot(group)).value.inventory.gold == 404, "正常退出先写入最新完整状态")
-	print("SAVE_FAULT_RESULT: %s %d failures" % [fault, failures])
+			hub.request_transition("depart")
+			await frames()
+			var arena: Node3D = get_tree().current_scene
+			arena.inventory.gold = 643
+			SaveManager.operation_completed.connect(_on_quit_saved.bind(group))
+			arena._on_quit_pressed()
+			return
+		_:
+			check(false, "未知故障案例")
+	get_tree().current_scene.queue_free()
+	await frames()
+	print("SAVE_FAULT_RESULT: ", fault, " ", failures, " failures")
 	get_tree().quit(0 if failures == 0 else 1)
+
+## 正常退出探针在成功保存信号中检查文件，退出必须由正式 Hub 执行。
+func _on_quit_saved(result: SaveResult, group: String) -> void:
+	if result.ok and result.value is SaveGameResource:
+		var latest: SaveSlotResource
+		for entry: SaveSlotResource in SaveManager.store.catalog().slots:
+			if entry.group_id == group:
+				latest = entry
+				break
+		check(latest != null and SaveManager.store.load_session(group, latest.slot_id).value.inventory.gold == 643, "正常退出前检查点已包含本趟收益")
+		print("SAVE_FAULT_RESULT: quit ", failures, " failures")

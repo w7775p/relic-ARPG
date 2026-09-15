@@ -38,8 +38,8 @@ func _run() -> void:
 	var hub: Control = get_tree().current_scene
 	var session: GameSession = hub.game_session
 	var group: String = session.group_id
-	check(hub.is_hub() and hub.panel.visible and hub.inventory.equipment.weapon.base == "rust_sword", "新角色进入真实 Hub 并只生成一次起装")
-	check(hub.panel.get_global_rect().end.y <= hub.hud.toolbar.get_global_rect().position.y, "据点整备内容与 HUD 底部存档操作区保持分离")
+	check(hub.is_hub() and hub.hud.page_visible("backpack") and hub.inventory.equipment.weapon.base == "rust_sword", "新角色进入真实 Hub 并只生成一次起装")
+	check(hub.hud.backpack_bottom_y() <= hub.hud.toolbar_top_y(), "据点整备内容与 HUD 底部存档操作区保持分离")
 	check(sequence(group) == 1 and not SceneRouter.has_session_transition(), "新角色自动检查点完成，路由领取后清空会话引用")
 	for amount: int in range(1, 6):
 		hub.inventory.gold = amount
@@ -54,11 +54,8 @@ func _run() -> void:
 
 	var generated: ItemInstanceResource = hub.generator.generate(2, true)
 	hub.inventory.pickup(generated)
-	hub.panel.source = 0
-	hub.panel.selected = hub.inventory.data.bag_ids.find(generated.id)
-	hub.panel.refresh()
-	hub._refresh_salvage_ui()
-	check(hub.salvage_info.text.contains("出售") and hub.salvage_info.text.contains("拆解") and not hub.salvage_button.disabled, "Hub 背包选中装备并列显示出售与拆解收益")
+	check(hub.hud.select_backpack_item(generated.id), "Hub 可按稳定 ID 选择背包装备")
+	check(hub.hud.backpack_disposition_text().contains("出售") and hub.hud.backpack_disposition_text().contains("拆解") and hub.hud.salvage_available(), "Hub 背包选中装备并列显示出售与拆解收益")
 
 	var salvage_target: ItemInstanceResource = hub.generator.generate(4, true)
 	hub.inventory.pickup(salvage_target)

@@ -184,11 +184,9 @@ func _run() -> void:
 	var reforge_rng_state: int = 0
 	var drop_rng_state: int = 0
 	if reforge_target != null:
-		hub.panel.source = 0
-		hub.panel.selected = hub.inventory.data.bag_ids.find(reforge_target.id)
-		hub.panel.refresh()
-		hub._refresh_reforge_ui()
-		check(hub.reforge_info.text.contains("候选") and hub.reforge_info.text.contains("费用") and not hub.reforge_button.disabled, "成品包 Hub 显示重铸位置、候选与费用")
+		check(hub.hud.select_backpack_item(reforge_target.id), "成品包 Hub 可按稳定 ID 选择重铸目标")
+		hub.hud.prime_reforge_from_selection()
+		check(hub.hud.reforge_preview_text().contains("候选") and hub.hud.reforge_preview_text().contains("费用") and hub.hud.reforge_available(), "成品包 Hub 显示重铸位置、候选与费用")
 		var preview: Dictionary = hub.reforge_preview(reforge_target.id, 0)
 		var before_materials: int = hub.inventory.materials
 		var before_drop_state: int = hub.inventory.data.rng_state

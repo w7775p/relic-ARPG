@@ -15,7 +15,7 @@ var minimum_quality: int:
 		game_session.modules.character.touch()
 
 @onready var hud: HubHUD = $HubHUD
-var panel: InventoryPanel
+var panel: BackpackPage
 var salvage_button: Button
 var salvage_info: Label
 var reforge_selector: OptionButton
@@ -167,7 +167,7 @@ func _refresh_reforge_ui() -> void:
 
 ## 兼容旧入口，实际点击行为交给 HubHUD 当前模块。
 func _on_salvage_pressed() -> void:
-	hud._on_salvage_pressed()
+	hud._on_salvage_requested(hud.selected_item_id())
 
 ## 兼容旧入口，打开当前选中装备的独立重铸页面。
 func _on_reforge_pressed() -> void:
@@ -189,7 +189,7 @@ func reforge_preview(item_id: String, affix_index: int) -> Dictionary:
 func reforge_item(item_id: String, affix_index: int, request_id: String = "") -> Dictionary:
 	return reforge_service.reforge(item_id, affix_index, request_id)
 
-## 返回指定来源的物品视图，业务控制器不再依赖 InventoryPanel 内部列表实现。
+## 返回指定来源的物品视图，业务控制器不依赖页面内部节点结构。
 func _entries_for_source(source: int) -> Array:
 	if source == 0:
 		return inventory.bag

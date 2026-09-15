@@ -1,0 +1,58 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/hub/equipment/equipment_page.gd" id="1"]
+
+[node name="EquipmentPage" type="PanelContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Rows" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+text = "已装备"
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Items" type="ItemList" parent="Margin/Rows/Columns"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Detail" type="ScrollContainer" parent="Margin/Rows/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DetailText" type="Label" parent="Margin/Rows/Columns/Detail"]
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 2
+
+[node name="Actions" type="HFlowContainer" parent="Margin/Rows"]
+layout_mode = 2
+
+[node name="Unequip" type="Button" parent="Margin/Rows/Actions"]
+layout_mode = 2
+text = "卸下"
+
+[node name="Hint" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+autowrap_mode = 2
+
+[connection signal="item_selected" from="Margin/Rows/Columns/Items" to="." method="_on_items_item_selected"]
+[connection signal="pressed" from="Margin/Rows/Actions/Unequip" to="." method="_on_unequip_pressed"]

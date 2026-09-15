@@ -39,7 +39,7 @@ func _run() -> void:
 	var session: GameSession = hub.game_session
 	var group: String = session.group_id
 	check(hub.is_hub() and hub.panel.visible and hub.inventory.equipment.weapon.base == "rust_sword", "新角色进入真实 Hub 并只生成一次起装")
-	check(hub.panel.get_global_rect().end.y <= hub.get_node("Toolbar").get_global_rect().position.y, "据点整备内容与底部存档操作区保持分离")
+	check(hub.panel.get_global_rect().end.y <= hub.hud.toolbar.get_global_rect().position.y, "据点整备内容与 HUD 底部存档操作区保持分离")
 	check(sequence(group) == 1 and not SceneRouter.has_session_transition(), "新角色自动检查点完成，路由领取后清空会话引用")
 	for amount: int in range(1, 6):
 		hub.inventory.gold = amount

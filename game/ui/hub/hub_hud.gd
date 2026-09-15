@@ -1,7 +1,12 @@
 class_name HubHUD
 extends Control
-## 据点 UI 总控：组合独立页面、处理页面切换和跨模块协调；业务事务仍由 HubController 与服务层负责。
+## 据点 UI 总控：组合独立页面、工具栏与页面切换；业务事务仍由 HubController 与服务层负责。
 
+signal save_requested
+signal load_requested
+signal retry_requested
+signal menu_requested
+signal quit_requested
 signal reforge_opened(item_id: String)
 signal reforge_closed
 signal reforged(item_id: String)
@@ -27,6 +32,9 @@ var _current_page: String = "backpack"
 @onready var stash_page: StashPage = $Content/Pages/StashPage
 @onready var loadout_page: LoadoutPage = $Content/Pages/LoadoutPage
 @onready var reforge_page: ReforgePage = $Content/Pages/ReforgePage
+@onready var toolbar: MarginContainer = $Toolbar
+@onready var status_label: Label = $Toolbar/Rows/Status
+@onready var retry_button: Button = $Toolbar/Rows/Buttons/Retry
 
 ## 绑定业务对象并初始化各独立页面；HubHUD 只负责集成和协调。
 func setup(owner: Node, state: InventoryState, salvage: SalvageService, reforge: ReforgeService) -> void:
@@ -79,6 +87,18 @@ func show_page(page_id: String) -> void:
 		"stash": stash_page.refresh()
 		"loadout": loadout_page.refresh()
 	_refresh_backpack_services()
+
+## 由控制器写入底部状态文本，不暴露内部 Label 路径。
+func set_status(message: String) -> void:
+	status_label.text = message
+
+## 由控制器控制重试入口，不暴露内部按钮路径。
+func set_retry_visible(value: bool) -> void:
+	retry_button.visible = value
+
+## 返回当前状态文本，供控制器组合业务反馈。
+func status_text() -> String:
+	return status_label.text
 
 ## 背包页服务状态由总控根据业务服务统一刷新。
 func _refresh_backpack_services() -> void:
@@ -243,3 +263,19 @@ func _on_stash_nav_pressed() -> void:
 
 func _on_loadout_nav_pressed() -> void:
 	show_page("loadout")
+
+## Toolbar 只发意图 signal，控制器决定保存和场景行为。
+func _on_save_pressed() -> void:
+	save_requested.emit()
+
+func _on_load_pressed() -> void:
+	load_requested.emit()
+
+func _on_retry_pressed() -> void:
+	retry_requested.emit()
+
+func _on_menu_pressed() -> void:
+	menu_requested.emit()
+
+func _on_quit_pressed() -> void:
+	quit_requested.emit()

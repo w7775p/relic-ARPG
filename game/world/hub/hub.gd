@@ -43,6 +43,11 @@ func _ready() -> void:
 	add_child(_timer)
 	game_session.changed.connect(_on_session_changed)
 	hud.setup(self, inventory, salvage_service, reforge_service)
+	hud.save_requested.connect(_on_save_pressed)
+	hud.load_requested.connect(_on_load_pressed)
+	hud.retry_requested.connect(_on_retry_pressed)
+	hud.menu_requested.connect(_on_menu_pressed)
+	hud.quit_requested.connect(_on_quit_pressed)
 	# 兼容现有自动回归入口；玩法代码不再直接搭建这些控件。
 	panel = hud.inventory_panel
 	salvage_button = hud.salvage_button
@@ -62,7 +67,7 @@ func _on_entered() -> void:
 	if game_session.needs_initial_save or game_session.pending_settlement:
 		_save_auto("new_character" if game_session.needs_initial_save else "settlement")
 	else:
-		$Toolbar/Rows/Status.text = "已载入据点；出发会创建新的探险"
+		hud.set_status("已载入据点；出发会创建新的探险")
 	if not game_session.return_action.is_empty():
 		var action: String = game_session.return_action
 		game_session.return_action = ""
@@ -83,13 +88,13 @@ func _on_session_changed(_module_id: String) -> void:
 func _on_autosave_timeout() -> void:
 	_save_auto("hub_change")
 
-## 保存并显示结果，失败保留会话和重试入口。
+## 保存并通过 HUD 公开接口显示结果，失败保留会话和重试入口。
 func _save_auto(reason: String) -> SaveResult:
 	_timer.stop()
 	var result: SaveResult = SaveManager.save_game(game_session, self, 0, reason)
 	_timer.stop()
-	$Toolbar/Rows/Status.text = result.message + ("；" + result.warning if not result.warning.is_empty() else "")
-	$Toolbar/Rows/Buttons/Retry.visible = not result.ok
+	hud.set_status(result.message + ("；" + result.warning if not result.warning.is_empty() else ""))
+	hud.set_retry_visible(not result.ok)
 	return result
 
 ## 出发、回菜单和正常退出均等待真实检查点完成。
@@ -106,7 +111,7 @@ func request_transition(action: String) -> void:
 		var error: Error = SceneRouter.open_expedition()
 		if error != OK:
 			_transitioning = false
-			$Toolbar/Rows/Status.text = "探险加载失败，请重试"
+			hud.set_status("探险加载失败，请重试")
 	elif action == "menu":
 		SceneRouter.open_main_menu()
 	elif action == "quit":
@@ -136,8 +141,8 @@ func _on_slots_closed() -> void:
 
 ## 同步手动保存的真实反馈，完成后清除先前失败的离场意图。
 func _on_manual_saved(result: SaveResult) -> void:
-	$Toolbar/Rows/Status.text = result.message + ("；" + result.warning if not result.warning.is_empty() else "")
-	$Toolbar/Rows/Buttons/Retry.visible = not result.ok
+	hud.set_status(result.message + ("；" + result.warning if not result.warning.is_empty() else ""))
+	hud.set_retry_visible(not result.ok)
 	if result.ok:
 		_pending_action = ""
 
@@ -220,7 +225,7 @@ func inventory_action(action: String, source: int, index: int) -> String:
 		"retrieve": success = source == 2 and inventory.transfer(index, false)
 		"depart":
 			request_transition("depart")
-			return "已出发" if _transitioning else $Toolbar/Rows/Status.text
+			return "已出发" if _transitioning else hud.status_text()
 		"filter":
 			minimum_quality = (minimum_quality + 1) % 3
 			success = true

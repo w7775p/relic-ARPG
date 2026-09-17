@@ -45,7 +45,7 @@ const UNIQUES: Array[UniqueDefinition] = [
 	preload("res://content/items/unique_energy_grips.tres"),
 	preload("res://content/items/unique_blood_echo.tres"),
 ]
-const STAT_NAMES: Dictionary = {"damage":"攻击", "armor":"护甲", "max_health":"最大生命", "critical_chance":"暴击率", "whirlwind_radius_m":"旋风范围（米）", "move_speed_mps":"移速（米/秒）", "idle_energy_regen":"闲置回能/秒", "hit_energy":"直接命中回能", "kill_energy":"击杀回能", "haste":"攻击间隔缩短（秒）", "lightning_damage":"闪电伤害", "bleed_damage_multiplier":"流血伤害"}
+const STAT_NAMES: Dictionary = {"damage":"攻击", "armor":"护甲", "max_health":"最大生命", "critical_chance":"暴击率", "whirlwind_radius_m":"旋风范围", "move_speed_mps":"移速", "idle_energy_regen":"闲置回能", "hit_energy":"直接命中回能", "kill_energy":"击杀回能", "haste":"攻击间隔缩短", "lightning_damage":"闪电伤害", "bleed_damage_multiplier":"流血伤害"}
 
 ## 按稳定编号查找底材，未知编号返回空。
 static func base(id: String) -> ItemBase:
@@ -73,10 +73,25 @@ static func unique_stats(id: String) -> Dictionary:
 	var definition: UniqueDefinition = unique(id)
 	return definition.stats if definition != null else {}
 
-## 按统一单位格式化词条。
+## 按属性语义统一格式化单位；说明层和实际结算共用同一静态定义与实例数值。
 static func stat_text(stat: String, value: float) -> String:
-	if stat == "critical_chance":
-		return "暴击率 +%.1f%%" % (value * 100.0)
-	if stat == "bleed_damage_multiplier":
-		return "流血伤害 +%.0f%%" % (value * 100.0)
+	match stat:
+		"critical_chance":
+			return "暴击率 +%.1f%%" % (value * 100.0)
+		"bleed_damage_multiplier":
+			return "流血伤害 +%.0f%%" % (value * 100.0)
+		"whirlwind_radius_m":
+			return "旋风范围 +%.1f 米" % value
+		"move_speed_mps":
+			return "移速 +%.2f 米/秒" % value
+		"idle_energy_regen":
+			return "闲置回能 +%.1f/秒" % value
+		"haste":
+			return "攻击间隔 -%.2f 秒" % value
+		"hit_energy":
+			return "直接命中回能 +%.1f" % value
+		"kill_energy":
+			return "击杀回能 +%.1f" % value
+		"damage", "armor", "max_health", "lightning_damage":
+			return "%s +%.1f" % [STAT_NAMES.get(stat, stat), value]
 	return "%s +%.2f" % [STAT_NAMES.get(stat, stat), value]

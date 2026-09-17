@@ -79,7 +79,7 @@ func refresh() -> void:
 				choice.select(index)
 	for id: String in passive_buttons:
 		passive_buttons[id].set_pressed_no_signal(state.passives.has(id))
-	attributes.text = "已选 %d/3｜据点可免费调整\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒\n右键可选旋风或流血横扫；F 可装战吼；Q 恢复药剂独立于装备。" % [state.passives.size(), build.damage, build.critical_chance * 100, build.whirlwind_radius_m, inventory.defense("max_health"), inventory.defense("armor"), build.idle_energy_regen]
+	attributes.text = "已选 %d/3｜据点可免费调整\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒\n%s\nQ · %s" % [state.passives.size(), build.damage, build.critical_chance * 100, build.whirlwind_radius_m, inventory.defense("max_health"), inventory.defense("armor"), build.idle_energy_regen, SkillDefinition.damage_rule_text(), SkillRunner.POTION.describe(build)]
 	hint.text = "技能和被动修改只在据点开放；页面仅提交稳定技能/被动 ID。"
 	_refreshing = false
 

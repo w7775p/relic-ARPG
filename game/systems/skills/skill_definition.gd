@@ -19,18 +19,23 @@ extends Resource
 @export var duration_sec: float = 0.0
 @export var heal_ratio: float = 0.0
 
-## 显示当前伤害、消耗、持续时间与冷却，数值直接读取实际资源。
+## 统一说明直接命中与持续伤害的结算边界，供据点和探险装配页复用。
+static func damage_rule_text() -> String:
+	return "直接命中可暴击并触发直接命中回能、暴击连锁；持续伤害不暴击、不触发直接命中效果，击杀仍可触发击杀效果。"
+
+## 显示当前伤害、单位、标签、消耗、持续时间与冷却，数值直接读取实际资源和构筑。
 func describe(build: BuildDefinition) -> String:
 	var tag_text: String = " / ".join(tags)
 	match id:
 		"primary":
-			return "%s｜%s｜伤害 %.1f｜无消耗｜间隔 %.2f 秒" % [display_name, tag_text, build.damage * 1.5, build.attack_interval_sec]
+			return "%s｜%s｜直接命中 %.1f｜无消耗｜间隔 %.2f 秒" % [display_name, tag_text, build.damage * 1.5, build.attack_interval_sec]
 		"whirlwind":
-			return "%s｜%s｜伤害 %.1f｜消耗 %.1f/秒｜伤害间隔 %.2f 秒" % [display_name, tag_text, build.damage, build.energy_cost_per_sec, build.whirlwind_interval_sec]
+			return "%s｜%s｜直接命中 %.1f｜消耗 %.1f 能量/秒｜伤害间隔 %.2f 秒" % [display_name, tag_text, build.damage, build.energy_cost_per_sec, build.whirlwind_interval_sec]
 		"sweep":
-			return "%s｜%s｜伤害 %.1f｜范围 %.1f 米｜消耗 %.0f｜间隔 %.2f 秒｜流血 %.1f 秒×最多%d层" % [display_name, tag_text, build.damage * damage_multiplier, range_m, energy_cost, cooldown_sec, bleed_duration_sec, bleed_max_stacks]
+			var bleed_tick_damage: float = build.damage * bleed_damage_multiplier * build.bleed_damage_multiplier
+			return "%s｜%s｜直接命中 %.1f｜范围 %.1f 米｜消耗 %.0f 能量｜间隔 %.2f 秒｜流血每层 %.1f/跳（每 %.1f 秒，持续 %.1f 秒，最多 %d 层）" % [display_name, tag_text, build.damage * damage_multiplier, range_m, energy_cost, cooldown_sec, bleed_tick_damage, bleed_tick_sec, bleed_duration_sec, bleed_max_stacks]
 		"warcry":
 			return "%s｜%s｜护甲 +%.0f｜回能 %.0f｜持续 %.1f 秒｜冷却 %.1f 秒" % [display_name, tag_text, armor_bonus, energy_restore, duration_sec, cooldown_sec]
 		"potion":
-			return "%s｜恢复 %.0f%% 最大生命｜冷却 %.1f 秒" % [display_name, heal_ratio * 100.0, cooldown_sec]
-	return display_name
+			return "%s｜%s｜恢复 %.0f%% 最大生命｜冷却 %.1f 秒" % [display_name, tag_text, heal_ratio * 100.0, cooldown_sec]
+	return "%s｜%s" % [display_name, tag_text] if not tag_text.is_empty() else display_name

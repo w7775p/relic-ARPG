@@ -1,3 +1,20 @@
+# P1_Task6 D1 阶段自动验收（2026-09-17）
+
+代码 head `7b9fc26db4d91d8f0f83f89f4ab152319b4369a2`，分支 `feat/p1-task6-d1-integration`，[PR #13](https://github.com/w7775p/relic-ARPG/pull/13)。Windows [run 35187722075](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075) 使用官方 Godot `4.7.2.stable.official.ed1daf0bf` 和同版导出模板；`python tools/verify.py --godot <引擎路径>` 的源码/实际场景回归、存储故障、隔离 PCK 全部通过，随后 Windows exe 导出及实际成品拾取/存档验证通过。
+
+| 范围 | 实际结果 |
+| --- | --- |
+| D1 内容与说明 | 2 构筑、4 主动技能、6 被动、14 底材、18 普通词条、4 独特及既有两类精英修饰/固定场地变体保持；属性单位、技能标签、直接命中/持续伤害边界、独特机制和重铸位置读取真实配置/实例值 |
+| D1 业务集成 | 锁定装备拒绝出售/拆解/重铸；拆解材料可用于一次真实重铸；被动重置、过滤偏好、Resource 捕获/恢复和下一趟运行态边界通过 |
+| 两套构筑自动覆盖 | `p1_content` 使用真实技能结算分别验证雷霆旋风与 Blood Echo 流血横扫击杀固定精英；单精英药剂、战吼、能量与流血跳伤继续由专项回归覆盖 |
+| 真实输入与场景 | 既有 M2/HubFlow/PickupInput 保持真实 Hub→Expedition→Hub、E/Tab、过滤、满包保留/腾格重试、保存读回和新探险清理 |
+| 成品包 | 实际 Windows exe 从 Hub 装配横扫，进入探险击杀、真实 E 拾取、撤离保存、读回装备/词条/随机状态并核对下一件掉落；通过 |
+| 说明层依赖 | 药剂说明由轻量 `LoadoutState.POTION` 读取 `content/skills/potion.tres`；UI 不为显示文本加载 `SkillRunner` 战斗执行器资源链 |
+
+Windows 构建：[artifact 10482424579](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075/artifacts/10482424579)，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。
+
+人工待验收：从正常 Windows 入口分别使用雷霆旋风与流血横扫，各连续完成三趟“出发→清图→整备”，核对正常掉落/换装过程、拆解→重铸、过滤切换后的可读反馈，并检查画面、声音、说明排版与操作手感。自动回归提供功能证据，当前仍不能代替这一阶段的可见试玩，因此 P1_Task6 状态保持“待验收”。
+
 # 词条配置导出丢失修复（2026-09-13）
 
 代码 `992532a08bef65d4b07f148bcab297bafe110ba5`，分支 `feat/resource-save`，[PR #8](https://github.com/w7775p/relic-ARPG/pull/8) 已于 2026-09-13 合入 main `3cdc612`。[Windows run 34757117119](https://github.com/w7775p/relic-ARPG/actions/runs/34757117119) 的全量源码/PCK 回归、同版模板导出及实际 exe 的生成/拾取/存档检查全部通过。
@@ -14,7 +31,7 @@
 
 # 拾取反馈跟进记录（2026-09-13）
 
-分支 `feat/resource-save`，代码 `708160e834cd1b36d4031ad83f2e30310ed9e47e`；引擎 `4.7.2.stable.official.ed1daf0bf`。用户游玩装配为横扫。新增 `pickup_input.tscn` 经正式 Hub 装配、右键施法及 E 事件复现：横扫直接和流血击杀后的近处装备可正常拾取，远处无候选时缺少反馈，满包提示会被下一帧 HUD 覆盖。修复前 22 项中五个反馈断言失败；修复后包含异常物品反馈的 23 项全部通过。
+分支 `feat/resource-save`，代码 `708160e834cd1b36d4031ad83f2e30310ed9e47e`；引擎 `4.7.2.stable.official.ed1daf0bf`。用户游玩装配为横扫。新增 `pickup_input.tscn` 经正式 Hub 装配、右键直接/流血击杀→按住右键时 E 拾取，近处物品入包正常；确认超出 2.5 米无反馈及满包提示被逐帧 HUD 覆盖。新增统一数秒反馈，保留候选与常规状态；无候选给出距离/遮挡/过滤条件，成功显示物品名，异常物品独立提示并写 F3 诊断。用户原始故障是否由满包或距离造成仍未确认。
 
 回归同时检查按住横扫右键时 E 拾取、稳定物品身份、重复 E、背包暂停与焦点关闭、满包保留地面装备、腾格后重试及撤离到 Hub 后实际文件读回。M2 装备入包测试改为真实 E 派发；新场景已接入 `tools/verify.py`。Linux 统一入口通过导入、主入口、11 个常规场景和 7 个故障进程，无非预期错误。对应 [Windows run 34745672581](https://github.com/w7775p/relic-ARPG/actions/runs/34745672581) 同入口全量回归、同版模板导出及独立包启动全部成功，启动门禁确认进入 `M2_EXPEDITION_BOOT_READY`。
 
@@ -46,7 +63,7 @@ python3 tools/verify.py --godot /path/to/Godot_v4.7.2
 | 索引/中断事务 | 索引替换失败正文仍成功、坏索引重建、pending 不选入、正式文件删除后可重新保存；通过 |
 | 正常探险退出 | 真实探险 → Hub 结算 → 落盘成功 → 进程退出，文件金额正确；通过 |
 | Windows 包 | 使用同版模板导出，独立包 headless 启动到 `M2_EXPEDITION_BOOT_READY`，退出码和日志检查通过 |
-| 实际画面/字体/手感 | 待人工验收：当前环境无可用图形服务；逻辑布局断言不能替代可见试玩 |
+| 实际画面/字体/手感 | 待人工验收：当前环境无可用图形服务；逻辑布局断言不能代替可见试玩 |
 
 故障测试只放行对应隔离路径上的已知预期 I/O 错误；脚本错误、其他引擎错误、非零退出码或缺失完成标记仍使验证失败。
 

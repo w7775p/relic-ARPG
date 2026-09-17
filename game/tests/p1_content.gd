@@ -1,5 +1,5 @@
 extends Node
-## P1_Task3 回归：装备额度、稳定 ID、生成合法性、构筑击杀与有限流血传播。
+## P1_Task3 / Task6 回归：装备额度、稳定 ID、说明语义、构筑击杀与有限流血传播。
 const ARENA: PackedScene = preload("res://world/maps/combat_arena.tscn")
 var failures: int = 0
 var checks: int = 0
@@ -17,7 +17,7 @@ func check(value: bool, message: String) -> void:
 func _ready() -> void:
 	_run.call_deferred()
 
-## 核对累计 14/18/4、随机实例、两套构筑与第四独特传播边界。
+## 核对累计 14/18/4、随机实例、说明单位、两套构筑与第四独特传播边界。
 func _run() -> void:
 	check(ItemCatalog.BASES.size() == 14, "累计底材数量为 14")
 	check(ItemCatalog.AFFIXES.size() == 18, "累计普通随机词条数量为 18")
@@ -60,7 +60,24 @@ func _run() -> void:
 	inventory.equip(0)
 	var build: BuildDefinition = inventory.build()
 	check(build.bleed_damage_multiplier > 1.0 and build.bleed_spread_max_targets == 3 and build.bleed_spread_max_generation == 1, "流血底材与独特传播参数进入真实属性汇总")
-	check(ItemGenerator.describe(blood).contains("流血击杀传播"), "第四件独特说明展示真实传播参数")
+	var unique_text: String = ItemGenerator.describe(blood)
+	check(unique_text.contains("独特机制：流血击杀传播") and unique_text.contains("重铸：独特装备不可重铸"), "第四件独特说明读取真实传播参数并解释重铸限制")
+	var sweep_text: String = LoadoutState.skill("sweep").describe(build)
+	check(sweep_text.contains("直接命中") and sweep_text.contains("流血每层") and sweep_text.contains("每 1.0 秒"), "横扫说明区分直接命中与逐跳流血并显示实际间隔")
+	var rule_text: String = SkillDefinition.damage_rule_text()
+	check(rule_text.contains("持续伤害") and rule_text.contains("不暴击") and rule_text.contains("击杀仍可触发击杀效果"), "共用技能说明明确持续伤害与直接命中的触发边界")
+	check(ItemCatalog.stat_text("move_speed_mps", 1.25).contains("米/秒") and ItemCatalog.stat_text("whirlwind_radius_m", 0.4).contains("米") and ItemCatalog.stat_text("haste", 0.04).contains("秒"), "移动、范围与间隔词条显示明确单位")
+	var reforge_item: ItemInstanceResource = null
+	for attempt: int in range(64):
+		var candidate: ItemInstanceResource = generator.generate(6, false)
+		if (candidate.quality == 1 or candidate.quality == 2) and not candidate.affixes.is_empty():
+			reforge_item = candidate
+			break
+	check(reforge_item != null, "说明回归准备到可重铸随机装备")
+	if reforge_item != null:
+		check(ItemGenerator.describe(reforge_item).contains("重铸位置：未固定"), "首次重铸前说明展示位置未固定")
+		reforge_item.reforge_index = 0
+		check(ItemGenerator.describe(reforge_item).contains("重铸位置：词条 1"), "固定重铸位置后说明直接读取实例状态")
 	await _check_elite_builds(inventory)
 	await _check_bleed_spread(inventory)
 	print("P1_CONTENT_RESULT: ", failures, " failures; ", checks, " checks")

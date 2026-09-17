@@ -117,27 +117,35 @@ static func title(item: ItemInstanceResource) -> String:
 	var name_text: String = ItemCatalog.unique(item.unique_id).display_name if not item.unique_id.is_empty() else definition.display_name
 	return "%s %s [%s]" % [["普通", "魔法", "稀有", "独特"][int(item.quality)], name_text, ItemCatalog.SLOT_NAMES[definition.slot]]
 
-## 说明取自底材与实际随机结果；独特机制文本含真实结算参数。
+## 说明取自底材、实例词条与独特配置；重铸位置直接读取实例固定状态。
 static func describe(item: ItemInstanceResource) -> String:
 	var definition: ItemBase = ItemCatalog.base(item.base)
 	var result: String = "%s\n物品等级 %d · 售价 %d 金\n%s" % [title(item), item.level, price(item), ItemCatalog.stat_text(definition.stat, definition.value)]
 	for rolled: AffixRollResource in item.affixes:
 		var entry: AffixDefinition = ItemCatalog.affix(rolled.id)
-		result += "\n" + ItemCatalog.stat_text(entry.stat, rolled.value)
+		if entry != null:
+			result += "\n" + ItemCatalog.stat_text(entry.stat, rolled.value)
+	if item.quality == 1 or item.quality == 2:
+		if item.reforge_index >= 0:
+			result += "\n重铸位置：词条 %d（后续重铸固定此位置）" % (item.reforge_index + 1)
+		else:
+			result += "\n重铸位置：未固定（首次成功重铸后固定所选位置）"
+	elif item.quality == 3:
+		result += "\n重铸：独特装备不可重铸"
 	var stats: Dictionary = ItemCatalog.unique_stats(item.unique_id)
 	var defaults: BuildDefinition = BuildDefinition.new()
 	for stat: String in stats:
 		if stat.begins_with("bleed_spread_"):
 			continue
 		if stat == "chain_count":
-			result += "\n直接暴击释放最多 %d 目标连锁闪电" % int(stats[stat])
+			result += "\n独特机制：直接命中暴击释放最多 %d 目标连锁闪电" % int(stats[stat])
 			result += "\n闪电基础伤害 %.0f，间隔 %.2f 秒，跳跃 %.1f 米；存活目标感电 %.1f 秒" % [defaults.lightning_damage, defaults.lightning_cooldown_sec, defaults.chain_range_m, defaults.shock_duration_sec]
 		elif stat == "death_explosion":
-			result += "\n感电目标死亡时爆炸：基础伤害 %.0f，半径 %.1f 米" % [defaults.explosion_damage, defaults.explosion_radius_m]
+			result += "\n独特机制：感电目标死亡时爆炸，基础伤害 %.0f，半径 %.1f 米" % [defaults.explosion_damage, defaults.explosion_radius_m]
 		else:
 			result += "\n" + ItemCatalog.stat_text(stat, float(stats[stat]))
 	if int(stats.get("bleed_spread_max_targets", 0)) > 0:
-		result += "\n流血击杀传播：%.1f 米内最多 %d 个目标，继承 %.0f%% 流血伤害，最多传播 %d 代" % [float(stats.get("bleed_spread_radius_m", 0.0)), int(stats.get("bleed_spread_max_targets", 0)), float(stats.get("bleed_spread_damage_ratio", 0.0)) * 100.0, int(stats.get("bleed_spread_max_generation", 0))]
+		result += "\n独特机制：流血击杀传播，%.1f 米内最多 %d 个目标，继承 %.0f%% 流血伤害，最多传播 %d 代" % [float(stats.get("bleed_spread_radius_m", 0.0)), int(stats.get("bleed_spread_max_targets", 0)), float(stats.get("bleed_spread_damage_ratio", 0.0)) * 100.0, int(stats.get("bleed_spread_max_generation", 0))]
 	return result
 
 ## 出售价值由品质和物品等级计算。

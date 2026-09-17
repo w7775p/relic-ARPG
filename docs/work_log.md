@@ -143,3 +143,13 @@ Hub 对未锁定的魔法/稀有背包装备显示位置、当前词条、合法
 新增 `hub_ui_modularity` 12 项结构回归，覆盖选中可重铸装备时背包尺寸不变、重铸页独占固定 PageHost、返回恢复原稳定实例选择以及四个主页面互斥。`p1_loadout`、`hub_flow`、发布包 smoke 和保存故障探针迁到 HUD 公开接口；探险继续使用原 `InventoryPanel`。旧 Hub/HUD 临时 UI 兼容别名已经删除。
 
 重构期间两次失败均属于测试耦合：旧装配测试直接调用 `InventoryPanel._on_tab()`；保存故障测试迁移 Toolbar 时一度误删正常退出信号探针。均恢复覆盖并迁移到公开接口，没有新增玩法或引擎级 `known_trap`。最终代码 head `8f8fbb56f46cd7ff5d7fc2dcb773f6eaf0094456` 的 [Windows run 34952323992](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992) 全绿，覆盖全量源码、7 类保存故障、隔离 PCK、Windows 导出和实际 EXE。最终构建 [artifact 10389985816](https://github.com/w7775p/relic-ARPG/actions/runs/34952323992/artifacts/10389985816)，SHA256 `bacb887f079bc81e35ca16bf252cb0863e1199915da626ae17f2244b4c85a414`；启动日志 artifact `10390005719`。当前仍待用户试玩新页面结构，通过后再合并 PR 并进入 P1_Task6。
+
+## P1_Task6：D1 过滤、属性解释与阶段验收（2026-09-17）
+
+从最新 main `a0b382ebad4d610e5671965f1ed1816fe5d7753d` 建立 `feat/p1-task6-d1-integration`。`e9105df` 完善装备属性单位、技能标签、直接命中/持续伤害边界、独特机制和重铸位置说明；`b42c58f` 建立 D1 跨系统回归；在发现同一测试进程反复切换大场景会造成退出期资源残留后，按任务边界将新增用例收敛为业务事务与 Resource 恢复，真实路由/E/Tab/满包/成品流程继续由已有专项回归负责，形成 `ed37928`；`7b9fc26` 将 UI 药剂说明改为从轻量 `LoadoutState.POTION` 读取同一 `potion.tres`，避免显示层加载 `SkillRunner` 整条战斗执行资源链。
+
+失败排查中的场景清理顺序、延迟退出和 UI workaround 均已回滚，未进入最终分支历史。当前 branch 相对 main 只保留四个独立有效代码/测试 commit；本卡没有新增持久字段，Resource 模块版本保持不变。
+
+最终代码 head `7b9fc26db4d91d8f0f83f89f4ab152319b4369a2` 的 [Windows run 35187722075](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075) 全绿：官方 Godot 4.7.2 的源码/实际场景回归、存储故障、隔离 PCK、Windows exe 导出及实际成品包拾取/存档全部通过。构建 [artifact 10482424579](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075/artifacts/10482424579)，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。交付 [PR #13](https://github.com/w7775p/relic-ARPG/pull/13)。
+
+自动证据覆盖 14/18/4 内容额度、两套构筑固定精英击杀、药剂/战吼/流血、锁定保护、拆解→重铸、过滤偏好、Resource 捕获恢复、真实 E/Tab、满包重试、Hub 保存读回和下一件掉落。P1_Task6 仍有一项明确人工阶段标准：雷霆旋风与流血横扫各连续完成三趟正常“出发→清图→整备”，同时确认过滤/说明可读性、画面、声音与手感。完成前任务状态保持待验收，P2_Task1 暂不解锁。

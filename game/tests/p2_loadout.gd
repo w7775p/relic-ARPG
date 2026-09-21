@@ -77,6 +77,10 @@ func _run() -> void:
 	for id: String in ["momentum", "heavy_hand", "bulwark", "breath"]:
 		check(not LoadoutState.passive(id).describe().is_empty(), "新被动说明从真实参数生成：" + id)
 	check(LoadoutState.skill("heavy").describe(hub.inventory.build()).contains("前摇") and LoadoutState.skill("charge").describe(hub.inventory.build()).contains("撞地形"), "技能说明包含动作规则与碰撞边界")
+	await frames()
+	var page: LoadoutPage = hub.hud.loadout_page
+	check(page.skill_choices.auxiliary.get_item_text(page.skill_choices.auxiliary.selected) == "冲锋" and page.skill_details.auxiliary.text.contains("撞地形"), "装配下拉显示短名称，完整规则在独立说明中展示")
+	check(page.skill_choices.auxiliary.get_global_rect().end.x <= page.get_global_rect().end.x and page.skill_details.auxiliary.get_global_rect().end.x <= page.get_global_rect().end.x, "1280×720 装配长说明与选择框保持在页面右边界内")
 	check(SaveManager.save_game(hub.game_session, hub, 2).ok, "冲锋重击与新被动写入真实 Hub 检查点")
 	var loaded: SaveResult = SaveManager.load_game(group, "manual_02")
 	check(loaded.ok and loaded.value.inventory.loadout.slots.basic == "heavy" and loaded.value.inventory.loadout.slots.auxiliary == "charge" and loaded.value.inventory.loadout.passives.has("breath"), "新装配读取恢复全部稳定 ID")

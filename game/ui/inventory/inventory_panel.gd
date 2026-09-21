@@ -16,6 +16,7 @@ var inventory_columns: HBoxContainer
 var inventory_actions: HFlowContainer
 var passive_buttons: Dictionary = {}
 var skill_choices: Dictionary = {}
+var skill_details: Dictionary = {}
 var attributes: Label
 
 ## 使用原生容器适配窗口，所有操作通过会话规则提交。
@@ -183,6 +184,11 @@ func _create_loadout(rows: VBoxContainer) -> void:
 		choice.item_selected.connect(_on_skill.bind(slot))
 		row.add_child(choice)
 		skill_choices[slot] = choice
+		var detail: Label = Label.new()
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		loadout_view.add_child(detail)
+		skill_details[slot] = detail
 	for definition: PassiveDefinition in LoadoutState.PASSIVES:
 		var button: Button = Button.new()
 		button.toggle_mode = true
@@ -209,9 +215,11 @@ func _refresh_loadout() -> void:
 		for index: int in range(choice.item_count):
 			var id: String = choice.get_item_metadata(index)
 			if not id.is_empty():
-				choice.set_item_text(index, LoadoutState.skill(id).describe(build))
+				choice.set_item_text(index, LoadoutState.skill(id).display_name)
+				choice.set_item_tooltip(index, LoadoutState.skill(id).describe(build))
 			if id == state.slots[slot]:
 				choice.select(index)
+				skill_details[slot].text = LoadoutState.skill(id).describe(build) if not id.is_empty() else "此槽未装配技能"
 	for id: String in passive_buttons:
 		passive_buttons[id].set_pressed_no_signal(state.passives.has(id))
 		passive_buttons[id].disabled = not hub

@@ -1,6 +1,6 @@
 class_name SkillRunner
 extends Node
-## 运行普攻、主要技能、战吼与恢复药剂；攻击快照在施放时确定。
+## 总控技能输入与资源；冲锋、重击由独立动作模块执行，攻击快照在施放时确定。
 
 signal build_changed
 
@@ -278,5 +278,6 @@ func cancel_actions() -> void:
 	if heavy != null:
 		heavy.cancel()
 	if charge != null:
-		actor.cancel_charge()
+		if is_instance_valid(actor):
+			actor.cancel_charge()
 		charge.combo_remaining_sec = 0.0

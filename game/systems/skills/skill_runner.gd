@@ -1,6 +1,6 @@
 class_name SkillRunner
 extends Node
-## 运行普攻、主要技能、战吼与恢复药剂；攻击快照在施放时确定。
+## 总控技能输入与资源；冲锋、重击由独立动作模块执行，攻击快照在施放时确定。
 
 signal build_changed
 
@@ -10,6 +10,8 @@ const SWEEP: SkillDefinition = preload("res://content/skills/sweep.tres")
 const WARCRY: SkillDefinition = preload("res://content/skills/warcry.tres")
 const POTION: SkillDefinition = preload("res://content/skills/potion.tres")
 
+var heavy: HeavyAttack
+var charge: ChargeAttack
 var loadout: LoadoutState = LoadoutState.new()
 var build: BuildDefinition = BASIC
 var energy: float = 100.0
@@ -33,6 +35,16 @@ var _potion_remaining: float = 0.0
 var _exhausted: bool = false
 
 
+## 场景完成依赖注入后创建独立动作模块。
+func setup_actions() -> void:
+	charge = ChargeAttack.new()
+	charge.setup(self)
+	heavy = HeavyAttack.new()
+	heavy.setup(self)
+	actor.dodge_started.connect(cancel_actions)
+	actor.died.connect(cancel_actions)
+
+
 ## 换装直接重算移动属性，保留当前生命、能量与技能冷却。
 func equip(preset: BuildDefinition) -> void:
 	build = preset
@@ -45,6 +57,7 @@ func equip(preset: BuildDefinition) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(actor) or actor.is_dead:
 		is_channeling = false
+		cancel_actions()
 		return
 	if input_enabled:
 		channel_requested = Input.is_action_pressed("channel_skill")
@@ -56,6 +69,14 @@ func _physics_process(delta: float) -> void:
 
 ## 推进攻击、增益和药剂冷却；持续施法期间停止闲置回能。
 func advance(delta: float) -> void:
+	if actor.is_dead:
+		cancel_actions()
+		return
+	if charge != null and not get_tree().paused:
+		charge.advance(delta)
+	var was_heavy: bool = heavy != null and heavy.phase != HeavyAttack.Phase.IDLE
+	if heavy != null:
+		heavy.advance(delta)
 	_attack_remaining = maxf(0.0, _attack_remaining - delta)
 	_whirlwind_remaining = maxf(0.0, _whirlwind_remaining - delta)
 	_sweep_remaining = maxf(0.0, _sweep_remaining - delta)
@@ -65,6 +86,16 @@ func advance(delta: float) -> void:
 		_warcry_remaining = maxf(0.0, _warcry_remaining - delta)
 		if _warcry_remaining <= 0.0:
 			_remove_warcry()
+	if auxiliary_requested and loadout.slots.auxiliary == "charge" and charge != null:
+		charge.cast()
+		auxiliary_requested = false
+	if was_heavy or actor.charge_remaining_m > 0.0:
+		is_channeling = false
+		if potion_requested:
+			use_potion()
+		potion_requested = false
+		auxiliary_requested = false
+		return
 	if not channel_requested:
 		_exhausted = false
 	var main_id: String = str(loadout.slots.main)
@@ -88,11 +119,14 @@ func advance(delta: float) -> void:
 			energy -= SWEEP.energy_cost
 			_sweep_remaining = SWEEP.cooldown_sec
 			cast_sweep()
-	elif not main_active:
+	elif not main_active and not (primary_requested and loadout.slots.basic == "heavy"):
 		restore_energy(build.idle_energy_regen * delta)
 	if loadout.slots.basic == "primary" and primary_requested and not main_active and _attack_remaining <= 0.0 and actor.dodge_remaining_sec <= 0.0:
 		_attack_remaining = build.attack_interval_sec
 		cast_primary()
+	if loadout.slots.basic == "heavy" and primary_requested and not main_active and heavy != null:
+		if not heavy.cast():
+			restore_energy(build.idle_energy_regen * delta)
 	if auxiliary_requested and loadout.slots.auxiliary == "warcry":
 		cast_warcry()
 	if potion_requested:
@@ -206,6 +240,10 @@ func restore_energy(amount: float) -> void:
 
 ## 新遭遇或据点整备清空技能瞬态，药剂冷却同时重置。
 func reset() -> void:
+	if heavy != null:
+		heavy.cancel()
+	if charge != null:
+		charge.reset()
 	_remove_warcry()
 	energy = max_energy
 	is_channeling = false
@@ -219,3 +257,27 @@ func reset() -> void:
 	_sweep_remaining = 0.0
 	_warcry_cooldown_remaining = 0.0
 	_potion_remaining = 0.0
+
+
+## HUD 读取实际辅助技能和冷却，避免冲锋装配后继续显示战吼。
+func status_text() -> String:
+	var auxiliary: String = "战吼持续 %.1f / 冷却 %.1f 秒" % [_warcry_remaining, _warcry_cooldown_remaining]
+	if loadout.slots.auxiliary == "charge" and charge != null:
+		auxiliary = "冲锋冷却 %.1f 秒｜重击增益 %.1f 秒" % [charge.cooldown_sec, charge.combo_remaining_sec]
+	elif loadout.slots.auxiliary.is_empty():
+		auxiliary = "辅助槽为空"
+	var action: String = ""
+	if heavy != null and heavy.phase != HeavyAttack.Phase.IDLE:
+		action = "｜重击%s %.2f 秒" % ["前摇" if heavy.phase == HeavyAttack.Phase.WINDUP else "恢复", heavy.remaining_sec]
+	return auxiliary + "｜药剂 %.1f 秒" % _potion_remaining + action
+
+
+## 闪避、死亡取消正在进行的动作；保留已扣能量与技能冷却，防止取消绕过费用。
+func cancel_actions() -> void:
+	is_channeling = false
+	if heavy != null:
+		heavy.cancel()
+	if charge != null:
+		if is_instance_valid(actor):
+			actor.cancel_charge()
+		charge.combo_remaining_sec = 0.0

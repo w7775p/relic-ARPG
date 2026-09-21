@@ -14,6 +14,9 @@ extends Resource
 @export var idle_energy_regen: float = 18.0
 @export var hit_energy: float = 0.0
 @export var kill_energy: float = 0.0
+## 冲锋与重击的伤害倍率，1.0 表示原值；仅汇总装备/被动，运行增益另计。
+@export var charge_damage_multiplier: float = 1.0
+@export var heavy_damage_multiplier: float = 1.0
 @export var bleed_damage_multiplier: float = 1.0
 @export var bleed_spread_radius_m: float = 0.0
 @export var bleed_spread_max_targets: int = 0

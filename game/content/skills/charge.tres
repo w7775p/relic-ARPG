@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "charge"
+display_name = "冲锋"
+slot = "auxiliary"
+tags = PackedStringArray("位移", "近战", "直接命中")
+damage_multiplier = 1.2
+range_m = 7.0
+speed_mps = 22.0
+hit_radius_m = 1.2
+energy_cost = 18.0
+cooldown_sec = 3.0
+combo_bonus = 0.6
+combo_duration_sec = 3.0

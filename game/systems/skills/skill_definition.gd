@@ -18,6 +18,15 @@ extends Resource
 @export var energy_restore: float = 0.0
 @export var duration_sec: float = 0.0
 @export var heal_ratio: float = 0.0
+## 冲锋速度（米/秒）、命中半径（米）与结束后一次重击增益的倍率/秒数。
+@export var speed_mps: float = 0.0
+@export var hit_radius_m: float = 0.0
+@export var combo_bonus: float = 0.0
+@export var combo_duration_sec: float = 0.0
+## 重击前摇、恢复期（秒）与命中击退速度（米/秒）。
+@export var windup_sec: float = 0.0
+@export var recovery_sec: float = 0.0
+@export var knockback_mps: float = 0.0
 
 ## 统一说明直接命中与持续伤害的结算边界，供据点和探险装配页复用。
 static func damage_rule_text() -> String:
@@ -36,6 +45,10 @@ func describe(build: BuildDefinition) -> String:
 			return "%s｜%s｜直接命中 %.1f｜范围 %.1f 米｜消耗 %.0f 能量｜间隔 %.2f 秒｜流血每层 %.1f/跳（每 %.1f 秒，持续 %.1f 秒，最多 %d 层）" % [display_name, tag_text, build.damage * damage_multiplier, range_m, energy_cost, cooldown_sec, bleed_tick_damage, bleed_tick_sec, bleed_duration_sec, bleed_max_stacks]
 		"warcry":
 			return "%s｜%s｜护甲 +%.0f｜回能 %.0f｜持续 %.1f 秒｜冷却 %.1f 秒" % [display_name, tag_text, armor_bonus, energy_restore, duration_sec, cooldown_sec]
+		"heavy":
+			return "%s｜%s｜直接命中 %.1f｜半径 %.1f 米｜消耗 %.0f 能量｜前摇 %.2f 秒 / 恢复 %.2f 秒；起手锁定位置，空格取消，消耗不退；冲锋增益在起手消耗" % [display_name, tag_text, build.damage * damage_multiplier * build.heavy_damage_multiplier, range_m, energy_cost, windup_sec, recovery_sec]
+		"charge":
+			return "%s｜%s｜直接命中 %.1f｜距离 %.1f 米 / 速度 %.1f 米/秒｜消耗 %.0f 能量｜冷却 %.1f 秒｜撞地形或敌人停止，同次每敌人一次；命中后 %.1f 秒内下一次重击伤害 +%.0f%%" % [display_name, tag_text, build.damage * damage_multiplier * build.charge_damage_multiplier, range_m, speed_mps, energy_cost, cooldown_sec, combo_duration_sec, combo_bonus * 100.0]
 		"potion":
 			return "%s｜%s｜恢复 %.0f%% 最大生命｜冷却 %.1f 秒" % [display_name, tag_text, heal_ratio * 100.0, cooldown_sec]
 	return "%s｜%s" % [display_name, tag_text] if not tag_text.is_empty() else display_name

@@ -212,6 +212,8 @@ func _run() -> void:
 			check(restored_reforge != null and restored_reforge.reforge_index == 0 and ResourceFingerprint.digest(restored_reforge) == reforge_digest and result.value.inventory.materials == reforge_materials, "成品包检查点保留重铸固定位置、词条结果与材料余额")
 			check(result.value.inventory.data.reforge_rng_state == reforge_rng_state and result.value.inventory.data.rng_state == drop_rng_state, "成品包检查点分别保留重铸 RNG 与保存时的掉落 RNG")
 		check(ResourceFingerprint.digest(result.value.generator.generate(4, true)) == ResourceFingerprint.digest(hub.game_session.generator.generate(4, true)), "成品包读档后下一件装备编号和词条序列一致")
+	await preload("res://app/validation/charge_smoke.gd").run(self, hub)
+	hub = get_tree().current_scene
 	hub.queue_free()
 	await frames()
 	_finish()

@@ -8,6 +8,7 @@ signal reset_requested
 
 var inventory: InventoryState
 var skill_choices: Dictionary = {}
+var skill_details: Dictionary = {}
 var passive_buttons: Dictionary = {}
 var _built: bool = false
 var _refreshing: bool = false
@@ -47,10 +48,17 @@ func _build_controls() -> void:
 		choice.item_selected.connect(_on_skill_selected.bind(slot))
 		row.add_child(choice)
 		skill_choices[slot] = choice
+		var detail: Label = Label.new()
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		content.add_child(detail)
+		content.move_child(detail, insert_index)
+		insert_index += 1
+		skill_details[slot] = detail
 	for definition: PassiveDefinition in LoadoutState.PASSIVES:
 		var button: Button = Button.new()
 		button.toggle_mode = true
-		button.text = definition.display_name + "：" + definition.description
+		button.text = definition.display_name + "：" + definition.describe()
 		button.pressed.connect(_on_passive_pressed.bind(definition.id))
 		content.add_child(button)
 		content.move_child(button, insert_index)
@@ -74,9 +82,11 @@ func refresh() -> void:
 		for index: int in range(choice.item_count):
 			var id: String = str(choice.get_item_metadata(index))
 			if not id.is_empty():
-				choice.set_item_text(index, LoadoutState.skill(id).describe(build))
+				choice.set_item_text(index, LoadoutState.skill(id).display_name)
+				choice.set_item_tooltip(index, LoadoutState.skill(id).describe(build))
 			if id == state.slots[slot]:
 				choice.select(index)
+				skill_details[slot].text = LoadoutState.skill(id).describe(build) if not id.is_empty() else "此槽未装配技能"
 	for id: String in passive_buttons:
 		passive_buttons[id].set_pressed_no_signal(state.passives.has(id))
 	attributes.text = "已选 %d/3｜据点可免费调整\n装备＋被动合计：伤害 %.1f｜暴击 %.0f%%｜旋风半径 %.1f 米\n生命上限 %.0f｜护甲 %.0f｜停止施放回能 %.1f/秒\n%s\nQ · %s" % [state.passives.size(), build.damage, build.critical_chance * 100, build.whirlwind_radius_m, inventory.defense("max_health"), inventory.defense("armor"), build.idle_energy_regen, SkillDefinition.damage_rule_text(), LoadoutState.POTION.describe(build)]

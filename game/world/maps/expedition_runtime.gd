@@ -44,7 +44,7 @@ func _ready() -> void:
 	panel.session = self
 	$Interface.add_child(panel)
 	panel.hide()
-	$Interface/CombatInfo/Rows/Controls.text = "I 背包 / E 拾取 / Tab 切换 / F 战吼 / Q 药剂 / T 撤离回据点保存"
+	$Interface/CombatInfo/Rows/Controls.text = "I 背包 / E 拾取 / Tab 切换 / F 辅助技能 / Q 药剂 / T 撤离回据点保存"
 	_on_inventory_changed()
 	player.reset_health()
 	skills.reset()
@@ -170,6 +170,12 @@ func _on_inventory_changed() -> void:
 		return
 	skills.loadout = inventory.loadout
 	skills.equip(inventory.build())
+	$Interface/Hud/Rows/Title.text = "遗物试炼"
+	var keys: Array[String] = []
+	for slot: String in ["basic", "main", "auxiliary"]:
+		var definition: SkillDefinition = LoadoutState.skill(inventory.loadout.slots[slot])
+		keys.append({"basic":"左键", "main":"右键", "auxiliary":"F"}[slot] + " · " + (definition.display_name if definition != null else "空槽"))
+	$Interface/Hud/Rows/Keys.text = " / ".join(keys) + " / 空格闪避 / Esc 暂停"
 	player.max_health = inventory.defense("max_health")
 	player.armor = inventory.defense("armor") + (SkillRunner.WARCRY.armor_bonus if skills._warcry_applied else 0.0)
 	player.health = minf(player.health, player.max_health)

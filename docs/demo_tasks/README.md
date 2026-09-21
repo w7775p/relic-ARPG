@@ -1,6 +1,6 @@
 # D1～D3 任务总表
 
-共 **21 张独立任务卡**：P1 对应 D1，共 6 张；P2 对应 D2，共 9 张；P3 对应 D3，共 6 张。D1、D2、D3 是开发阶段，编号不代表天数。P1_Task1～P1_Task6 均已完成；2026-09-21 用户确认 D1 阶段验收通过，当前进入 D2，P2_Task1 已解锁。
+共 **21 张独立任务卡**：P1 对应 D1，共 6 张；P2 对应 D2，共 9 张；P3 对应 D3，共 6 张。D1、D2、D3 是开发阶段，编号不代表天数。P1_Task1～P1_Task6 均已完成；2026-09-21 用户确认 D1 阶段验收通过，当前进入 D2，P2_Task1 已实现并提交 PR #14，待人工验收。
 
 ## 当前存档边界
 
@@ -18,7 +18,9 @@ Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通
 
 2026-09-15 P1_Task5 试玩反馈触发 Hub UI 结构整改：保留重铸业务与 items v2 事务，新增 `HubHUD` 母控件，将背包、已装备、仓库、技能与被动、重铸拆成独立页面；重铸详情不再动态塞入背包，标题及保存/读取/退出工具栏也由 HUD 管理。新增 12 项 `hub_ui_modularity` 回归并将 HubFlow、发布包 smoke、保存故障测试迁到公开接口；探险仍使用原 `InventoryPanel`。最终 PR head `55aafee0` 的 [Windows run 34953250933](https://github.com/w7775p/relic-ARPG/actions/runs/34953250933) 全量源码、7 类故障、PCK、Windows exe 和实际成品 Hub 重铸/保存均通过；[用户验收构建 artifact 10389614800](https://github.com/w7775p/relic-ARPG/actions/runs/34953250933/artifacts/10389614800)，SHA256 `8e57b583d62e5899be9dc94864367d8e62f3e91d507319105eec278bd332994a`。用户 Windows 人工试玩验收通过，[PR #12](https://github.com/w7775p/relic-ARPG/pull/12) 已合入 main `154f4529`，P1_Task6 解锁。
 
-2026-09-17 P1_Task6：从 main `a0b382e` 整理 D1 属性与技能说明，补齐单位、技能标签、直接命中/持续伤害边界、独特机制与重铸位置；新增 D1 业务集成回归，串起装配/被动、锁定、拆解→重铸、过滤偏好与 Resource 捕获恢复。真实 E/Tab、满包、Hub 路由和 Windows 成品拾取/存档继续由既有专项门禁覆盖。UI 药剂说明改由 `LoadoutState.POTION` 读取同一份轻量配置，避免显示层加载战斗执行器。最终代码 head `7b9fc26` 的 [Windows run 35187722075](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075) 全绿；[构建 artifact 10482424579](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075/artifacts/10482424579)，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。2026-09-21 用户确认 D1 阶段验收通过，P1_Task6 更新为已完成，P2_Task1 解锁；[PR #13](https://github.com/w7775p/relic-ARPG/pull/13) 仍待合入 main。
+2026-09-17 P1_Task6：从 main `a0b382e` 整理 D1 属性与技能说明，补齐单位、技能标签、直接命中/持续伤害边界、独特机制与重铸位置；新增 D1 业务集成回归，串起装配/被动、锁定、拆解→重铸、过滤偏好与 Resource 捕获恢复。真实 E/Tab、满包、Hub 路由和 Windows 成品拾取/存档继续由既有专项门禁覆盖。UI 药剂说明改由 `LoadoutState.POTION` 读取同一份轻量配置，避免显示层加载战斗执行器。最终代码 head `7b9fc26` 的 [Windows run 35187722075](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075) 全绿；[构建 artifact 10482424579](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075/artifacts/10482424579)，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。2026-09-21 用户确认 D1 阶段验收通过，P1_Task6 更新为已完成，P2_Task1 解锁；[PR #13](https://github.com/w7775p/relic-ARPG/pull/13) 已合入 main `6781dd8`。
+
+2026-09-21 P2_Task1：从 main `6781dd8` 完成冲锋重击与四被动，累计六技能十被动。新增专项 80 项，源码/成品拾取保存 47 项；[Windows run 35584816275](https://github.com/w7775p/relic-ARPG/actions/runs/35584816275) 全量、导出与实际 exe 通过，[构建](https://github.com/w7775p/relic-ARPG/actions/runs/35584816275/artifacts/10631808873)。[PR #14](https://github.com/w7775p/relic-ARPG/pull/14) 待验收，可见画面、声音和手感仍需 Windows 试玩。
 
 ## 基线与模板调整
 
@@ -30,15 +32,15 @@ Hub 在 main `30b85f0` 完成拆分；Resource 重构及词条导出修复已通
 
 ## 使用方法
 
-默认按 P1_Task 1→6、P2_Task 1→9、P3_Task 1→6 执行，一次交给新窗口一张卡。D1 已验收完成，当前下一张为 P2_Task1。阶段最后一张负责集成验收；它通过后进入下一阶段。共用热点包括 `hub.gd`、`expedition_runtime.gd`、`inventory_state.gd`、`skill_runner.gd`、Resource 持久模块及源码/成品验证入口，按顺序接续可减少冲突。
+默认按 P1_Task 1→6、P2_Task 1→9、P3_Task 1→6 执行，一次交给新窗口一张卡。D1 已验收完成，当前 P2_Task1 待验收；通过并合入后进入 P2_Task2。阶段最后一张负责集成验收；它通过后进入下一阶段。共用热点包括 `hub.gd`、`expedition_runtime.gd`、`inventory_state.gd`、`skill_runner.gd`、Resource 持久模块及源码/成品验证入口，按顺序接续可减少冲突。
 
 原任务包与 Resource 重构均已合入 main，开工从最新 main 读取本卡及配套规范；若前置 PR 尚未合入，用户明确授权堆叠开发时才基于对应 head 接续，否则等待 main 更新。
 
-当前可直接发送：
+P2_Task1 通过验收并合入后可发送：
 
-> 在 w7775p/relic-ARPG 执行 `docs/demo_tasks/P2_Task1.md`。开始前先确认 PR #13 已合入最新 main；若尚未合入，除非用户明确授权基于其 head 接续，否则先完成合入再开 D2 功能分支。
+> 在 w7775p/relic-ARPG 执行 `docs/demo_tasks/P2_Task2.md`。先读取最新 main 和任务卡，核对 PR #14 已合入；按卡内范围实现、验证、提交 PR。
 
-D1 人工阶段验收已经完成。新开发窗口从 `P2_Task1.md` 接续；完整单卡标题保留 `P1_Task 1` 形式，文件名使用 `P1_Task1.md`，方便链接和命令行读取。
+D1 人工阶段验收已经完成。当前验收与交接见 `P2_Task1.md`；完整单卡标题保留 `P1_Task 1` 形式，文件名使用 `P1_Task1.md`，方便链接和命令行读取。
 
 ## 任务顺序与依赖
 
@@ -50,7 +52,7 @@ D1 人工阶段验收已经完成。新开发窗口从 `P2_Task1.md` 接续；�
 | [P1_Task 4](P1_Task4.md) | 据点拆解与材料循环 | P1_Task 3 | 已完成 |
 | [P1_Task 5](P1_Task5.md) | 单词条位置重铸 | P1_Task 4 | 已完成 |
 | [P1_Task 6](P1_Task6.md) | D1 过滤、属性解释与阶段验收 | P1_Task 1、P1_Task 2、P1_Task 3、P1_Task 4、P1_Task 5 | 已完成 |
-| [P2_Task 1](P2_Task1.md) | 冲锋重击与被动扩展 | P1_Task 6 | 待执行 |
+| [P2_Task 1](P2_Task1.md) | 冲锋重击与被动扩展 | P1_Task 6 | 待验收；PR #14 |
 | [P2_Task 2](P2_Task2.md) | 墓园敌人与精英组合 | P2_Task 1 | 待执行 |
 | [P2_Task 3](P2_Task3.md) | 墓园房间标准与十二个模板 | P2_Task 2 | 待执行 |
 | [P2_Task 4](P2_Task4.md) | 随机连接、导航与本趟布局 | P2_Task 3 | 待执行 |
@@ -129,7 +131,7 @@ D1 人工阶段验收已经完成。新开发窗口从 `P2_Task1.md` 接续；�
 python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log
 ```
 
-脚本使用隔离用户目录；包内 `--smoke-loot` 经正式 Hub 装配横扫、进入探险、真实右键击杀和 E 拾取，再撤离回 Hub。P1_Task5 起，共用 smoke 还会准备合法魔法/稀有装备，在真实 Hub 显示候选/费用、执行一次重铸、通过正式保存入口建立检查点，读回核对固定位置、词条实值、材料、重铸 RNG、掉落 RNG，再比较下一件掉落。共用用例为 `game/app/validation/pickup_smoke.gd`，源码入口为 `game/tests/pickup_input.tscn`；专项重铸另由 `game/tests/p1_reforge.tscn` 覆盖 v1→v2、失败事务和小候选池。
+脚本使用隔离用户目录；包内 `--smoke-loot` 经正式 Hub 装配横扫、进入探险、真实右键击杀和 E 拾取，再撤离回 Hub。P1_Task5 起，共用 smoke 还会准备合法魔法/稀有装备，在真实 Hub 显示候选/费用、执行一次重铸、通过正式保存入口建立检查点，读回核对固定位置、词条实值、材料、重铸 RNG、掉落 RNG，再比较下一件掉落。P2_Task1 起另串联冲锋重击装配、真实 F/左键、精英掉落和新 ID 保存读回，源码与成品共 47 项。共用用例为 `game/app/validation/pickup_smoke.gd`，源码入口为 `game/tests/pickup_input.tscn`；专项重铸另由 `game/tests/p1_reforge.tscn` 覆盖 v1→v2、失败事务和小候选池。
 
 完成需退出码为零、无脚本/引擎错误，并出现 `PACKAGE_LOOT_BOOT_READY`、`PICKUP_INPUT_RESULT: 0 failures` 及脚本汇总 `PACKAGE_LOOT_RESULT: 0 failures`。记录代码提交、构建链接与成品日志；画面、声音和手感单列人工验收范围。
 

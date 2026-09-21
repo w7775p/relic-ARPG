@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PassiveDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/stats/passive_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "momentum"
+display_name = "破阵"
+stat = "charge_damage_multiplier"
+value = 0.5
+secondary_stat = ""
+secondary_value = 0.0

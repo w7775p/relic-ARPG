@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PassiveDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/stats/passive_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "breath"
+display_name = "换息"
+stat = "idle_energy_regen"
+value = 8.0
+secondary_stat = "max_health"
+secondary_value = -40.0

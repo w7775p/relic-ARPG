@@ -62,7 +62,7 @@ func targets_in_range(origin: Vector3, radius_m: float) -> Array[CombatActor]:
 
 ## 判断会触发直接命中收益和暴击闪电的攻击来源。
 static func is_direct_skill(skill_id: StringName) -> bool:
-	return skill_id == &"primary" or skill_id == &"whirlwind" or skill_id == &"sweep" or skill_id == &"charge"
+	return skill_id == &"primary" or skill_id == &"whirlwind" or skill_id == &"sweep" or skill_id == &"charge" or skill_id == &"heavy"
 
 
 ## 结算玩家伤害；持续与派生技能不掷暴击，感电提供 20% 伤害增幅。

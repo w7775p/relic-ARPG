@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://systems/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "heavy"
+display_name = "重击"
+slot = "basic"
+tags = PackedStringArray("近战", "范围", "直接命中", "击退")
+damage_multiplier = 3.2
+range_m = 3.2
+energy_cost = 28.0
+windup_sec = 0.35
+recovery_sec = 0.45
+knockback_mps = 7.0

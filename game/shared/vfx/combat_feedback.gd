@@ -112,3 +112,19 @@ func on_hit(event: DamageEvent) -> void:
 		AudioManager.play_cue(0.45 if event.killed else (1.4 if event.is_critical else 0.85))
 	if event.killed:
 		ring(event.origin, 0.7, Color(1.0, 0.75, 0.35), 0.25)
+
+
+## 重击前摇范围保持真实半径，生命周期由动作模块取消/命中统一回收。
+func heavy_warning(origin: Vector3, radius_m: float) -> MeshInstance3D:
+	if not visuals_enabled or get_child_count() >= max_visuals:
+		return null
+	var mesh: TorusMesh = TorusMesh.new()
+	mesh.inner_radius = maxf(0.02, radius_m - 0.08)
+	mesh.outer_radius = radius_m
+	mesh.material = _material(Color(1.0, 0.65, 0.12))
+	var instance: MeshInstance3D = MeshInstance3D.new()
+	instance.mesh = mesh
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(instance)
+	instance.global_position = origin + Vector3.UP * 0.12
+	return instance

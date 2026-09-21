@@ -2,7 +2,7 @@ class_name ChargeAttack
 extends RefCounted
 ## 冲锋规则子模块：冷却、攻击快照、同次去重与一次重击增益；运动交给玩家控制器。
 const DEFINITION: SkillDefinition = preload("res://content/skills/charge.tres")
-var runner: SkillRunner
+var runner: Node
 var cooldown_sec: float = 0.0
 var combo_remaining_sec: float = 0.0
 var _combo_bonus: float = 0.0
@@ -11,14 +11,14 @@ var _attack_id: int = 0
 var _hit_ids: Dictionary = {}
 
 ## 绑定真实运动信号，按实际行进段结算。
-func setup(owner: SkillRunner) -> void:
+func setup(owner: Node) -> void:
 	runner = owner
 	runner.actor.charge_advanced.connect(_on_advanced)
 	runner.actor.charge_finished.connect(_on_finished)
 
 ## 仅接受存活、可操作且有足够能量的角色，施放时冻结构筑快照。
 func cast() -> bool:
-	if runner.actor.is_dead or runner.get_tree().paused or cooldown_sec > 0.0 or runner.energy < DEFINITION.energy_cost:
+	if (runner.heavy != null and runner.heavy.phase != HeavyAttack.Phase.IDLE) or runner.actor.is_dead or runner.get_tree().paused or cooldown_sec > 0.0 or runner.energy < DEFINITION.energy_cost:
 		return false
 	var facing: Vector3 = -runner.actor.visual_root.global_basis.z
 	if not runner.actor.start_charge(facing, DEFINITION.range_m, DEFINITION.speed_mps):

@@ -46,7 +46,7 @@ func prepare_reforge_target(session: GameSession) -> ItemInstanceResource:
 
 ## 串起不依赖场景生命周期的 D1 事务；真实路由与 E/Tab 继续由既有 HubFlow、M2、PickupInput 覆盖。
 func _run() -> void:
-	check(LoadoutState.SKILLS.size() == 4 and LoadoutState.PASSIVES.size() == 6, "D1 保持四个主动技能与六个被动")
+	check(["primary", "whirlwind", "sweep", "warcry"].all(func(id: String) -> bool: return LoadoutState.skill(id) != null) and ["might", "precision", "reach", "vitality", "guard", "recovery"].all(func(id: String) -> bool: return LoadoutState.passive(id) != null), "D1 原有四技能与六被动稳定 ID 保持")
 	check(ItemCatalog.BASES.size() == 14 and ItemCatalog.AFFIXES.size() == 18 and ItemCatalog.UNIQUES.size() == 4, "D1 装备额度保持 14/18/4")
 	check(EncounterDirector.ELITE_MODIFIERS.size() == 2 and EncounterDirector.VARIANT_IDS.size() == 2, "D1 保持两个精英修饰与两种固定场地变体")
 

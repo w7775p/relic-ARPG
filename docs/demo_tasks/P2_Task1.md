@@ -2,7 +2,7 @@
 
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
-阶段：D2。状态：待执行。任务 ID：`P2_Task1`。建议分支：`feat/p2-task1-charge-build`。
+阶段：D2。状态：进行中。任务 ID：`P2_Task1`。建议分支：`feat/p2-task1-charge-build`。
 
 前置任务：[P1_Task 6](P1_Task6.md)。2026-09-21 用户已确认 D1 阶段验收通过，本卡当前已解锁。执行时仍以包含 P1_Task6 和 [Resource 重构](../resource_save_task.md) 的最新 `main` 为代码起点；若 PR #13 尚未合入，除非用户明确授权基于其 head 接续，否则先完成合入。存档重构及词条导出修复已在 `3cdc612` 合入。跨窗口接续先核对 [任务总表](README.md) 与实际代码。`313ac7f` 仅作 M2 历史对照。
 
@@ -83,4 +83,4 @@ D1 验收后已有普攻、旋风、横扫、战吼四个主动技能和六个�
 
 ## 执行记录
 
-尚未执行。完成时填写实际基线、分支/提交、PR、验收结果、存档迁移、构建位置和遗留项；更新顶部状态。推荐步骤：待执行 → 进行中 → 待验收 → 已完成，阻塞时写明原因。
+2026-09-21 从最新 main `6781dd8`（PR #13 已合入）创建 `feat/p2-task1-charge-build`。首个子任务接通 F 冲锋、实际胶囊碰撞、沿途一次命中与限时增益。Godot 4.7.2 实际运行 `tests/p2_charge.tscn`：22 项通过，覆盖薄墙、墙角、狭口、敌人和暂停。当前继续重击与四被动；全量、Windows 和可见验收尚未运行。

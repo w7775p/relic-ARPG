@@ -10,6 +10,7 @@ const SWEEP: SkillDefinition = preload("res://content/skills/sweep.tres")
 const WARCRY: SkillDefinition = preload("res://content/skills/warcry.tres")
 const POTION: SkillDefinition = preload("res://content/skills/potion.tres")
 
+var charge: ChargeAttack
 var loadout: LoadoutState = LoadoutState.new()
 var build: BuildDefinition = BASIC
 var energy: float = 100.0
@@ -33,6 +34,12 @@ var _potion_remaining: float = 0.0
 var _exhausted: bool = false
 
 
+## 场景完成依赖注入后创建独立动作模块。
+func setup_actions() -> void:
+	charge = ChargeAttack.new()
+	charge.setup(self)
+
+
 ## 换装直接重算移动属性，保留当前生命、能量与技能冷却。
 func equip(preset: BuildDefinition) -> void:
 	build = preset
@@ -45,6 +52,8 @@ func equip(preset: BuildDefinition) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(actor) or actor.is_dead:
 		is_channeling = false
+		if charge != null:
+			charge.reset()
 		return
 	if input_enabled:
 		channel_requested = Input.is_action_pressed("channel_skill")
@@ -56,6 +65,16 @@ func _physics_process(delta: float) -> void:
 
 ## 推进攻击、增益和药剂冷却；持续施法期间停止闲置回能。
 func advance(delta: float) -> void:
+	if charge != null and not get_tree().paused:
+		charge.advance(delta)
+	if auxiliary_requested and loadout.slots.auxiliary == "charge" and charge != null:
+		charge.cast()
+		auxiliary_requested = false
+	if actor.charge_remaining_m > 0.0:
+		if potion_requested:
+			use_potion()
+		potion_requested = false
+		return
 	_attack_remaining = maxf(0.0, _attack_remaining - delta)
 	_whirlwind_remaining = maxf(0.0, _whirlwind_remaining - delta)
 	_sweep_remaining = maxf(0.0, _sweep_remaining - delta)
@@ -206,6 +225,8 @@ func restore_energy(amount: float) -> void:
 
 ## 新遭遇或据点整备清空技能瞬态，药剂冷却同时重置。
 func reset() -> void:
+	if charge != null:
+		charge.reset()
 	_remove_warcry()
 	energy = max_energy
 	is_channeling = false
@@ -219,3 +240,13 @@ func reset() -> void:
 	_sweep_remaining = 0.0
 	_warcry_cooldown_remaining = 0.0
 	_potion_remaining = 0.0
+
+
+## HUD 读取实际辅助技能和冷却，避免冲锋装配后继续显示战吼。
+func status_text() -> String:
+	var auxiliary: String = "战吼持续 %.1f / 冷却 %.1f 秒" % [_warcry_remaining, _warcry_cooldown_remaining]
+	if loadout.slots.auxiliary == "charge" and charge != null:
+		auxiliary = "冲锋冷却 %.1f 秒｜重击增益 %.1f 秒" % [charge.cooldown_sec, charge.combo_remaining_sec]
+	elif loadout.slots.auxiliary.is_empty():
+		auxiliary = "辅助槽为空"
+	return auxiliary + "｜药剂 %.1f 秒" % _potion_remaining

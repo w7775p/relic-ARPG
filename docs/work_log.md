@@ -153,3 +153,8 @@ Hub 对未锁定的魔法/稀有背包装备显示位置、当前词条、合法
 最终代码 head `7b9fc26db4d91d8f0f83f89f4ab152319b4369a2` 的 [Windows run 35187722075](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075) 全绿：官方 Godot 4.7.2 的源码/实际场景回归、存储故障、隔离 PCK、Windows exe 导出及实际成品包拾取/存档全部通过。构建 [artifact 10482424579](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075/artifacts/10482424579)，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。交付 [PR #13](https://github.com/w7775p/relic-ARPG/pull/13)。
 
 自动证据覆盖 14/18/4 内容额度、两套构筑固定精英击杀、药剂/战吼/流血、锁定保护、拆解→重铸、过滤偏好、Resource 捕获恢复、真实 E/Tab、满包重试、Hub 保存读回和下一件掉落。2026-09-21 用户确认 D1 阶段验收通过；P1_Task6 更新为已完成，P2_Task1 解锁。此次仅记录用户给出的阶段验收结论，没有新增逐项设备、帧率或画面测量数据；PR #13 仍待合入 main。
+
+
+## 2026-09-21 P2_Task1 冲锋子任务
+
+基于 main `6781dd8`，分支 `feat/p2-task1-charge-build`。新增 ChargeAttack 规则模块，PlayerController 用 move_and_collide 执行扫掠移动；撞墙/敌人停止，同次目标去重，真实命中后提供一次 3 秒重击增益。Godot 4.7.2 冲锋实际物理回归 22 项通过。后续重击和四被动继续本分支；本步未声明全任务完成。

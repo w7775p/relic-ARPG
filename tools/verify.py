@@ -10,6 +10,7 @@ from verify_package import verify_package
 
 
 TEST_MARKERS = {
+    "res://tests/p2_charge.tscn": "P2_CHARGE_RESULT: 0 failures",
     "res://tests/resource_model.tscn": "RESOURCE_MODEL_RESULT: 0 failures",
     "res://tests/resource_store.tscn": "RESOURCE_STORE_RESULT: 0 failures",
     "res://tests/save_scale.tscn": "SAVE_SCALE_RESULT: 0 failures",

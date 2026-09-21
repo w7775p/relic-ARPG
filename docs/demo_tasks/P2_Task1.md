@@ -4,7 +4,7 @@
 
 阶段：D2。状态：待执行。任务 ID：`P2_Task1`。建议分支：`feat/p2-task1-charge-build`。
 
-前置任务：[P1_Task 6](P1_Task6.md)。执行时以包含前置功能和 [Resource 重构](../resource_save_task.md) 的最新 `main` 为代码起点；存档重构及词条导出修复已在 `3cdc612` 合入。跨窗口接续先核对 [任务总表](README.md) 与实际代码。`313ac7f` 仅作 M2 历史对照。
+前置任务：[P1_Task 6](P1_Task6.md)。2026-09-21 用户已确认 D1 阶段验收通过，本卡当前已解锁。执行时仍以包含 P1_Task6 和 [Resource 重构](../resource_save_task.md) 的最新 `main` 为代码起点；若 PR #13 尚未合入，除非用户明确授权基于其 head 接续，否则先完成合入。存档重构及词条导出修复已在 `3cdc612` 合入。跨窗口接续先核对 [任务总表](README.md) 与实际代码。`313ac7f` 仅作 M2 历史对照。
 
 ## 开始前先阅读以下文档
 

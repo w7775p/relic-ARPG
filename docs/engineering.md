@@ -127,6 +127,8 @@ Hub 在初建、出发前、结算返回、退出及持久事务约 1 秒去抖�
 
 `LoadoutState` 由 InventoryState 持有并交给 SkillRunner，记录 basic/main/auxiliary 技能 ID 和最多三项被动 ID。静态 SkillDefinition 与 PassiveDefinition 资源显式预载；`inventory.build()` 和 `defense()` 分别叠加技能与防御属性。装配修改由 Hub 的 `loadout_action` 处理；探险中的共用面板只读。右键主要槽当前提供旋风与流血横扫，F 辅助槽提供战吼，Q 药剂使用独立语义动作。
 
+P1_Task6 起，属性与技能说明统一读取内容 Resource 和当前实例/构筑值：技能文本显示标签、单位和直接命中/持续伤害边界，装备说明显示独特机制与当前 `reforge_index`。药剂说明由轻量 `LoadoutState.POTION` 直接预载 `content/skills/potion.tres`，Hub 与探险 UI 调用 `describe(build)`；显示层无需引用 `SkillRunner`，避免为了格式化文字加载战斗执行器资源链。
+
 横扫配置保存在 `content/skills/sweep.tres`：前方范围筛选继续复用 CombatSystem 的注册目标集合与地形 LOS。直接伤害属于 direct skill，可暴击并触发已有直接命中收益；流血以单独 `bleed` 来源进入伤害系统。每层保存攻击根编号、伤害、击杀回能与死亡爆炸参数、剩余时间和下一跳，最多三层；满层后替换剩余时间最短的一层。流血跳伤不属于 direct skill，因此没有暴击闪电或直接命中回能；死亡仍沿统一事件发放一次击杀收益。
 
 战吼配置保存在 `content/skills/warcry.tres`，提供单层护甲增益、即时回能、持续时间和冷却。重复施放刷新持续时间，护甲只保留一层；属性重算会把这层临时护甲重新叠到装备基础值上，结束与 reset 通过同一入口移除。恢复药剂配置保存在 `content/skills/potion.tres`，Q 使用时按最大生命比例治疗；满血、死亡、暂停或冷却中拒绝，进入新探险时 reset 清零药剂冷却。

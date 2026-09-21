@@ -155,7 +155,7 @@ func _on_action(key: String) -> void:
 	refresh()
 	hint.text = message + "\n" + hint.text
 
-## 原生滚动容器承载技能槽和六个被动，低分辨率下仍可访问底部属性与重置按钮。
+## 原生滚动容器承载技能槽和十个被动，低分辨率下仍可访问底部属性与重置按钮。
 func _create_loadout(rows: VBoxContainer) -> void:
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -186,7 +186,7 @@ func _create_loadout(rows: VBoxContainer) -> void:
 	for definition: PassiveDefinition in LoadoutState.PASSIVES:
 		var button: Button = Button.new()
 		button.toggle_mode = true
-		button.text = definition.display_name + "：" + definition.description
+		button.text = definition.display_name + "：" + definition.describe()
 		button.pressed.connect(_on_loadout.bind("passive", definition.id))
 		loadout_view.add_child(button)
 		passive_buttons[definition.id] = button

@@ -50,7 +50,7 @@ func _build_controls() -> void:
 	for definition: PassiveDefinition in LoadoutState.PASSIVES:
 		var button: Button = Button.new()
 		button.toggle_mode = true
-		button.text = definition.display_name + "：" + definition.description
+		button.text = definition.display_name + "：" + definition.describe()
 		button.pressed.connect(_on_passive_pressed.bind(definition.id))
 		content.add_child(button)
 		content.move_child(button, insert_index)

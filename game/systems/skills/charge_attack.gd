@@ -50,7 +50,7 @@ func _on_advanced(from: Vector3, to: Vector3) -> void:
 		if point.distance_to(target.global_position) > DEFINITION.hit_radius_m or not runner.combat.has_line_of_sight(point, target.global_position):
 			continue
 		_hit_ids[target.get_instance_id()] = true
-		runner.combat.hit(target, _snapshot.damage * DEFINITION.damage_multiplier, &"charge", _attack_id, _snapshot)
+		runner.combat.hit(target, _snapshot.damage * DEFINITION.damage_multiplier * _snapshot.charge_damage_multiplier, &"charge", _attack_id, _snapshot)
 	runner.feedback.beam(from, to, Color(0.2, 0.75, 1.0), 0.12, 0.15)
 
 ## 正常结束且确实命中过目标才发放一层增益；闪避取消清除增益。

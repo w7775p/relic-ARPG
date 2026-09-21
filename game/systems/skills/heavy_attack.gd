@@ -22,7 +22,7 @@ func cast() -> bool:
 	runner.energy -= DEFINITION.energy_cost
 	runner.is_channeling = false
 	_snapshot = runner.build.duplicate()
-	_damage = _snapshot.damage * DEFINITION.damage_multiplier * (1.0 + runner.charge.consume_combo())
+	_damage = _snapshot.damage * DEFINITION.damage_multiplier * _snapshot.heavy_damage_multiplier * (1.0 + runner.charge.consume_combo())
 	_attack_id = runner.combat.next_attack_id()
 	phase = Phase.WINDUP
 	remaining_sec = DEFINITION.windup_sec

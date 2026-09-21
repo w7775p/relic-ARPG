@@ -33,9 +33,16 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 | [P1_Task3](demo_tasks/P1_Task3.md) | 14/18/4 装备池、流血传播、两种精英修饰、固定场地双变体 | 已完成 | 最终 Windows run 34808913642 全量源码/PCK、Windows exe 与成品包验证通过；2026-09-14 用户最终复测验收通过；PR #10 已合入 main `48479ed` |
 | [P1_Task4](demo_tasks/P1_Task4.md) | 据点单件拆解、出售/拆解收益选择与材料循环 | 已完成 | Windows run 34813475464 全量源码/PCK、Windows exe 与成品包验证通过；2026-09-14 用户试玩验收通过；PR #11 已合入 main `4798f7b`；数值与交互优化后置 |
 | [P1_Task5](demo_tasks/P1_Task5.md) | 魔法/稀有单词条位置重铸、独立 RNG、items v2 与 Hub UI 模块化 | 已完成 | 最终 PR run 34953250933 全量源码、12 项 Hub 模块化、专项重铸、7 类故障、PCK、Windows exe 与实际成品 Hub 重铸/保存读回全部通过；2026-09-15 用户 Windows 试玩验收通过；PR #12 已合入 main `154f4529` |
-| [P1_Task6](demo_tasks/P1_Task6.md) | D1 过滤、属性解释与阶段验收 | 已完成 | Windows run 35187722075 全量源码/PCK、Windows exe 与成品拾取/存档门禁通过；2026-09-21 用户确认 D1 阶段验收通过；PR #13 待合入 |
+| [P1_Task6](demo_tasks/P1_Task6.md) | D1 过滤、属性解释与阶段验收 | 已完成 | Windows run 35187722075 全量源码/PCK、Windows exe 与成品拾取/存档门禁通过；2026-09-21 用户确认 D1 阶段验收通过；PR #13 已合入 main `6781dd8` |
 
-后续顺序见 [任务总表](demo_tasks/README.md)。D1 已完成并通过用户阶段验收，P2_Task1 已解锁；开始 D2 前先确认 PR #13 已合入最新 main，或在用户明确授权下基于其 head 接续。
+后续顺序见 [任务总表](demo_tasks/README.md)。D1 已验收并合入 main `6781dd8`；P2_Task1 已实现并提交 PR #14，当前待人工验收。
+
+## D2 执行状态
+
+| 任务 | 内容 | 状态 | 验证 |
+| --- | --- | --- | --- |
+| [P2_Task1](demo_tasks/P2_Task1.md) | 冲锋、重击、一次组合增益、四被动与第三构筑 | 待验收 | Godot 4.7.2 本地 22 场景、7 类故障、隔离 PCK 通过；Windows run 35584816275 全量、导出与实际 exe 通过，构建见 validation.md；可见画面、声音、手感待验收，PR #14 未合并 |
+| [P2_Task2](demo_tasks/P2_Task2.md) | 墓园敌人与精英组合 | 待执行 | 待 P2_Task1 验收并合入最新 main |
 
 ## 架构重构
 
@@ -47,4 +54,4 @@ MVP 在 M2 全部验收后成立。D1 加入流血横扫及重铸循环，D2 加
 
 P1_Task1/2 的 v3/v4 描述属于原阶段交付历史。后续任务以 Resource 存档和真实 Hub 为准，保留新 Resource 已发布版本的升级链；不再要求 JSON 迁移或战斗中恢复。
 
-2026-09-14 P1_Task3 已完成并通过人工验收；[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task4 已完成自动与人工验收；[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 合入 main `4798f7b83dcb01405e1e8b7ab175a4c2b6c63284`。P1_Task5 已完成自动验收、Hub UI 结构整改与 Windows 人工试玩；[PR #12](https://github.com/w7775p/relic-ARPG/pull/12) 合入 main `154f4529fad0bcfbdbc6df68cb7eb217dc75d49c`。P1_Task6 已完成代码、自动成品验收及用户阶段验收；2026-09-21 用户确认 D1 验收通过，[PR #13](https://github.com/w7775p/relic-ARPG/pull/13) 当前待合入。P2_Task1 已解锁。
+2026-09-14 P1_Task3 已完成并通过人工验收；[PR #10](https://github.com/w7775p/relic-ARPG/pull/10) 合入 main `48479ed9ec67c1943d9cf590b8e430976547ed79`。P1_Task4 已完成自动与人工验收；[PR #11](https://github.com/w7775p/relic-ARPG/pull/11) 合入 main `4798f7b83dcb01405e1e8b7ab175a4c2b6c63284`。P1_Task5 已完成自动验收、Hub UI 结构整改与 Windows 人工试玩；[PR #12](https://github.com/w7775p/relic-ARPG/pull/12) 合入 main `154f4529fad0bcfbdbc6df68cb7eb217dc75d49c`。P1_Task6 已完成代码、自动成品验收及用户阶段验收；2026-09-21 用户确认 D1 验收通过，[PR #13](https://github.com/w7775p/relic-ARPG/pull/13) 已合入 main `6781dd8`。P2_Task1 已实现，PR #14 待验收。

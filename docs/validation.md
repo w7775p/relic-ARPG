@@ -1,3 +1,37 @@
+# P2_Task1 冲锋重击验证（2026-09-21）
+
+代码 head `4a389e5afd148bc4d85f7d2b31c38e9898ee834d`，分支 `feat/p2-task1-charge-build`，[PR #14](https://github.com/w7775p/relic-ARPG/pull/14)。以 main `6781dd8` 开始，官方 Godot `4.7.2.stable.official.ed1daf0bf`。本地运行：
+
+```bash
+python tools/verify.py --godot /workspace/scratch/7b23297c2b83/godot-runtime/Godot_v4.7.2-stable_linux.x86_64
+```
+
+退出码 0；编辑器导入、主菜单启动、22 个源码场景、7 类实际存储故障及无源码目录内 PCK 全部通过。存储故障仅放行原有预期 I/O 诊断，其他脚本/引擎错误及缺失完成标记仍会失败。
+
+| 专项 | 结果 |
+| --- | --- |
+| `p2_charge` 22 项 | 薄墙、墙角、狭口、敌人停止；实际行程内命中去重；空冲无增益、限时一次增益、暂停/取消 |
+| `p2_heavy` 22 项 | 规定时点单次伤害、前摇与恢复、暂停、闪避/死亡、快照、击退、LOS、组合起手消费 |
+| `p2_loadout` 31 项 | 六技能十被动与上限三项；生存/资源代价；真实 Hub/F/左键/空格；文件往返、新探险无瞬态；1280×720 长说明边界 |
+| `p2_encounter` 5 项 | 第三构筑独立通过怪群与单精英，能量有界且精英战经历低能量恢复 |
+| 原有构筑与系统 | D1 内容 78、流血技能 32、D1 集成 23、Hub 模块化 12 等全部通过，保留雷霆旋风/流血横扫与装备循环 |
+| 共用拾取/成品 | 源码与隔离 PCK 均 47 项；在原横扫/重铸/RNG 覆盖后，增加 Hub 装配冲锋重击→真实 F/左键→精英掉落→E 拾取→Hub 保存与读回 |
+
+测试装备为 `debug/charge_test.tres`：伤害 40、暴击 0、命中回能 4、击杀回能 9，基础闲置回能 18/秒；无新被动。两次遭遇分别从满生命/能量开始，保留正常敌人 AI/生命/护甲/伤害，按 60 Hz 物理帧驱动实际冲锋，自动使用 Q。固定站位与瞄准用于复现；此记录不代表整张正式地图清场或玩家操作效率。
+
+| 遭遇 | 逻辑时长 | 最低 / 结束能量 | 低于 28 能量帧数 | 冲锋次数 | 结束生命 |
+| --- | --- | --- | --- | --- | --- |
+| 六只普通近战 | 0.50 秒 | 66.00 / 100.00 | 0 | 1 | 300.00 |
+| 单精英 | 14.62 秒 | 0.10 / 13.10 | 763 | 1 | 185.87 |
+
+代码 head `4a389e5` 的 [Windows run 35584816275 / #215](https://github.com/w7775p/relic-ARPG/actions/runs/35584816275) 已成功：同版引擎/模板、全量源码和故障回归、隔离 PCK、Windows 导出，以及 `python tools/verify_package.py --executable builds/windows/relic_arpg.exe --log package-smoke.log` 的实际成品 47 项全部通过。
+
+[Windows 构建 artifact 10631808873](https://github.com/w7775p/relic-ARPG/actions/runs/35584816275/artifacts/10631808873)，ZIP SHA256 `37f68e21122c03fd7b8d77573f5fae04c20cf2912ab3e92580790b92ea745366`；[成品验证日志](https://github.com/w7775p/relic-ARPG/actions/runs/35584816275/artifacts/10631304933)。后续交付记录只修改文档，代码与该包一致。
+
+部分快速场景退出时仍有 ObjectDB 警告；本轮以 `--verbose` 检查冲锋、重击和遭遇场景，列出的残留为 `AudioStreamWAV/AudioStreamPlaybackWAV`，未发现动作脚本残留。原有 `p1_content` 也出现退出警告；成品 smoke 完成且无此警告。本轮未修改音频服务，音频退出清理不作为已解决事项。
+
+当前环境没有可用图形服务，自动输入和布局断言不能证明可见画面、声音或手感。人工验收路径见 [P2_Task1](demo_tasks/P2_Task1.md#当前交付与接续)；当前状态为待验收。存档模块结构与版本保持，没有正式专属装备或 P2_Task2 之后的功能。
+
 # P1_Task6 D1 阶段验收（2026-09-17～2026-09-21）
 
 代码 head `7b9fc26db4d91d8f0f83f89f4ab152319b4369a2`，分支 `feat/p1-task6-d1-integration`，[PR #13](https://github.com/w7775p/relic-ARPG/pull/13)。Windows [run 35187722075](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075) 使用官方 Godot `4.7.2.stable.official.ed1daf0bf` 和同版导出模板；`python tools/verify.py --godot <引擎路径>` 的源码/实际场景回归、存储故障、隔离 PCK 全部通过，随后 Windows exe 导出及实际成品拾取/存档验证通过。
@@ -13,7 +47,7 @@
 
 Windows 构建：[artifact 10482424579](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075/artifacts/10482424579)，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。
 
-2026-09-21 用户确认 D1 阶段验收通过。项目状态据此将 P1_Task6 更新为“已完成”并解锁 P2_Task1。自动回归证据仍以上述 Windows run 与成品包门禁为准；本次状态更新只记录用户给出的阶段验收结论，没有新增逐项设备、帧率或画面测量数据。PR #13 当前仍待合入 main。
+2026-09-21 用户确认 D1 阶段验收通过。项目状态据此将 P1_Task6 更新为“已完成”并解锁 P2_Task1。自动回归证据仍以上述 Windows run 与成品包门禁为准；本次状态更新只记录用户给出的阶段验收结论，没有新增逐项设备、帧率或画面测量数据。PR #13 已于 2026-09-21 合入 main `6781dd8`。
 
 # 词条配置导出丢失修复（2026-09-13）
 

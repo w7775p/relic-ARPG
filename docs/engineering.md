@@ -125,7 +125,7 @@ Hub 在初建、出发前、结算返回、退出及持久事务约 1 秒去抖�
 
 ## D1 技能装配与流血技能
 
-`LoadoutState` 由 InventoryState 持有并交给 SkillRunner，记录 basic/main/auxiliary 技能 ID 和最多三项被动 ID。静态 SkillDefinition 与 PassiveDefinition 资源显式预载；`inventory.build()` 和 `defense()` 分别叠加技能与防御属性。装配修改由 Hub 的 `loadout_action` 处理；探险中的共用面板只读。右键主要槽当前提供旋风与流血横扫，F 辅助槽提供战吼，Q 药剂使用独立语义动作。
+`LoadoutState` 由 InventoryState 持有并交给 SkillRunner，记录 basic/main/auxiliary 技能 ID 和最多三项被动 ID。静态 SkillDefinition 与 PassiveDefinition 资源显式预载；`inventory.build()` 和 `defense()` 分别叠加技能与防御属性。装配修改由 Hub 的 `loadout_action` 处理；探险中的共用面板只读。左键基础槽提供普攻与重击，右键主要槽提供旋风与流血横扫，F 辅助槽提供战吼与冲锋，Q 药剂使用独立语义动作。
 
 P1_Task6 起，属性与技能说明统一读取内容 Resource 和当前实例/构筑值：技能文本显示标签、单位和直接命中/持续伤害边界，装备说明显示独特机制与当前 `reforge_index`。药剂说明由轻量 `LoadoutState.POTION` 直接预载 `content/skills/potion.tres`，Hub 与探险 UI 调用 `describe(build)`；显示层无需引用 `SkillRunner`，避免为了格式化文字加载战斗执行器资源链。
 
@@ -134,3 +134,21 @@ P1_Task6 起，属性与技能说明统一读取内容 Resource 和当前实例/
 战吼配置保存在 `content/skills/warcry.tres`，提供单层护甲增益、即时回能、持续时间和冷却。重复施放刷新持续时间，护甲只保留一层；属性重算会把这层临时护甲重新叠到装备基础值上，结束与 reset 通过同一入口移除。恢复药剂配置保存在 `content/skills/potion.tres`，Q 使用时按最大生命比例治疗；满血、死亡、暂停或冷却中拒绝，进入新探险时 reset 清零药剂冷却。
 
 长期装配由 CharacterResource 内的 LoadoutResource 保存，LoadoutState 提供规则与变更通知。流血、横扫计时、战吼与药剂归本趟 SkillRunner/战斗对象；撤离后清理，进入新探险重新初始化。它们不进入正式存档。
+
+
+## P2_Task1 冲锋重击
+
+`SkillRunner` 负责输入、能量与模块生命周期，`ChargeAttack` 负责冲锋冷却、施放快照、命中集合和一次增益，`HeavyAttack` 负责 IDLE/WINDUP/RECOVERY。动作模块通过 PlayerController 的公开方法与运动/闪避/死亡信号协调，UI 只读取轻量内容定义。
+
+`PlayerController.advance_charge()` 用 `move_and_collide(direction * distance)` 扫掠胶囊，每帧最多消耗剩余距离；冲锋期间将敌人层加入碰撞掩码，运动后恢复原值。伤害查询只覆盖实际移动段，并检查地形视线，目标实例 ID 在同次攻击中去重。碰撞与距离用法对照 [Godot 4.7 PhysicsBody3D](https://docs.godotengine.org/en/4.7/classes/class_physicsbody3d.html)。
+
+| 配置 | 当前值与规则 |
+| --- | --- |
+| `charge.tres` | 7 米、22 米/秒、1.2 米命中半径、1.2 倍伤害；18 能量、3 秒冷却；正常结束且命中过目标才获得 3 秒内下一次重击＋60% |
+| `heavy.tres` | 3.2 倍伤害、3.2 米范围、7 米/秒击退；28 能量；0.35 秒前摇、0.45 秒恢复；起手冻结属性快照，前摇结束单次结算 |
+| 取消和暂停 | 空格取消不退能量或已消费增益；死亡/撤离清理，暂停冻结计时；冲锋与重击动作期间不闲置回能 |
+| 被动 | 破阵/重锤分别修改技能倍率；重甲/换息通过 `secondary_stat/value` 同时表达收益与代价；十项最多选择三项 |
+
+两技能进入 CombatSystem 的直接命中管线，沿用暴击、命中/击杀回能与掉落规则。正式 Hub 的 LoadoutPage 与探险 InventoryPanel 使用短名选择框、自动换行的已选技能说明和参数提示；技能/被动 ID 继续保存在原 character 模块。没有新增持久字段或升级模块版本。
+
+`p2_charge`、`p2_heavy`、`p2_loadout`、`p2_encounter` 纳入统一验证。`debug/charge_test.tres` 仅供遭遇回归，不进入正式装备目录；正式专属装备留给 P2_Task7。`app/validation/charge_smoke.gd` 只由共用拾取 smoke 调用，随包验证第三构筑与保存读回。

@@ -2,7 +2,7 @@
 
 仓库：[w7775p/relic-ARPG](https://github.com/w7775p/relic-ARPG)。工程入口：`game/project.godot`。技术栈：Godot 4.7.2 标准版、GDScript、3D 俯视即时动作、Windows 键鼠。
 
-阶段：D1。状态：待验收。任务 ID：`P1_Task6`。分支：`feat/p1-task6-d1-integration`。
+阶段：D1。状态：已完成。任务 ID：`P1_Task6`。分支：`feat/p1-task6-d1-integration`。
 
 前置任务：[P1_Task 1](P1_Task1.md)；[P1_Task 2](P1_Task2.md)；[P1_Task 3](P1_Task3.md)；[P1_Task 4](P1_Task4.md)；[P1_Task 5](P1_Task5.md)。执行时以包含前置功能和 [Resource 重构](../resource_save_task.md) 的最新 `main` 为代码起点；存档重构及词条导出修复已在 `3cdc612` 合入。跨窗口接续先核对 [任务总表](README.md) 与实际代码。`313ac7f` 仅作 M2 历史对照。
 
@@ -87,4 +87,4 @@ M2 已有全部/魔法以上/稀有以上三个品质过滤档、附近候选 Ta
 
 自动验收已通过。Windows run `35187722075`（run #200）使用官方 Godot `4.7.2.stable.official.ed1daf0bf`：源码/实际场景回归、存储故障、隔离 PCK、Windows exe 导出及成品包拾取/存档验证全部成功。构建 artifact `10482424579`，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。交付 PR：[PR #13](https://github.com/w7775p/relic-ARPG/pull/13)。
 
-自动覆盖已经验证内容额度、两套构筑固定精英击杀、药剂/战吼/能量、过滤偏好、锁定保护、拆解→重铸、Resource 捕获恢复、真实 E 拾取、满包重试、Hub 保存读回及下一件掉落。验收标准②要求的“雷霆旋风与流血横扫各连续三趟正常出发→清图→整备”及正常 Windows 入口的画面、声音、说明可读性和操作手感仍需用户实际试玩，因此本卡保持“待验收”。人工通过后再更新为“已完成”并解锁 P2_Task1。
+自动覆盖已经验证内容额度、两套构筑固定精英击杀、药剂/战吼/能量、过滤偏好、锁定保护、拆解→重铸、Resource 捕获恢复、真实 E 拾取、满包重试、Hub 保存读回及下一件掉落。2026-09-21 用户确认 D1 阶段验收通过，本卡状态更新为“已完成”，P2_Task1 解锁。此次状态更新只记录用户给出的阶段验收结论，没有补造逐项设备、帧率或画面测量数据；PR #13 仍待合入 main。

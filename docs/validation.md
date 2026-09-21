@@ -1,4 +1,4 @@
-# P1_Task6 D1 阶段自动验收（2026-09-17）
+# P1_Task6 D1 阶段验收（2026-09-17～2026-09-21）
 
 代码 head `7b9fc26db4d91d8f0f83f89f4ab152319b4369a2`，分支 `feat/p1-task6-d1-integration`，[PR #13](https://github.com/w7775p/relic-ARPG/pull/13)。Windows [run 35187722075](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075) 使用官方 Godot `4.7.2.stable.official.ed1daf0bf` 和同版导出模板；`python tools/verify.py --godot <引擎路径>` 的源码/实际场景回归、存储故障、隔离 PCK 全部通过，随后 Windows exe 导出及实际成品拾取/存档验证通过。
 
@@ -13,7 +13,7 @@
 
 Windows 构建：[artifact 10482424579](https://github.com/w7775p/relic-ARPG/actions/runs/35187722075/artifacts/10482424579)，SHA256 `ca196adb5812e661f535dc4a89281844670e91565218ef9544ae24ceccdbd00f`。
 
-人工待验收：从正常 Windows 入口分别使用雷霆旋风与流血横扫，各连续完成三趟“出发→清图→整备”，核对正常掉落/换装过程、拆解→重铸、过滤切换后的可读反馈，并检查画面、声音、说明排版与操作手感。自动回归提供功能证据，当前仍不能代替这一阶段的可见试玩，因此 P1_Task6 状态保持“待验收”。
+2026-09-21 用户确认 D1 阶段验收通过。项目状态据此将 P1_Task6 更新为“已完成”并解锁 P2_Task1。自动回归证据仍以上述 Windows run 与成品包门禁为准；本次状态更新只记录用户给出的阶段验收结论，没有新增逐项设备、帧率或画面测量数据。PR #13 当前仍待合入 main。
 
 # 词条配置导出丢失修复（2026-09-13）
 
